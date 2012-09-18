@@ -14,8 +14,7 @@
                 clojure.lang.ILookup
                 clojure.lang.ITransientMap]
    :methods [[getRequired [] clojure.lang.Seqable]
-             [setRequired [clojure.lang.Seqable] void]
-             ]))
+             [setRequired [clojure.lang.Seqable] void]]))
 
 (defn- $ [this] (:data (.state this)))
 
@@ -32,7 +31,7 @@
 (defn -setRequired [this ks]
   {:post [(internal-data-valid? this)]}
   (swap! (:required (.state this))
-         (fn [_] (apply hash-set ks))))
+         (fn [_]  (into (apply hash-set (seq ks)) #{:id}))))
 
 (defn- -toString [this]
   (->>  (vals @this) (map #(-> % deref str)) (s/join "\n")))
@@ -65,7 +64,7 @@
 (defn -assoc
   ([this obj] (-assoc this (:id obj) obj))
   ([this k v]
-   {:pre [(satisfied? this v)
+   {:pre ["has to have the contents key" (satisfied? this v)
           (= k (:id v))]}
     (alter ($ this) assoc k (atom v))
     this))

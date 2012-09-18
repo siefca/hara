@@ -21,11 +21,17 @@ The data has to be in the form of a map and has to at least contain a field name
 
 
 
+## TODOS:
 
-
+- Fix up the readme to include more examples:
+  - load/save from korma
+  - search
+  - update based upon a predicate
+  
+- Do unit tests for hara.data.dyna-rec
 
 ## License
 
-Copyright © 2012 FIXME
+Copyright © 2012 Chris Zheng
 
 Distributed under the Eclipse Public License, the same as Clojure.
