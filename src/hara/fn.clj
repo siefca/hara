@@ -1,5 +1,14 @@
 (ns hara.fn)
 
+
+(defn call-if-not-nil [f v]
+  (if-not (nil? v) (f v)))
+
+(defn look-up [m ks]
+  (reduce (fn [acc f] (call-if-not-nil #(f %) acc))
+          m
+          ks))
+
 (defn manipulate*
   ([f x] (manipulate* f x {}))
   ([f x cs]
