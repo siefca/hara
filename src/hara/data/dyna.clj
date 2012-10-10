@@ -5,80 +5,91 @@
   ([] (DynaRec.))
   ([v & [ks]]
      (let [ks (or ks (-> v first keys))
-           da (DynaRec. ks)]
+           dk (DynaRec. ks)]
        (dosync
         (doseq [e v]
-          (conj! da e)))
-       da)))
+          (conj! dk e)))
+       dk)))
 
-(defn- $ [da] (:data (.state da)))
+(defn- $ [dk] (:data (.state dk)))
 
-(defn ids [da] (keys da))
+(defn ids [dk] (keys dk))
 
-(defn has-id? [da id] (contains? @da id))
+(defn has-id? [dk id] (contains? @dk id))
 
-(defn ch-id! [da oid nid]
-  {:pre [(has-id? da oid)
-         (or (not (has-id? da nid))
+(defn ch-id! [dk oid nid]
+  {:pre [(has-id? dk oid)
+         (or (not (has-id? dk nid))
              (= oid nid))]}
-  (let [ne  (assoc @(da oid) :id nid)]
+  (let [ne  (assoc @(dk oid) :id nid)]
     (dosync
-     (dissoc! da oid)
-     (conj! da ne))))
+     (dissoc! dk oid)
+     (conj! dk ne))))
+
+(defn watch [dk k f]
+  (.addWatch dk k f))
+
+(defn unwatch [dk k]
+  (.removeWatch dk k))
+
+(defn watch-keys [dk]
+  (map first (.listWatches dk)))
 
 (defn search
-  ([da]
-     (search da (fn [_] true)))
-  ([da pred]
-     (search da
+  ([dk]
+     (search dk (fn [_] true)))
+  ([dk pred]
+     (search dk
              pred
              (fn [x y] (.compareTo (:id x) (:id y)))))
-  ([da pred comp]
+  ([dk pred comp]
      (let [pred (if (fn? pred)
                   pred
                   #(= pred (:id %)))]
-       (->> (ids da)
-            (map #(da %))
+       (->> (ids dk)
+            (map #(dk %))
             (map deref)
             (filter pred)
             (sort comp)))))
 
 (defn select
-  [da id]
-  {:pre [(has-id? da id)]}
-  @(da id))
+  [dk id]
+  {:pre [(has-id? dk id)]}
+  @(dk id))
 
-(defn empty! [da]
-  (dosync (alter ($ da) empty) da))
+(defn empty! [dk]
+  (doseq [w (watch-keys dk)]
+    (unwatch dk w))
+  (dosync (alter ($ dk) empty) dk))
 
-(defn delete! [da id]
-  {:pre [(has-id? da id)]}
-  (dosync (dissoc! da id)))
+(defn delete! [dk id]
+  {:pre [(has-id? dk id)]}
+  (dosync (dissoc! dk id)))
 
-(defn insert! [da e]
-  {:pre [(not (has-id? da (:id e)))]}
-  (dosync (conj! da e)))
+(defn insert! [dk e]
+  {:pre [(not (has-id? dk (:id e)))]}
+  (dosync (conj! dk e)))
 
-(defn update! [da e]
-  (cond (has-id? da (:id e))  (swap! (da (:id e)) into e)
-        :else                 (insert! da e))
-  da)
+(defn update! [dk e]
+  (cond (has-id? dk (:id e))  (swap! (dk (:id e)) into e)
+        :else                 (insert! dk e))
+  dk)
 
 (defn !
-  ([da id k]
-     (let [t (select da id)]
+  ([dk id k]
+     (let [t (select dk id)]
        (t k)))
-  ([da id k v]
-     (update! da {:id id k v})))
+  ([dk id k v]
+     (update! dk {:id id k v})))
 
 (defn init!
-  ([da v] (init! da identity v))
-  ([da f v] (init! da f v [:id]))
-  ([da f v ks]
-     (empty! da)
-     (.setRequired da ks)
-     (doseq [e v] (update! da (f e)))
-     da))
+  ([dk v] (init! dk identity v))
+  ([dk f v] (init! dk f v [:id]))
+  ([dk f v ks]
+     (empty! dk)
+     (.setRequired dk ks)
+     (doseq [e v] (update! dk (f e)))
+     dk))
 
 ;; Generalised Data Methods
 (defn- *op [func e & xs]
@@ -88,33 +99,39 @@
 (defn- contains-all? [m ks]
   (every? #(contains? m %) ks))
 
-(defn op! [da id func & args]
-  {:pre  [(has-id? da id)]
-   :post [(contains-all? (select da id) (.getRequired da))]}
-  (let [ae (da id)]
+(defn op! [dk id func & args]
+  {:pre  [(has-id? dk id)]
+   :post [(contains-all? (select dk id) (.getRequired dk))]}
+  (let [ae (dk id)]
     (swap! ae
            (fn [_] (apply *op func @ae args))))
-  da)
+  dk)
 
-(defn op-pred! [da pred func & args]
-  (let [pids (map :id (search da pred))]
+(defn op-pred! [dk pred func & args]
+  (let [pids (map :id (search dk pred))]
     (doseq [id pids]
-      (apply (partial op! da id func) args)))
-  da)
+      (apply (partial op! dk id func) args)))
+  dk)
 
-(defn op-all! [da func & args]
-  (doseq [id (ids da)]
-    (apply (partial op! da id func) args))
-  da)
+(defn op-all! [dk func & args]
+  (doseq [id (ids dk)]
+    (apply (partial op! dk id func) args))
+  dk)
 
-(defn assoc-in! [da id & args]
-  (apply op! da id assoc args))
+(defn assoc-in! [dk id & args]
+  (apply op! dk id assoc args))
 
-(defn dissoc-in! [da id & args]
-  (apply op! da id dissoc args))
+(defn dissoc-in! [dk id & args]
+  (apply op! dk id dissoc args))
 
-(defn update-in! [da id ks func]
-  (apply op! da id update-in [ks func]))
+(defn update-in! [dk id ks func]
+  (apply op! dk id update-in [ks func]))
+
+(defn reset-in! [dk id val]
+  {:pre  [(has-id? dk id)]
+   :post [(contains-all? (select dk id) (.getRequired dk))
+          (= id (:id (select dk id)))]}
+  (reset! (dk id) val))
 
 (defn save-deck [dk f]
   (spit f (select dk)))

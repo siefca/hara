@@ -14,7 +14,10 @@
                 clojure.lang.ILookup
                 clojure.lang.ITransientMap]
    :methods [[getRequired [] clojure.lang.Seqable]
-             [setRequired [clojure.lang.Seqable] void]]))
+             [setRequired [clojure.lang.Seqable] void]
+             [listWatches [] clojure.lang.Seqable]
+             [addWatch    [clojure.lang.Keyword clojure.lang.IFn] void]
+             [removeWatch [clojure.lang.Keyword] clojure.lang.IFn]]))
 
 (defn- $ [this] (:data (.state this)))
 
@@ -28,14 +31,26 @@
   (every? #(valid? @% (.getRequired this)) (vals @this)))
 
 (defn -getRequired [this] @(:required (.state this)))
+
 (defn -setRequired [this ks]
   {:post [(internal-data-valid? this)]}
   (swap! (:required (.state this))
          (fn [_]  (into (apply hash-set (seq ks)) #{:id}))))
 
+(defn -listWatches [this] (seq @(:watches (.state this))))
+
+(defn -addWatch [this k f]
+  (swap! (:watches (.state this)) assoc k f)
+  (doseq [entry (seq this)]
+    (add-watch (second entry) k f)))
+
+(defn -removeWatch [this k]
+  (swap! (:watches (.state this)) dissoc k)
+  (doseq [entry (seq this)]
+    (remove-watch (second entry) k)))
+
 (defn- -toString [this]
   (->>  (vals @this) (map #(-> % deref str)) (s/join "\n")))
-
 
 (defn- satisfied?
   ([this e] (valid? e (-getRequired this))))
@@ -44,10 +59,7 @@
 
 (defn -valAt
   ([this k] ((-deref this) k))
-  ([this k nv] ((-deref this) k nv))
-  #_([this k nv]
-    (if-let [vatom ((-deref this) k nv)]
-      @vatom)))
+  ([this k nv] ((-deref this) k nv)))
 
 (defn -invoke
   ([this k] (-valAt this k))
@@ -57,8 +69,11 @@
 
 (defn -count [this] (count (-deref this)))
 
-(defn -without [this obj]
-  (alter ($ this) dissoc obj)
+(defn -without [this k]
+  (if-let [av (-valAt this k)]
+    (doseq [watch (-listWatches this)]
+      (remove-watch av (first watch))))
+  (alter ($ this) dissoc k)
   this)
 
 (defn -assoc
@@ -66,7 +81,10 @@
   ([this k v]
    {:pre ["has to have the contents key" (satisfied? this v)
           (= k (:id v))]}
-    (alter ($ this) assoc k (atom v))
+   (let [av (atom v)]
+     (alter ($ this) assoc k av)
+     (doseq [watch (-listWatches this)]
+       (add-watch av (first watch) (second watch))))
     this))
 
 (defn -conj [this obj]
@@ -78,10 +96,12 @@
 (defn -init
   ([]
      [[]  {:required  (atom #{:id})
-           :data      (ref {})}])
+           :data      (ref {})
+           :watches   (atom {})}])
   ([ks]
      [[]  {:required  (atom (into (apply hash-set (seq ks)) #{:id}))
-           :data      (ref {})}]))
+           :data      (ref {})
+           :watches   (atom {})}]))
 
 (defmethod print-method
   hara.data.DynaRec
