@@ -70,6 +70,7 @@
     {1 {:id 1 :contents 1} 2 {:id 2 :contents 2}} ))
 
 (comment
+  (use 'hara.data.iotam)
   (def a (DynaRec.))
   (dosync
    (assoc! a 1 {:id 1 :contents 1})
@@ -77,9 +78,9 @@
    (assoc! a 3 {:id 3 :contents 3}))
 
   (.addWatch a :a println)
-  (swap! (.valAt a 3) assoc  :a 1)
-  (.listWatches a)
+  (iswap! (.valAt a 3) assoc  :a 1)
+  (.getWatches a)
 
   (.removeWatch a :a)
-  (swap! (.valAt a 3) assoc  :a 1)
-  (.listWatches a))
+  (iswap! (.valAt a 3) assoc  :a 1)
+  (.getWatches a))

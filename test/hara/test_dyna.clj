@@ -118,15 +118,15 @@
 ;;(def a (d/load-deck "user1.clj"))
 ;;(println a)
 (comment
-  (d/watch my-dka :a println)
-  (d/watch-keys my-dka)
+  (add-watch my-dka :a println)
+  (.getWatches my-dka)
   (d/update-in! my-dka :1 [:a :b] (fn [_] :c))
 
   (println my-dka)
   (d/reset-in! my-dka :1 {:id :1 :val 1})
   (def a (my-dka :1))
   (reset! a {:id :1 :val 1})
-  (d/unwatch my-dka :a)
+  (remove-watch my-dka :a)
 
   (d/empty! my-dka)
 

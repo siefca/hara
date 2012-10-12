@@ -27,15 +27,6 @@
      (dissoc! dk oid)
      (conj! dk ne))))
 
-(defn watch [dk k f]
-  (.addWatch dk k f))
-
-(defn unwatch [dk k]
-  (.removeWatch dk k))
-
-(defn watch-keys [dk]
-  (map first (.listWatches dk)))
-
 (defn search
   ([dk]
      (search dk (fn [_] true)))
@@ -59,8 +50,8 @@
   @(dk id))
 
 (defn empty! [dk]
-  (doseq [w (watch-keys dk)]
-    (unwatch dk w))
+  (doseq [w (.getWatches dk)]
+    (remove-watch dk w))
   (dosync (alter ($ dk) empty) dk))
 
 (defn delete! [dk id]

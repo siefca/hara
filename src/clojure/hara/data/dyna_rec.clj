@@ -10,15 +10,12 @@
                   [clojure.lang.Sequential] []}
    :state state
    :extends clojure.lang.AFn
-   :implements [clojure.lang.IDeref
+   :implements [clojure.lang.IRef
                 clojure.lang.Seqable
                 clojure.lang.ILookup
                 clojure.lang.ITransientMap]
    :methods [[getRequired [] clojure.lang.Seqable]
-             [setRequired [clojure.lang.Seqable] void]
-             [listWatches [] clojure.lang.Seqable]
-             [addWatch    [clojure.lang.Keyword clojure.lang.IFn] void]
-             [removeWatch [clojure.lang.Keyword] clojure.lang.IFn]]))
+             [setRequired [clojure.lang.Seqable] void]]))
 
 (defn- $ [this] (:data (.state this)))
 
@@ -38,7 +35,15 @@
   (swap! (:required (.state this))
          (fn [_]  (into (apply hash-set (seq ks)) #{:id}))))
 
-(defn -listWatches [this] (seq @(:watches (.state this))))
+(defn -setValidator [this vf]
+  (doseq [entry (seq this)]
+    (.setValidator (second entry) vf)))
+
+(defn -getValidator [this]
+  (if-let [l (seq this)]
+    (.getValidator (-> l first second))))
+
+(defn -getWatches [this] @(:watches (.state this)))
 
 (defn -addWatch [this k f]
   (swap! (:watches (.state this)) assoc k f)
@@ -72,7 +77,7 @@
 
 (defn -without [this k]
   (if-let [av (-valAt this k)]
-    (doseq [watch (-listWatches this)]
+    (doseq [watch (-getWatches this)]
       (remove-watch av (first watch))))
   (alter ($ this) dissoc k)
   this)
@@ -84,7 +89,7 @@
           (= k (:id v))]}
    (let [av (iotam v)]
      (alter ($ this) assoc k av)
-     (doseq [watch (-listWatches this)]
+     (doseq [watch (-getWatches this)]
        (add-watch av (first watch) (second watch))))
     this))
 
