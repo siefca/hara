@@ -1,5 +1,6 @@
 (ns hara.test-dyna
-  (:use midje.sweet)
+  (:use midje.sweet
+        hara.data.iotam)
   (:require [hara.data.dyna :as d] :reload))
 
 (def ^:dynamic s* d/search)
@@ -25,10 +26,6 @@
  (before :checks
          (def my-dx (hara.data.dyna/new [{:id :id :a {:a :a :b {:b :b :c :c}}}]))))
 
-;;(persistent! my-dka)
-;;(println my-dka)
-;;(d/ids my-dka)
-;;(.required my-dka)
 
 (fact "ids will output all the ids of the map"
   (apply hash-set (d/ids my-dka)) => #{:1 :2 :3})
@@ -118,16 +115,18 @@
 ;;(def a (d/load-deck "user1.clj"))
 ;;(println a)
 (comment
-  (add-watch my-dka :a println)
-  (.getWatches my-dka)
+  (d/add-elem-watch my-dka :a println)
+  (d/get-elem-watches my-dka)
   (d/update-in! my-dka :1 [:a :b] (fn [_] :c))
 
   (println my-dka)
   (d/reset-in! my-dka :1 {:id :1 :val 1})
   (def a (my-dka :1))
-  (reset! a {:id :1 :val 1})
-  (remove-watch my-dka :a)
+  (ireset! a {:id :1 :val 1})
+  (d/remove-elem-watch my-dka :a)
 
   (d/empty! my-dka)
+  (ireset! a {:id :1 :val 1})
 
+  (def my-dka (hara.data.dyna/new [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}]))
 )

@@ -77,7 +77,7 @@
    (assoc! a 2 {:id 2 :contents 2})
    (assoc! a 3 {:id 3 :contents 3}))
 
-  (.addWatch a :a println)
+  (add-watch a :a println)
   (iswap! (.valAt a 3) assoc  :a 1)
   (.getWatches a)
 

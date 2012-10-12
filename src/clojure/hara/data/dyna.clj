@@ -27,6 +27,21 @@
      (dissoc! dk oid)
      (conj! dk ne))))
 
+(defn add-elem-watch [this k f]
+  (.addElemWatch this k f))
+
+(defn remove-elem-watch [this k]
+  (.removeElemWatch this k))
+
+(defn get-elem-watches [this]
+  (.getElemWatches this))
+
+(defn set-elem-validator [this v]
+  (.setElemValidator this v))
+
+(defn get-elem-validator [this]
+  (.getElemValidator this))
+
 (defn search
   ([dk]
      (search dk (fn [_] true)))
@@ -50,8 +65,8 @@
   @(dk id))
 
 (defn empty! [dk]
-  (doseq [w (.getWatches dk)]
-    (remove-watch dk w))
+  (doseq [w (.getElemWatches dk)]
+    (remove-elem-watch dk w))
   (dosync (alter ($ dk) empty) dk))
 
 (defn delete! [dk id]
