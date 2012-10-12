@@ -1,4 +1,5 @@
 (ns hara.data.dyna
+  (:use [hara.data.iotam :only [iswap! ireset!]])
   (:import hara.data.DynaRec))
 
 (defn new
@@ -71,7 +72,7 @@
   (dosync (conj! dk e)))
 
 (defn update! [dk e]
-  (cond (has-id? dk (:id e))  (swap! (dk (:id e)) into e)
+  (cond (has-id? dk (:id e))  (iswap! (dk (:id e)) into e)
         :else                 (insert! dk e))
   dk)
 
@@ -103,7 +104,7 @@
   {:pre  [(has-id? dk id)]
    :post [(contains-all? (select dk id) (.getRequired dk))]}
   (let [ae (dk id)]
-    (swap! ae
+    (iswap! ae
            (fn [_] (apply *op func @ae args))))
   dk)
 
@@ -131,7 +132,7 @@
   {:pre  [(has-id? dk id)]
    :post [(contains-all? (select dk id) (.getRequired dk))
           (= id (:id (select dk id)))]}
-  (reset! (dk id) val))
+  (ireset! (dk id) val))
 
 (defn save-deck [dk f]
   (spit f (select dk)))

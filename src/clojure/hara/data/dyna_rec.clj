@@ -1,5 +1,6 @@
 (ns hara.data.dyna-rec
-  (:use [hara.fn :only [deref*]])
+  (:use [hara.fn :only [deref*]]
+        [hara.data.iotam :only [iotam iswap! ireset!]])
   (:require [clojure.string :as s])
   (:gen-class
    :name hara.data.DynaRec
@@ -81,7 +82,7 @@
   ([this k v]
    {:pre ["has to have the contents key" (satisfied? this v)
           (= k (:id v))]}
-   (let [av (atom v)]
+   (let [av (iotam v)]
      (alter ($ this) assoc k av)
      (doseq [watch (-listWatches this)]
        (add-watch av (first watch) (second watch))))

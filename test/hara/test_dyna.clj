@@ -124,10 +124,10 @@
 
   (println my-dka)
   (d/reset-in! my-dka :1 {:id :1 :val 1})
+  (def a (my-dka :1))
   (reset! a {:id :1 :val 1})
   (d/unwatch my-dka :a)
 
   (d/empty! my-dka)
 
-  (def a (my-dka :1))
 )

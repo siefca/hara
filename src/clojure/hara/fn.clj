@@ -1,6 +1,5 @@
 (ns hara.fn)
 
-
 (defn call-if-not-nil [f v]
   (if-not (nil? v) (f v)))
 

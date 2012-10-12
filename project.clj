@@ -1,8 +1,10 @@
-(defproject hara "0.2.1"
+(defproject hara "0.3.2"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]]
   :aot [hara.data.dyna-rec]
+  :java-source-paths ["src/java"]
+  :source-paths ["src/clojure"]
   :profiles {:dev {:dependencies [[midje "1.4.0"]]}})
