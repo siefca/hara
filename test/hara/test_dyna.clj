@@ -1,19 +1,19 @@
 (ns hara.test-dyna
   (:use midje.sweet
-        hara.data.iotam)
-  (:require [hara.data.dyna :as d] :reload))
+        hara.iotam)
+  (:require [hara.dyna :as d] :reload))
 
 (def ^:dynamic s* d/search)
 
-(def my-dka (hara.data.dyna/new [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}]))
+(def my-dka (d/dyna [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}]))
 
 (background
  (before :checks
-         (def my-dka (hara.data.dyna/new [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}])))
+         (def my-dka (d/dyna [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}])))
 
  (before :checks
          (def my-dkb
-           (let [dy (d/new)]
+           (let [dy (d/dyna)]
              (dosync
               (alter
                (:data (.state dy))
@@ -24,7 +24,7 @@
              dy)))
 
  (before :checks
-         (def my-dx (hara.data.dyna/new [{:id :id :a {:a :a :b {:b :b :c :c}}}]))))
+         (def my-dx (d/dyna [{:id :id :a {:a :a :b {:b :b :c :c}}}]))))
 
 
 (fact "ids will output all the ids of the map"
@@ -128,5 +128,5 @@
   (d/empty! my-dka)
   (ireset! a {:id :1 :val 1})
 
-  (def my-dka (hara.data.dyna/new [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}]))
+  (def my-dka (d/dyna [{:id :1 :val 1}, {:id :2 :val 2}, {:id :3 :val 3}]))
 )

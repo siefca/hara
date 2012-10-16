@@ -1,4 +1,4 @@
-(ns hara.data.iotam
+(ns hara.iotam
   (:import hara.data.Iotam)
   (:use [hara.fn :only [look-up]]))
 
@@ -6,13 +6,13 @@
   (Iotam. obj))
 
 (defn iswap! 
-  ([iotam f] (.swap iotam f))
-  ([iotam f x] (.swap iotam f x))
-  ([iotam f x y] (.swap iotam f x y))
-  ([iotam f x y & args] (.swap iotam f x y args)))
+  ([^hara.data.Iotam iotam f] (.swap iotam f))
+  ([^hara.data.Iotam iotam f x] (.swap iotam f x))
+  ([^hara.data.Iotam iotam f x y] (.swap iotam f x y))
+  ([^hara.data.Iotam iotam f x y & args] (.swap iotam f x y args)))
 
 (defn ireset!
-  [iotam v] (.reset iotam v))
+  [^hara.data.Iotam iotam v] (.reset iotam v))
 
 (defn iwatch-for-change [kv f]
   (fn [k rf p n t func args]

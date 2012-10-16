@@ -34,7 +34,7 @@
 
   (let [a (DynaRec. [:contents])]
     (dosync (conj! a {:id 1 :contents 1}))
-    (println a)
+    ;;(println a)
     (persistent! a))
   => {1 {:id 1 :contents 1}})
 
@@ -70,7 +70,7 @@
     {1 {:id 1 :contents 1} 2 {:id 2 :contents 2}} ))
 
 (comment
-  (use 'hara.data.iotam)
+  (use 'hara.iotam)
   (def a (DynaRec.))
   (dosync
    (assoc! a 1 {:id 1 :contents 1})

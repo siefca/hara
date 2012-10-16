@@ -1,4 +1,4 @@
-(defproject hara "0.3.3"
+(defproject hara "0.4.1"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
