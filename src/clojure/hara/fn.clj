@@ -8,6 +8,15 @@
           m
           ks))
 
+(defn watch-for-change [kv f]
+  (fn [k rf p n & xs] ;; xs := [t func args]
+    (let [pv (look-up p kv)
+          nv (look-up n kv)]
+      (cond (and (nil? pv) (nil? nv)) nil
+            (= pv nv) nil
+            :else (apply f k rf pv nv xs)))))
+
+
 (defn manipulate*
   ([f x] (manipulate* f x {}))
   ([f x cs]
