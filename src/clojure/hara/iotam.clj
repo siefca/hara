@@ -1,6 +1,5 @@
 (ns hara.iotam
-  (:import hara.data.Iotam)
-  (:use [hara.fn :only [look-up]]))
+  (:import hara.data.Iotam))
 
 (defn iotam [obj]
   (Iotam. obj))
@@ -13,14 +12,6 @@
 
 (defn ireset!
   [^hara.data.Iotam iotam v] (.reset iotam v))
-
-(defn iwatch-for-change [kv f]
-  (fn [k rf p n t func args]
-    (let [pv (look-up p kv)
-          nv (look-up n kv)]
-      (cond (and (nil? pv) (nil? nv)) nil
-            (= pv nv) nil
-            :else (f k rf pv nv t func args)))))
 
 
 (comment
