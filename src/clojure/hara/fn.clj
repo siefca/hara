@@ -16,7 +16,6 @@
             (= pv nv) nil
             :else (apply f k rf pv nv xs)))))
 
-
 (defn manipulate*
   ([f x] (manipulate* f x {}))
   ([f x cs]
