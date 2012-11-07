@@ -1,8 +1,9 @@
 (ns hara.iotam
   (:import hara.data.Iotam))
 
-(defn iotam []
-  (Iotam. obj))
+(defn iotam
+  ([] (Iotam. nil))
+  ([obj] (Iotam. obj)))
 
 (defn iswap!
   ([^hara.data.Iotam iotam f] (.swap iotam f))

@@ -19,11 +19,13 @@
 (defn manipulate*
   ([f x] (manipulate* f x {}))
   ([f x cs]
-     (let [m-fn #(manipulate* f % cs)
-           c (first (filter #(instance? (first %) x) cs))]
+     (let [m-fn    #(manipulate* f % cs)
+           custom? #(instance? (:type %) x)
+           c (first (filter custom? cs))]
        (cond (not (nil? c))
-             (let [c-ctor (second c)]
-               (c-ctor (manipulate* f (f x) cs)))
+             (let [ctor (:ctor c)
+                   dtor (:dtor c)]
+               (ctor (manipulate* f (dtor x) cs)))
 
              :else
              (cond
@@ -51,9 +53,10 @@
 
 (defn deref*
   ([x] (deref* identity x))
-  ([f x] (deref* f x {}))
+  ([f x] (deref* f x []))
   ([f x cs]
-     (manipulate* (comp f deref+)
+     (manipulate* f
                   x
-                  (into cs {clojure.lang.IDeref identity}))))
-
+                  (conj cs {:type clojure.lang.IDeref
+                            :ctor identity
+                            :dtor deref}))))

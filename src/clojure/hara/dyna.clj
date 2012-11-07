@@ -70,11 +70,11 @@
   (dosync (alter ($ dyna) empty) dyna))
 
 (defn delete! [^hara.data.DynaRec dyna id]
-  {:pre [(has-id? dyna id)]}
+  ;;{:pre [(has-id? dyna id)]}
   (dosync (dissoc! dyna id)))
 
 (defn insert! [^hara.data.DynaRec dyna e]
-  {:pre [(not (has-id? dyna (:id e)))]}
+  ;;{:pre [(not (has-id? dyna (:id e)))]}
   (dosync (conj! dyna e)))
 
 (defn update! [^hara.data.DynaRec dyna e]
@@ -135,7 +135,7 @@
   (apply op! dyna id update-in [ks func]))
 
 (defn reset-in! [^hara.data.DynaRec dyna id val]
-  {:pre  [(has-id? dyna id)]
+  {;;;:pre  [(has-id? dyna id)]
    :post [(contains-all? (select dyna id) (.getRequired dyna))
           (= id (:id (select dyna id)))]}
   (ireset! (dyna id) val))
