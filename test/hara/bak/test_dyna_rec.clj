@@ -19,7 +19,7 @@
   => #{:id :contents})
 
 (fact "when an entry is added without one of the required keys, it fails"
-  (let [a (DynaRec. [:contents])]
+  (let [a (DynaRec. [ :contents])]
     (dosync (conj! a {:id 1})))
   => (throws AssertionError))
 
