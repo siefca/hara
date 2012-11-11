@@ -42,24 +42,24 @@
   (remove-watch (sel this) k))
 
 (defn -setElemValidator [this vf]
-  (doseq [entry (seq this)]
+  (doseq [entry @this]
     (.setValidator (second entry) vf)))
 
 (defn -getElemValidator [this]
-  (if-let [l (seq this)]
+  (if-let [l @this]
     (.getValidator (-> l first second))))
 
 (defn -getElemWatches [this]
-  @(:watches (.state this)))
+  (deref (:watches (.state this))))
 
 (defn -addElemWatch [this k f]
   (swap! (:watches (.state this)) assoc k f)
-  (doseq [entry (seq this)]
+  (doseq [entry @this]
     (add-watch entry k f)))
 
 (defn -removeElemWatch [this k]
   (swap! (:watches (.state this)) dissoc k)
-  (doseq [entry (seq this)]
+  (doseq [entry  @this]
     (remove-watch entry k)))
 
 (defn- -toString [this]
@@ -68,10 +68,12 @@
 (defn -deref [this] @(sel this))
 
 (defn -valAt
-  ([this k] (get (-deref this) k))
-  ([this k nv] (get (-deref this) k nv)))
+  ([this k] (-valAt this k nil))
+  ([this k nv]
+     (if-let [evm (get (-deref this) k nil)]
+       @evm nv)))
 
-(defn -seq [this] (seq (-deref this)))
+(defn -seq [this] (map deref (seq (-deref this))))
 
 (defn -count [this] (count (-deref this)))
 
@@ -117,9 +119,3 @@
      (->>  @this (map #(-> % deref))
            (cons (symbol (str "Eva@" hash)))
            vec)) w))
-
-
-(comment 'a 'b)
-;; (def a (-init ))
-;; (sel a)
-;; (-conj a 4)

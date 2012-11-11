@@ -1,6 +1,6 @@
 (ns hara.eva
   (:refer-clojure :exclude [swap! reset!])
-  (:use [hara.data.evom :only [swap! reset!]])
+  (:use [hara.data.evom :only [evom swap! reset!]])
   (:import hara.data.Eva))
 
 (defn eva
@@ -29,9 +29,112 @@
 (defn get-elem-validator [^hara.data.Eva eva]
   (.getElemValidator eva))
 
+(defn- match? [val key chk]
+  (if (fn? chk)
+    (chk (val key))
+    (= (val key) chk)))
 
+(defn- all-match? [val chk]
+  (let [m (apply hash-map chk)]
+    (every? #(apply match? val %) m)))
 
+(defn- rm-indices [v indices]
+  (let [sdx (apply hash-set indices)]
+    (->> v
+         (map-indexed (fn [i obj] (if-not (sdx i) obj)))
+         (filter (comp not nil?))
+         vec)))
 
+(defn indices [eva chk]
+  (cond
+    (number? chk)
+    (if (eva chk) [chk] [])
+
+    (set? chk)
+    (mapcat #(indices eva %) chk)
+
+    (fn? chk)
+    (filter (comp not nil?)
+            (map-indexed (fn [i obj] (if (chk obj) i))
+                         eva))
+
+    (vector? chk)
+    (filter (comp not nil?)
+            (map-indexed (fn [i obj] (if (all-match? obj chk) i))
+                         eva))))
+
+(defn select [eva & [chk]]
+  (cond
+    (nil? chk)
+    (persistent! eva)
+
+    (number? chk)
+    (if-let [val (eva chk)]
+      [val] [])
+
+    (vector? chk)
+    (filter #(all-match? % chk) eva)
+
+    (set? chk)
+    (map val (sort (select-keys (vec (seq eva)) chk)))
+
+    (fn? chk)
+    (filter chk eva)))
+
+(defn map! [eva f]
+  (doseq [evm @eva]
+    (swap! evm f))
+  eva)
+
+(defn smap! [eva chk f]
+  (cond
+    (number? chk)
+    (if-let [evm (@eva chk)]
+      (swap! evm f))
+
+    (vector? chk)
+    (map! eva (fn [obj]
+                (if (all-match? obj chk)
+                  (f obj) obj)))
+
+    (set? chk)
+    (dorun (map-indexed (fn [i obj]
+                          (if (chk i)
+                            (swap! obj f)))
+                        @eva))
+
+    (fn? chk)
+    (map! eva (fn [obj]
+                (if (chk obj) (f obj) obj))))
+  eva)
+
+(defn update! [eva chk val]
+  (smap! eva chk #(into % val)))
+
+(defn replace! [eva chk val]
+  (smap! eva chk (constantly val)))
+
+(defn delete! [eva chk]
+  (let [ks  (keys (get-elem-watches eva))
+        idx (indices eva chk)]
+    (doseq [i idx
+            k ks]
+      (remove-watch (@eva i) k))
+    (swap! (:data (.state eva)) rm-indices idx))
+  eva)
+
+(defn- -insert [v val & [i]]
+  (if (nil? i)
+    (conj v val)
+    (vec (concat (conj (subvec v 0 i) val)
+                 (subvec v i)))))
+
+(defn insert! [eva val & [i]]
+  (let [ws (get-elem-watches eva)]
+    (swap! (:data (.state eva)) -insert (evom val) i)
+    (doseq [w ws]
+      (add-watch (@eva i) (first w) (second w))))
+  eva)
 
 
 (comment
