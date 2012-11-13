@@ -1,6 +1,7 @@
 (ns hara.eva
   (:refer-clojure :exclude [swap! reset!])
   (:use [hara.data.evom :only [evom swap! reset!]])
+  (:use [hara.data.eva :only [sel add-iwatch del-iwatch]])
   (:import hara.data.Eva))
 
 (defn eva
@@ -12,7 +13,6 @@
           (conj! eva e)))
        eva)))
 
-(defn- sel [^hara.data.Eva eva] (:data (.state eva)))
 
 (defn add-elem-watch [^hara.data.Eva eva k f]
   (.addElemWatch eva k f))
@@ -37,13 +37,6 @@
 (defn- all-match? [val chk]
   (let [m (apply hash-map chk)]
     (every? #(apply match? val %) m)))
-
-(defn- rm-indices [v indices]
-  (let [sdx (apply hash-set indices)]
-    (->> v
-         (map-indexed (fn [i obj] (if-not (sdx i) obj)))
-         (filter (comp not nil?))
-         vec)))
 
 (defn indices [eva chk]
   (cond
@@ -81,31 +74,31 @@
     (fn? chk)
     (filter chk eva)))
 
-(defn map! [eva f]
+(defn map! [eva f & args]
   (doseq [evm @eva]
-    (swap! evm f))
+    (apply swap! evm f args))
   eva)
 
-(defn smap! [eva chk f]
+(defn smap! [eva chk f & args]
   (cond
     (number? chk)
     (if-let [evm (@eva chk)]
-      (swap! evm f))
+      (apply swap! evm f args))
 
     (vector? chk)
     (map! eva (fn [obj]
                 (if (all-match? obj chk)
-                  (f obj) obj)))
+                  (apply f obj args) obj)))
 
     (set? chk)
     (dorun (map-indexed (fn [i obj]
                           (if (chk i)
-                            (swap! obj f)))
+                            (apply swap! obj f args)))
                         @eva))
 
     (fn? chk)
     (map! eva (fn [obj]
-                (if (chk obj) (f obj) obj))))
+                (if (chk obj) (apply f obj args) obj))))
   eva)
 
 (defn update! [eva chk val]
@@ -114,13 +107,19 @@
 (defn replace! [eva chk val]
   (smap! eva chk (constantly val)))
 
+(defn- -delete [v indices eva]
+  (let [sdx (apply hash-set indices)]
+    (->> v
+         (map-indexed (fn [i obj]
+                        (if-not (sdx i)
+                          obj
+                          (do (del-iwatch eva obj) nil))))
+         (filter (comp not nil?))
+         vec)))
+
 (defn delete! [eva chk]
-  (let [ks  (keys (get-elem-watches eva))
-        idx (indices eva chk)]
-    (doseq [i idx
-            k ks]
-      (remove-watch (@eva i) k))
-    (swap! (:data (.state eva)) rm-indices idx))
+  (let [idx (indices eva chk)]
+    (swap! (sel eva) -delete idx eva))
   eva)
 
 (defn- -insert [v val & [i]]
@@ -130,75 +129,27 @@
                  (subvec v i)))))
 
 (defn insert! [eva val & [i]]
-  (let [ws (get-elem-watches eva)]
-    (swap! (:data (.state eva)) -insert (evom val) i)
-    (doseq [w ws]
-      (add-watch (@eva i) (first w) (second w))))
+  (let [evm (evom val)]
+    (add-iwatch eva evm)
+    (swap! (sel eva) -insert evm i))
   eva)
 
+(defn sort! [eva & comp]
+  (let [s-fn (fn [x y] ((or comp compare) @x @y))]
+    (swap! (sel eva) (fn [evm] (sort s-fn evm))))
+  eva)
+
+(defn filter! [eva pred]
+  (let [ft-fn (fn [pred]
+                (fn [x] (true? (pred @x))))]
+    (swap! (sel eva) #(filter (ft-fn pred) %)))
+  eva)
+
+(defn reverse! [eva]
+  (swap! (sel eva) reverse)
+  eva)
 
 (comment
-
-  (defn search
-    ([^hara.data.Eva eva]
-       (search eva (fn [_] true)))
-    ([^hara.data.Eva eva pred]
-       (search eva
-               pred
-               (fn [x y] (.compareTo (:id x) (:id y)))))
-    ([^hara.data.Eva eva pred comp]
-       (let [pred (if (fn? pred)
-                    pred
-                    #(= pred (:id %)))]
-         (->> (ids eva)
-              (map #(eva %))
-              (map deref)
-              (filter pred)
-              (sort comp)))))
-
-  (defn select
-    [^hara.data.Eva eva id]
-    {:pre [(has-id? eva id)]}
-    @(eva id))
-
-  (defn empty! [^hara.data.Eva eva]
-    (doseq [w (.getElemWatches eva)]
-      (remove-elem-watch eva w))
-    (dosync (alter (sel eva) empty) eva))
-
-  (defn delete! [^hara.data.Eva eva id]
-    (dosync (dissoc! eva id)))
-
-  (defn insert! [^hara.data.Eva eva e]
-    ;;{:pre [(not (has-id? eva (:id e)))]}
-    (dosync (conj! eva e)))
-
-  (defn update! [^hara.data.Eva eva e]
-    (cond (has-id? eva (:id e))  (iswap! (eva (:id e)) into e)
-          :else                 (insert! eva e))
-    eva)
-
-  (defn !
-    ([^hara.data.Eva eva id k]
-       (let [t (select eva id)]
-         (t k)))
-    ([^hara.data.Eva eva id k v]
-       (update! eva {:id id k v})))
-
-  (defn init!
-    ([^hara.data.Eva eva v] (init! eva identity v))
-    ([^hara.data.Eva eva f v] (init! eva f v [:id]))
-    ([^hara.data.Eva eva f v ks]
-       (empty! eva)
-       (.setRequired eva ks)
-       (doseq [e v] (update! eva (f e)))
-       eva))
-
-  ;; Generalised Data Methods
-  (defn- *op [func e & xs]
-    {:post [(= (:id e) (:id %))]}
-    (apply (partial func e) xs))
-
   (defn- contains-all? [m ks]
     (every? #(contains? m %) ks))
 

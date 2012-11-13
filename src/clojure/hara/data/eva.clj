@@ -14,13 +14,30 @@
                 clojure.lang.Seqable
                 clojure.lang.ILookup
                 clojure.lang.ITransientVector]
-   :methods [[setElemValidator [clojure.lang.IFn] void]
-             [getElemValidator [] clojure.lang.IFn]
-             [addElemWatch [java.lang.Object clojure.lang.IFn] void]
+   :methods [[addElemWatch [java.lang.Object clojure.lang.IFn] void]
              [removeElemWatch [java.lang.Object] void]
              [getElemWatches [] clojure.lang.IPersistentMap]]))
 
-(defn- sel [this] (:data (.state this)))
+(defn -trigger-watch [eva ])
+
+(defn make-keyword [this]
+  (keyword (str "__" (.hashCode this) "__")))
+
+(defn add-iwatch [this evm]
+  (let [k  (make-keyword this)
+        f  (fn [k & args]
+             (doseq [w (deref (:watches (.state this)))]
+               (let [wk (first w)
+                     wf (second w)]
+                 (apply wf wk this args))))]
+    (add-watch evm k f)))
+
+(defn del-iwatch [this evm]
+  (let [k  (make-keyword this)]
+    (remove-watch evm k)))
+
+
+(defn sel [this] (:data (.state this)))
 
 (defn -init
   ([]  [[]  {:data      (evom [])
@@ -41,26 +58,14 @@
 (defn -removeWatch [this k]
   (remove-watch (sel this) k))
 
-(defn -setElemValidator [this vf]
-  (doseq [entry @this]
-    (.setValidator (second entry) vf)))
-
-(defn -getElemValidator [this]
-  (if-let [l @this]
-    (.getValidator (-> l first second))))
-
 (defn -getElemWatches [this]
   (deref (:watches (.state this))))
 
 (defn -addElemWatch [this k f]
-  (swap! (:watches (.state this)) assoc k f)
-  (doseq [entry @this]
-    (add-watch entry k f)))
+  (swap! (:watches (.state this)) assoc k f))
 
 (defn -removeElemWatch [this k]
-  (swap! (:watches (.state this)) dissoc k)
-  (doseq [entry  @this]
-    (remove-watch entry k)))
+  (swap! (:watches (.state this)) dissoc k))
 
 (defn- -toString [this]
   (->> @this (map #(-> % deref str)) (s/join "\n")))
@@ -87,24 +92,24 @@
 
 (defn -conj [this v]
   (let [ev (evom v)]
-    (add-watches ev (-getElemWatches this))
+    (add-iwatch this ev)
     (swap! (sel this) conj ev)
     this))
 
 (defn -assoc [this k v]
-  (if-let [pv (-valAt this k)]
-    (remove-watches pv (keys (-getElemWatches this))))
-  (let [ev (evom v)]
-    (add-watches ev (-getElemWatches this))
-    (swap! (sel this) assoc k ev)
-    this))
+  (if-let [pv (get @this k)]
+    (reset! pv v)
+    (let [ev (evom v)]
+      (add-iwatch this ev)
+      (swap! (sel this) assoc k ev)
+      this)))
 
 (defn -assocN [this i v]
   (-assoc this i v))
 
 (defn -pop [this]
-  (if-let [lv (last this)]
-    (remove-watches lv (keys (-getElemWatches this))))
+  (if-let [lv (last @this)]
+    (del-iwatch this lv))
   (swap! (sel this) pop)
   this)
 

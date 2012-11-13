@@ -5,6 +5,12 @@
         [hara.data.evom :only [evom swap! reset! add-watches remove-watches]])
   (:require [hara.eva :as v] :reload))
 
+(defn is-atom [& [value]]
+  (fn [at]
+    (if (and (instance? clojure.lang.Atom at)
+             (= @at value))
+      true)))
+
 (defn is-evom [& [value]]
   (fn [evm]
     (if (and (instance? hara.data.Evom evm)
@@ -188,20 +194,25 @@
   (v/insert! ev {:id 2 :val 1} 2) => (throws Exception)
   (-> ev
       (v/insert! {:id 3 :val 1} 1)
-      (v/insert! {:id 2 :val 1} 1)) => (is-eva {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 1})))
-
-;; TODO:
-
-;; - Tests and implementation for insert!
-;; - Test how watches behave when elements are added (insert) and removed (delete) from Eva
-;; - Add in 'install idx watch, which adds a function that allows the eva to see all manipulations to its evom
+      (v/insert! {:id 2 :val 1} 1)) => (is-eva {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 1}))
 
 
+(facts "testing the add-elem-watch function with map"
+  (let [ev     (v/eva [1 2 3 4])
+        out    (atom [])
+        cj-fn  (fn  [_ _ _ p v & args]
+                 (swap! out conj [p v]))
+        _      (v/add-elem-watch ev :conj cj-fn)
+        _      (v/map! ev inc)]
+    (facts "out is updated"
+      ev => (is-eva 2 3 4 5)
+      out => (is-atom [[1 2] [2 3] [3 4] [4 5]]))))
 
-(def ev (v/eva [{:id 1 :val 1} {:id 2 :val 2} 0]))
-(v/update! ev 0 {:val 2})
+(fact "reverse!"
+  (v/reverse! (v/eva [1 2 3 4 5])) => (is-eva 5 4 3 2 1))
 
-(swap! (@ev 0) #(into % {:val 2}))
+(fact "filter!"
+  (v/filter! (v/eva [1 2 3 4 5 6 7]) odd?) => (is-eva 1 3 5 7))
 
-;;(println ev)
-(v/map! (v/eva [1 2 3 4]) inc)
+(fact "sort!"
+  (v/sort! (v/eva [3 2 1 5 4 7 6])) => (is-eva 1 2 3 4 5 6 7))
