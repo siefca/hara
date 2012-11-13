@@ -51,7 +51,14 @@
   (#'v/match? {:id 1} :id 1) => truthy
   (#'v/match? {:id 1} :id odd?) => truthy
   (#'v/match? {:id 1} :id 2) => falsey
-  (#'v/match? {:id 1} :id even?) => falsey)
+  (#'v/match? {:id 1} :id even?) => falsey
+  (#'v/match? {:id {:a 1}} [:id :a] 1) => truthy
+  (#'v/match? {:id {:a 1}} [:id :a] odd?) => truthy
+  (#'v/match? {:id {:a 1}} [:id :a] 2) => falsey
+  (#'v/match? {:id {:a 1}} [:id :a] even?) => falsey
+  (#'v/match? {:id {:a 1}} [:id :b] 1) => falsey
+  (#'v/match? {:id {:a 1}} [:id :b] odd?) => (throws Exception)
+ )
 
 (facts "all-match? will only return true if all the key/check pairs match"
   (#'v/all-match? {:id 1 :val 1} []) => true
@@ -65,9 +72,12 @@
   (#'v/all-match? {:id 1 :val 1} [:id even? :val 1]) => falsey
   (#'v/all-match? {:id 1 :val 1} [:id 1 :val even?]) => falsey
   (#'v/all-match? {:id 1 :val 1} [:id 2 :val even?]) => falsey
-  (#'v/all-match? {:id 1 :val 1} [:id even? :val even?]) => falsey)
+  (#'v/all-match? {:id {:a 1} :val 1} [[:id :a] even? :val even?]) => falsey
+  (#'v/all-match? {:id {:a 1} :val 1} [[:id :a] 1 :val even?]) => falsey
+  (#'v/all-match? {:id {:a 1} :val 1} [[:id :a] 2 :val even?]) => falsey
+  (#'v/all-match? {:id {:a 1} :val 1} [[:id :a] even? :val even?]) => falsey)
 
-(facts "rm-indices will remove indices from a vector"
+#_(facts "rm-indices will remove indices from a vector"
   (#'v/rm-indices [] []) => []
   (#'v/rm-indices [0] []) => [0]
   (#'v/rm-indices [0] [0]) => []
@@ -130,7 +140,7 @@
   (v/update! ev 0 {:val 2}) => (is-eva {:id 1 :val 2} {:id 2 :val 2} 0)
   (v/update! ev 1 {:id 3 :val 3 :valb 4}) => (is-eva {:id 1 :val 1} {:id 3 :val 3 :valb 4} 0)
   (v/update! ev 2) => (throws Exception)
-  (v/update! ev [:id 1] {:val 2}) => (throws Exception))
+  (v/update! ev [:id 1] {:val 2}) => (is-eva {:id 1 :val 2} {:id 2 :val 2} 0))
 
 (facts "update using array checks"
   (against-background
@@ -156,16 +166,29 @@
   (v/update! ev [:val even?] {:val 4}) => (is-eva {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 4} {:id 4 :val 4})
   (v/update! ev [:id odd? :val even?] {:valb 4}) => (is-eva {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2 :valb 4} {:id 4 :val 2}))
 
-(facts "replace is like update"
+(facts "replace is like update but replaces the entire cell"
   (against-background
     (before :checks
             (def ev (v/eva [1 2 3 4 5 6]))))
   (v/replace! ev 0 0) => (is-eva 0 2 3 4 5 6)
   (v/replace! ev #{1 2} 0) => (is-eva 1 0 0 4 5 6)
   (v/replace! ev odd? 0) => (is-eva 0 2 0 4 0 6)
-  (v/replace! ev [:id 1] 0) => (throws Exception)
+  (v/replace! ev [:id 1] 0) => (is-eva 1 2 3 4 5 6)
   (v/replace! (v/eva [{:id 1 :val 1} {:id 2 :val 1}]) [:id 1] 0) => (is-eva 0 {:id 2 :val 1}))
 
+(facts "update-in!"
+  (against-background
+    (before :checks
+            (def ev (v/eva [{:id 1 :val {:a 1}}]))))
+  (v/update-in! ev [:id 1] [:val :x] (constantly 2)) => (is-eva {:id 1 :val {:a 1 :x 2}})
+  (v/update-in! ev [:id 1] [:val :a] (constantly 2)) => (is-eva {:id 1 :val {:a 2}}))
+
+(facts "replace-in!"
+  (against-background
+    (before :checks
+            (def ev (v/eva [{:id 1 :val {:a 1}}]))))
+  (v/replace-in! ev [:id 1] [:val :x] 2) => (is-eva {:id 1 :val {:a 1 :x 2}})
+  (v/replace-in! ev [:id 1] [:val :a] 2) => (is-eva {:id 1 :val {:a 2}}))
 
 (facts "delete using array checks"
   (against-background
@@ -196,7 +219,18 @@
       (v/insert! {:id 3 :val 1} 1)
       (v/insert! {:id 2 :val 1} 1)) => (is-eva {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 1}))
 
+(fact "reverse!"
+  (v/reverse! (v/eva [1 2 3 4 5])) => (is-eva 5 4 3 2 1))
 
+(fact "filter!"
+  (v/filter! (v/eva [1 2 3 4 5 6 7]) odd?) => (is-eva 1 3 5 7))
+
+(fact "sort!"
+  (v/sort! (v/eva [3 2 1 5 4 7 6])) => (is-eva 1 2 3 4 5 6 7))
+
+
+
+;; Watch functionality
 (facts "testing the add-elem-watch function with map"
   (let [ev     (v/eva [1 2 3 4])
         out    (atom [])
@@ -208,11 +242,51 @@
       ev => (is-eva 2 3 4 5)
       out => (is-atom [[1 2] [2 3] [3 4] [4 5]]))))
 
-(fact "reverse!"
-  (v/reverse! (v/eva [1 2 3 4 5])) => (is-eva 5 4 3 2 1))
+(facts "testing the add-elem-watch function when an element has been deleted"
+  (let [ev     (v/eva [1 2 3 4])
+        out    (atom [])
+        cj-fn  (fn  [_ _ _ p v & args]
+                 (swap! out conj [p v]))
+        _      (v/add-elem-watch ev :conj cj-fn)
+        _      (v/delete! ev 0)
+        _      (v/map! ev inc)]
+    (facts "out is updated"
+      ev => (is-eva 3 4 5)
+      out => (is-atom [[2 3] [3 4] [4 5]]))))
 
-(fact "filter!"
-  (v/filter! (v/eva [1 2 3 4 5 6 7]) odd?) => (is-eva 1 3 5 7))
+(facts "testing the add-elem-watch function when an element has been added"
+  (let [ev     (v/eva [1 2 3 4])
+        out    (atom [])
+        cj-fn  (fn  [_ _ _ p v & args]
+                 (swap! out conj [p v]))
+        _      (v/add-elem-watch ev :conj cj-fn)
+        _      (v/insert! ev 3)
+        _      (v/map! ev inc)]
+    (facts "out is updated"
+      ev => (is-eva 2 3 4 5 4)
+      out => (is-atom [[1 2] [2 3] [3 4] [4 5] [3 4]]))))
 
-(fact "sort!"
-  (v/sort! (v/eva [3 2 1 5 4 7 6])) => (is-eva 1 2 3 4 5 6 7))
+(facts "testing the add-elem-watch function when an elements are arbitrarily "
+  (let [ev     (v/eva [1 2 3 4])
+        out    (atom [])
+        cj-fn  (fn  [_ _ _ p v & args]
+                 (swap! out conj [p v]))
+        _      (v/add-elem-watch ev :conj cj-fn)
+        _      (v/insert! ev 1 3)  ;; [1 2 3 3 4]
+        _      (v/delete! ev odd?) ;; [2 4]
+        _      (v/map! ev inc)]
+    (facts "out is updated"
+      ev => (is-eva 3 5)
+      out => (is-atom [[2 3] [4 5]]))
+
+     ;; [3 5 1 2 3 4 5]
+    (fact (v/concat! ev [1 2 3 4 5]) => (is-eva 3 5 1 2 3 4 5))
+    (fact (v/sort! ev) => (is-eva 1 2 3 3 4 5 5))
+    (fact (v/map-indexed! ev (fn [i x] x)) => (is-eva 1 2 3 3 4 5 5))
+    (fact (v/map-indexed! ev (fn [i x] i)) => (is-eva 0 1 2 3 4 5 6))
+
+    ))
+
+;;(def a (v/eva [1 1 2 3 4 5]))
+;;(v/map-indexed! a (fn [i x] i))
+;;(count a)

@@ -1,7 +1,8 @@
 (ns hara.eva
   (:refer-clojure :exclude [swap! reset!])
-  (:use [hara.data.evom :only [evom swap! reset!]])
-  (:use [hara.data.eva :only [sel add-iwatch del-iwatch]])
+  (:use [hara.data.evom :only [evom swap! reset!]]
+        [hara.data.eva :only [sel add-iwatch del-iwatch]]
+        [hara.fn :only [look-up]])
   (:import hara.data.Eva))
 
 (defn eva
@@ -29,14 +30,25 @@
 (defn get-elem-validator [^hara.data.Eva eva]
   (.getElemValidator eva))
 
-(defn- match? [val key chk]
-  (if (fn? chk)
-    (chk (val key))
-    (= (val key) chk)))
+(look-up {:id {:a 1}} [:id :b])
 
-(defn- all-match? [val chk]
+(defn- get-val [obj k]
+  (if (vector? k)
+    (look-up obj k)
+    (get obj k)))
+
+(defn- match? [obj k chk]
+  (cond
+    (fn? chk)
+    (chk (get-val obj k))
+
+    :else
+    (= (get-val obj k) chk)))
+
+(defn- all-match? [obj chk]
   (let [m (apply hash-map chk)]
-    (every? #(apply match? val %) m)))
+    (every? #(apply match? obj %) m)))
+
 
 (defn indices [eva chk]
   (cond
@@ -79,6 +91,12 @@
     (apply swap! evm f args))
   eva)
 
+(defn map-indexed! [eva f & args]
+  (doseq [i  (range (count eva))]
+    (swap! (nth @eva i) (fn [x]
+                          (apply f i x args)) ))
+  eva)
+
 (defn smap! [eva chk f & args]
   (cond
     (number? chk)
@@ -106,6 +124,12 @@
 
 (defn replace! [eva chk val]
   (smap! eva chk (constantly val)))
+
+(defn update-in! [eva chk ks f]
+  (smap! eva chk #(update-in % ks f)))
+
+(defn replace-in! [eva chk ks val]
+  (smap! eva chk #(update-in % ks (constantly val)) ))
 
 (defn- -delete [v indices eva]
   (let [sdx (apply hash-set indices)]
@@ -149,47 +173,7 @@
   (swap! (sel eva) reverse)
   eva)
 
-(comment
-  (defn- contains-all? [m ks]
-    (every? #(contains? m %) ks))
-
-  (defn op! [^hara.data.Eva eva id func & args]
-    {:pre  [(has-id? eva id)]
-     :post [(contains-all? (select eva id) (.getRequired eva))]}
-    (let [ae (eva id)]
-      (iswap! ae
-              (fn [_] (apply *op func @ae args))))
-    eva)
-
-  (defn op-pred! [^hara.data.Eva eva pred func & args]
-    (let [pids (map :id (search eva pred))]
-      (doseq [id pids]
-        (apply (partial op! eva id func) args)))
-    eva)
-
-  (defn op-all! [^hara.data.Eva eva func & args]
-    (doseq [id (ids eva)]
-      (apply (partial op! eva id func) args))
-    eva)
-
-  (defn assoc-in! [^hara.data.Eva eva id & args]
-    (apply op! eva id assoc args))
-
-  (defn dissoc-in! [^hara.data.Eva eva id & args]
-    (apply op! eva id dissoc args))
-
-  (defn update-in! [^hara.data.Eva eva id ks func]
-    (apply op! eva id update-in [ks func]))
-
-  (defn reset-in! [^hara.data.Eva eva id val]
-    {;;;:pre  [(has-id? eva id)]
-     :post [(contains-all? (select eva id) (.getRequired eva))
-            (= id (:id (select eva id)))]}
-    (ireset! (eva id) val))
-
-  (defn save [^hara.data.Eva eva f]
-    (spit f (select eva)))
-
-  #_(defn load [f]
-      (init!
-       (read-string (apply str (slurp f))))))
+(defn concat! [eva es]
+  (doseq [e es]
+    (insert! eva e))
+  eva)
