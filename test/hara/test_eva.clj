@@ -57,7 +57,7 @@
   (#'v/match? {:id {:a 1}} [:id :a] 2) => falsey
   (#'v/match? {:id {:a 1}} [:id :a] even?) => falsey
   (#'v/match? {:id {:a 1}} [:id :b] 1) => falsey
-  (#'v/match? {:id {:a 1}} [:id :b] odd?) => (throws Exception)
+  (#'v/match? {:id {:a 1}} [:id :b] odd?) => falsey
  )
 
 (facts "all-match? will only return true if all the key/check pairs match"
@@ -91,7 +91,7 @@
 (facts "indices will grab the necessary indices"
   (against-background
     (before :checks
-            (def ev (v/eva [{:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2}]))))
+            (def ev (v/eva [{:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2} {:id {:val 5}}]))))
 
   (fact
     (v/indices ev) => (throws Exception)
@@ -99,12 +99,12 @@
     (v/indices ev 2) => [2]
     (v/indices ev #{1 2}) => [1 2]
     (v/indices ev #{0}) => [0]
-    (v/indices ev #{4}) => []
+    (v/indices ev #{4}) => [4]
     (v/indices ev #(odd? (:id %))) => [0 2]
     (v/indices ev #(even? (:val %))) => [2 3]
     (v/indices ev [:id 1]) => [0]
     (v/indices ev [:val 1]) => [0 1]
-    (v/indices ev [:val nil?]) => []
+    (v/indices ev [:val nil?]) => [4]
     (v/indices ev [:id odd?]) => [0 2]
     (v/indices ev [:val even?]) => [2 3]
     (v/indices ev [:val even? :id odd?]) => [2]))

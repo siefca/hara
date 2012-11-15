@@ -30,9 +30,11 @@
 (defn get-elem-validator [^hara.data.Eva eva]
   (.getElemValidator eva))
 
-(look-up {:id {:a 1}} [:id :b])
+(defn- try-chk [chk val res] ;; returns `res` if `(chk val)` succeeds, otherwise returns nil. Will swallow all thrown exceptions.
+  (try (if (chk val) res)
+       (catch Throwable t)))
 
-(defn- get-val [obj k]
+(defn- get-val [obj k] ;; if k is a vector, then do a lookup of obj using keys contained in k, else do a normal lookup
   (if (vector? k)
     (look-up obj k)
     (get obj k)))
@@ -40,7 +42,8 @@
 (defn- match? [obj k chk]
   (cond
     (fn? chk)
-    (chk (get-val obj k))
+    (try (chk (get-val obj k))
+         (catch Throwable t))
 
     :else
     (= (get-val obj k) chk)))
@@ -60,7 +63,7 @@
 
     (fn? chk)
     (filter (comp not nil?)
-            (map-indexed (fn [i obj] (if (chk obj) i))
+            (map-indexed (fn [i obj] (try-chk chk obj i))
                          eva))
 
     (vector? chk)
@@ -84,7 +87,7 @@
     (map val (sort (select-keys (vec (seq eva)) chk)))
 
     (fn? chk)
-    (filter chk eva)))
+    (filter (fn [obj] (try-chk chk obj true)) eva)))
 
 (defn map! [eva f & args]
   (doseq [evm @eva]
@@ -116,7 +119,8 @@
 
     (fn? chk)
     (map! eva (fn [obj]
-                (if (chk obj) (apply f obj args) obj))))
+                (if (try-chk chk obj true)
+                  (apply f obj args) obj))))
   eva)
 
 (defn update! [eva chk val]
