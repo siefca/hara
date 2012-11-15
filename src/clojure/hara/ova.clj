@@ -71,7 +71,7 @@
 (defn select [ova & [chk]]
   (cond
     (nil? chk)
-    (persistent! ova)
+    (map deref @(sel ova))
 
     (number? chk)
     (if-let [val (ova chk)]
