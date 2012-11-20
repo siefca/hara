@@ -1,29 +1,11 @@
 (ns hara.test-ova-aot
   (:use midje.sweet
+        hara.testing
         [hara.fn :only [deref*]])
   (:import hara.data.Ova))
 
-(defn is-atom [& [value]]
-  (fn [at]
-    (if (and (instance? clojure.lang.Atom at)
-             (= @at value))
-      true)))
-
-(defn is-ref [& [value]]
-  (fn [rf]
-    (if (and (instance? clojure.lang.Ref rf)
-             (= @rf value))
-      true)))
-
-(defn is-ova [& values]
-  (fn [ov]
-    (if (and (instance? hara.data.Ova ov)
-             (= (seq (persistent! ov)) values))
-      true)))
-
-(fact "testing the DynaRec constructor"
+(fact "testing the Ova constructor"
   (Ova.) => (is-ova))
-
 
 (fact "simple specification"
   (let [ev (Ova.)]
@@ -33,6 +15,7 @@
       (first @ev) => (is-ref {:id :0})
       (count ev) => 1
       (first (.seq ev))   => {:id :0}
+      (seq ev)            => '({:id :0})
       (first (seq ev))    => {:id :0})
     (facts "valAt"
       (.valAt ev 0)       => {:id :0}
@@ -60,8 +43,6 @@
   (dosync (-> a (assoc! 0 1) (assoc! 1 1))) => (is-ova 1 1)
   (dosync (-> a (conj! 0) (conj! 1) pop! pop!)) => (is-ova)
   (dosync (-> a pop!)) => (throws Exception))
-
-
 
 (facts "add-watch"
   (let [a      (Ova.)

@@ -1,25 +1,8 @@
 (ns hara.test-ova
   (:use midje.sweet
+        hara.testing
         [hara.fn :only [deref*]])
   (:require [hara.ova :as v] :reload))
-
-(defn is-atom [& [value]]
-  (fn [at]
-    (if (and (instance? clojure.lang.Atom at)
-             (= @at value))
-      true)))
-
-(defn is-ref [& [value]]
-  (fn [rf]
-    (if (and (instance? clojure.lang.Ref rf)
-             (= @rf value))
-      true)))
-
-(defn is-ova [& values]
-  (fn [ov]
-    (if (and (instance? hara.data.Ova ov)
-             (= (seq (persistent! ov)) values))
-      true)))
 
 (declare ov)
 
