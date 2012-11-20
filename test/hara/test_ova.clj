@@ -124,96 +124,96 @@
     (before :checks
             (def ov (v/ova [{:id 1 :val 1} {:id 2 :val 2} 0]))))
 
-  (dosync (v/update! ov 0 {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 2} 0)
-  (dosync (v/update! ov 1 {:id 3 :val 3 :valb 4})) => (is-ova {:id 1 :val 1} {:id 3 :val 3 :valb 4} 0)
-  (dosync (v/update! ov 2)) => (throws Exception)
-  (dosync (v/update! ov [:id 1] {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 2} 0))
+  (dosync (v/update ov 0 {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 2} 0)
+  (dosync (v/update ov 1 {:id 3 :val 3 :valb 4})) => (is-ova {:id 1 :val 1} {:id 3 :val 3 :valb 4} 0)
+  (dosync (v/update ov 2)) => (throws Exception)
+  (dosync (v/update ov [:id 1] {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 2} 0))
 
 (facts "update using array checks"
   (against-background
     (before :checks
             (def ov (v/ova [{:id 1 :val 1} {:id 2 :val 2}]))))
 
-  (dosync (v/update! ov [:id 1] {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 2})
-  (dosync (v/update! ov [:val 2] {:val 3})) => (is-ova {:id 1 :val 1} {:id 2 :val 3}))
+  (dosync (v/update ov [:id 1] {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 2})
+  (dosync (v/update ov [:val 2] {:val 3})) => (is-ova {:id 1 :val 1} {:id 2 :val 3}))
 
 (facts "update using array checks"
   (against-background
     (before :checks
             (def ov (v/ova [{:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2}]))))
 
-  (dosync (v/update! ov [:id 1] {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
-  (dosync (v/update! ov [:val 2] {:val 3})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 3} {:id 4 :val 3})
-  (dosync (v/update! ov #(odd? (:id %)) {:val 3})) => (is-ova {:id 1 :val 3} {:id 2 :val 1} {:id 3 :val 3} {:id 4 :val 2})
-  (dosync (v/update! ov #(even? (:val %)) {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 4} {:id 4 :val 4})
-  (dosync (v/update! ov #{1 2} {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 4} {:id 3 :val 4} {:id 4 :val 2})
-  (dosync (v/update! ov #{0} {:val 4})) => (is-ova {:id 1 :val 4} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
-  (dosync (v/update! ov #{4} {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
-  (dosync (v/update! ov [:id odd?] {:val 3})) => (is-ova {:id 1 :val 3} {:id 2 :val 1} {:id 3 :val 3} {:id 4 :val 2})
-  (dosync (v/update! ov [:val even?] {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 4} {:id 4 :val 4})
-  (dosync (v/update! ov [:id odd? :val even?] {:valb 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2 :valb 4} {:id 4 :val 2}))
+  (dosync (v/update ov [:id 1] {:val 2})) => (is-ova {:id 1 :val 2} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
+  (dosync (v/update ov [:val 2] {:val 3})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 3} {:id 4 :val 3})
+  (dosync (v/update ov #(odd? (:id %)) {:val 3})) => (is-ova {:id 1 :val 3} {:id 2 :val 1} {:id 3 :val 3} {:id 4 :val 2})
+  (dosync (v/update ov #(even? (:val %)) {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 4} {:id 4 :val 4})
+  (dosync (v/update ov #{1 2} {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 4} {:id 3 :val 4} {:id 4 :val 2})
+  (dosync (v/update ov #{0} {:val 4})) => (is-ova {:id 1 :val 4} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
+  (dosync (v/update ov #{4} {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
+  (dosync (v/update ov [:id odd?] {:val 3})) => (is-ova {:id 1 :val 3} {:id 2 :val 1} {:id 3 :val 3} {:id 4 :val 2})
+  (dosync (v/update ov [:val even?] {:val 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 4} {:id 4 :val 4})
+  (dosync (v/update ov [:id odd? :val even?] {:valb 4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2 :valb 4} {:id 4 :val 2}))
 
-(facts "replace is like update but replaces the entire cell"
+(facts "set-val is like update but replaces the entire cell"
   (against-background
     (before :checks
             (def ov (v/ova [1 2 3 4 5 6]))))
-  (dosync (v/replace! ov 0 0)) => (is-ova 0 2 3 4 5 6)
-  (dosync (v/replace! ov #{1 2} 0)) => (is-ova 1 0 0 4 5 6)
-  (dosync (v/replace! ov odd? 0)) => (is-ova 0 2 0 4 0 6)
-  (dosync (v/replace! ov [:id 1] 0)) => (is-ova 1 2 3 4 5 6)
-  (dosync (v/replace! (v/ova [{:id 1 :val 1} {:id 2 :val 1}]) [:id 1] 0)) => (is-ova 0 {:id 2 :val 1}))
+  (dosync (v/set-val ov 0 0)) => (is-ova 0 2 3 4 5 6)
+  (dosync (v/set-val ov #{1 2} 0)) => (is-ova 1 0 0 4 5 6)
+  (dosync (v/set-val ov odd? 0)) => (is-ova 0 2 0 4 0 6)
+  (dosync (v/set-val ov [:id 1] 0)) => (is-ova 1 2 3 4 5 6)
+  (dosync (v/set-val (v/ova [{:id 1 :val 1} {:id 2 :val 1}]) [:id 1] 0)) => (is-ova 0 {:id 2 :val 1}))
 
-(facts "update-in!"
+(facts "update-in"
   (against-background
     (before :checks
             (def ov (v/ova [{:id 1 :val {:a 1}}]))))
-  (dosync (v/update-in! ov [:id 1] [:val :x] (constantly 2))) => (is-ova {:id 1 :val {:a 1 :x 2}})
-  (dosync (v/update-in! ov [:id 1] [:val :a] (constantly 2))) => (is-ova {:id 1 :val {:a 2}}))
+  (dosync (v/update-in ov [:id 1] [:val :x] (constantly 2))) => (is-ova {:id 1 :val {:a 1 :x 2}})
+  (dosync (v/update-in ov [:id 1] [:val :a] (constantly 2))) => (is-ova {:id 1 :val {:a 2}}))
 
-(facts "replace-in!"
+(facts "set-in"
   (against-background
     (before :checks
             (def ov (v/ova [{:id 1 :val {:a 1}}]))))
-  (dosync (v/replace-in! ov [:id 1] [:val :x] 2)) => (is-ova {:id 1 :val {:a 1 :x 2}})
-  (dosync (v/replace-in! ov [:id 1] [:val :a] 2)) => (is-ova {:id 1 :val {:a 2}}))
+  (dosync (v/set-in ov [:id 1] [:val :x] 2)) => (is-ova {:id 1 :val {:a 1 :x 2}})
+  (dosync (v/set-in ov [:id 1] [:val :a] 2)) => (is-ova {:id 1 :val {:a 2}}))
 
 (facts "delete using array checks"
   (against-background
     (before :checks
             (def ov (v/ova [{:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2}]))))
 
-  (dosync (v/delete! ov [:id 1])) => (is-ova {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
-  (dosync (v/delete! ov [:val 2])) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
-  (dosync (v/delete! ov #(odd? (:id %)))) => (is-ova {:id 2 :val 1} {:id 4 :val 2})
-  (dosync (v/delete! ov #(even? (:val %)))) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
-  (dosync (v/delete! ov #{1 2})) => (is-ova {:id 1 :val 1} {:id 4 :val 2})
-  (dosync (v/delete! ov #{0})) => (is-ova {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
-  (dosync (v/delete! ov #{4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
-  (dosync (v/delete! ov [:id odd?])) => (is-ova  {:id 2 :val 1} {:id 4 :val 2})
-  (dosync (v/delete! ov [:val even?])) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
-  (dosync (v/delete! ov [:id odd? :val even?])) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 4 :val 2}))
+  (dosync (v/delete ov [:id 1])) => (is-ova {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
+  (dosync (v/delete ov [:val 2])) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
+  (dosync (v/delete ov #(odd? (:id %)))) => (is-ova {:id 2 :val 1} {:id 4 :val 2})
+  (dosync (v/delete ov #(even? (:val %)))) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
+  (dosync (v/delete ov #{1 2})) => (is-ova {:id 1 :val 1} {:id 4 :val 2})
+  (dosync (v/delete ov #{0})) => (is-ova {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
+  (dosync (v/delete ov #{4})) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2})
+  (dosync (v/delete ov [:id odd?])) => (is-ova  {:id 2 :val 1} {:id 4 :val 2})
+  (dosync (v/delete ov [:val even?])) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
+  (dosync (v/delete ov [:id odd? :val even?])) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 4 :val 2}))
 
 (facts "insert puts a new object"
   (against-background
     (before :checks
             (def ov (v/ova [{:id 1 :val 1}]))))
-  (dosync (v/insert! ov {:id 2 :val 1})) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
-  (dosync (v/insert! ov {:id 2 :val 1} 0)) => (is-ova {:id 2 :val 1} {:id 1 :val 1})
-  (dosync (v/insert! ov {:id 2 :val 1} 1)) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
-  (dosync (v/insert! ov {:id 2 :val 1} -1)) => (throws Exception)
-  (dosync (v/insert! ov {:id 2 :val 1} 2)) => (throws Exception)
+  (dosync (v/insert ov {:id 2 :val 1})) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
+  (dosync (v/insert ov {:id 2 :val 1} 0)) => (is-ova {:id 2 :val 1} {:id 1 :val 1})
+  (dosync (v/insert ov {:id 2 :val 1} 1)) => (is-ova {:id 1 :val 1} {:id 2 :val 1})
+  (dosync (v/insert ov {:id 2 :val 1} -1)) => (throws Exception)
+  (dosync (v/insert ov {:id 2 :val 1} 2)) => (throws Exception)
   (dosync (-> ov
-      (v/insert! {:id 3 :val 1} 1)
-      (v/insert! {:id 2 :val 1} 1))) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 1}))
+      (v/insert {:id 3 :val 1} 1)
+      (v/insert {:id 2 :val 1} 1))) => (is-ova {:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 1}))
 
-(fact "reverse!"
-  (dosync (v/reverse! (v/ova [1 2 3 4 5]))) => (is-ova 5 4 3 2 1))
+(fact "reverse"
+  (dosync (v/reverse (v/ova [1 2 3 4 5]))) => (is-ova 5 4 3 2 1))
 
-(fact "filter!"
-  (dosync (v/filter! (v/ova [1 2 3 4 5 6 7]) odd?)) => (is-ova 1 3 5 7))
+(fact "filter"
+  (dosync (v/filter (v/ova [1 2 3 4 5 6 7]) odd?)) => (is-ova 1 3 5 7))
 
-(fact "sort!"
-  (dosync (v/sort! (v/ova [3 2 1 5 4 7 6]))) => (is-ova 1 2 3 4 5 6 7))
+(fact "sort"
+  (dosync (v/sort (v/ova [3 2 1 5 4 7 6]))) => (is-ova 1 2 3 4 5 6 7))
 
 
 
@@ -225,7 +225,7 @@
                  ;;(println o r k p v args )
                  (swap! out conj [p v]))
         _      (v/add-elem-watch ov :conj cj-fn)
-        _      (dosync (v/map! ov inc))]
+        _      (dosync (v/map ov inc))]
     (facts "out is updated"
       ov => (is-ova 2 3 4 5)
       (sort @out) => [[1 2] [2 3] [3 4] [4 5]])))
@@ -236,8 +236,8 @@
         cj-fn  (fn  [_ _ _ p v & args]
                  (swap! out conj [p v]))
         _      (v/add-elem-watch ov :conj cj-fn)
-        _      (dosync (v/delete! ov 0))
-        _      (dosync (v/map! ov inc))]
+        _      (dosync (v/delete ov 0))
+        _      (dosync (v/map ov inc))]
     (facts "out is updated"
       ov => (is-ova 3 4 5)
       (sort @out) => [[2 3] [3 4] [4 5]])))
@@ -248,8 +248,8 @@
         cj-fn  (fn  [_ _ _ p v & args]
                  (swap! out conj [p v]))
         _      (v/add-elem-watch ov :conj cj-fn)
-        _      (dosync (v/insert! ov 3))
-        _      (dosync (v/map! ov inc))]
+        _      (dosync (v/insert ov 3))
+        _      (dosync (v/map ov inc))]
     (facts "out is updated"
       ov => (is-ova 2 3 4 5 4))))
 
@@ -260,32 +260,32 @@
                  (swap! out conj [p v]))
         _      (v/add-elem-watch ov :conj cj-fn)]
 
-    (dosync (v/insert! ov 1 3))
+    (dosync (v/insert ov 1 3))
     (fact ov => (is-ova 1 2 3 1 4))
 
-    (dosync (v/delete! ov odd?))
+    (dosync (v/delete ov odd?))
     (fact ov => (is-ova 2 4))
 
-    (dosync (v/map! ov inc))
+    (dosync (v/map ov inc))
     (fact ov => (is-ova 3 5))
 
-    (dosync (v/concat! ov [1 2 3 4 5]))
+    (dosync (v/concat ov [1 2 3 4 5]))
     (fact ov  => (is-ova 3 5 1 2 3 4 5))
 
-    (dosync (v/sort! ov))
+    (dosync (v/sort ov))
     (fact ov  => (is-ova 1 2 3 3 4 5 5))
 
      ;; [3 5 1 2 3 4 5]
     ;;
     ;;(dosync (fact  => (is-ova 1 2 3 3 4 5 5)))
-    ;;(dosync (fact (v/map-indexed! ov (fn [i x] x)) => (is-ova 1 2 3 3 4 5 5)))
-    ;;(fact (dosync (v/map-indexed! ov (fn [i x] i))) => (is-ova 0 1 2 3 4 5 6))
+    ;;(dosync (fact (v/map-indexed ov (fn [i x] x)) => (is-ova 1 2 3 3 4 5 5)))
+    ;;(fact (dosync (v/map-indexed ov (fn [i x] i))) => (is-ova 0 1 2 3 4 5 6))
 
     ))
 (comment
   (def a (v/ova [5 4 3 2 6]))
   (println a)
-  (dosync (v/sort! a)))
+  (dosync (v/sort a)))
 ;;(def a (v/ova [1 1 2 3 4 5]))
-;;(v/map-indexed! a (fn [i x] i))
+;;(v/map-indexed a (fn [i x] i))
 ;;(count a)
