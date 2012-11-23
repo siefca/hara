@@ -1,6 +1,6 @@
 # hara
 
-Stateful data structures for clojure.
+Stateful data structures for clojure (and the functions to operate on them)
 
 ### Huh?
 
@@ -9,11 +9,12 @@ Stateful data structures for clojure.
 Yes. Exactly. Clojure has rid of alot of complexity on the jvm by requiring the programmer to think functionally. However, the issue of shared state is still a problem in multithreaded applications. Clojure has `ref`s and `atom`s to resolve this issue but they tend to be a little basic.
 
 A typical use case of stored state is an atom with a array containing data:
+
  - Data can be added or removed from the array
  - The data itself can be also changed
  - The data has to be accessible by a number of threads
 
-In the case above, the best option would be to construct an atom containing an array of atoms containing data. What hara offers is essentially functions that manipulate this structure (which is given the name 'ova').
+In the case above, the best option would be to construct a `ref` containing an array of `ref`s containing data. What hara offers is essentially functions that manipulate this structure (which is given the name `ova`).
 
 ### Installation:
 
@@ -54,7 +55,7 @@ it is useful for type conversion for serialization/deserialization
     ;; => [1 [:date 2 3] 6 7])
 
 
-## Ova
+## hara.ova
 
 There is `hara.ova`, the main data structure supporting state-based manipulation of records. Its a useful structure to have as a shared state. I use it as a transactional general purpose store that is the intermediary between the main application, the database and the web presentation layer when there is a need for data to be stored in memory and acted upon in some way by multiple threads. 
 
@@ -171,7 +172,7 @@ There is `hara.ova`, the main data structure supporting state-based manipulation
 
 #### watches
 
-A generic element watch can be placed on the ova, such that when any values change or has been updated, observers will be notified. the watch function takes 5 arguments: the ova, the ref, the key, the previous value and the next value.
+`add-elem-watch` allows a generic element watch can be placed on the ova, such that when any values change or has been updated, the watch will be executed. the watch function takes 5 arguments: the ova, the ref, the key, the previous value and the next value.
 
     (def out (atom []))
     (let [ov     (v/ova [1 2 3 4]
@@ -187,6 +188,7 @@ A generic element watch can be placed on the ova, such that when any values chan
 #### other functions
 
 tried to be as clojurish as possible:
+
     - dissoc
     - update-in
     - set-in
