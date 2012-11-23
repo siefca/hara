@@ -17,3 +17,8 @@
     (if (and (instance? hara.data.Ova ov)
              (= (seq (persistent! ov)) values))
       true)))
+
+(defn has-length [lens]
+  (fn [x]
+    (and (sequential? x)
+         (some #(= % (count x)) lens))))

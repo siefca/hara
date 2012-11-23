@@ -7,4 +7,5 @@
   :aot [hara.data.ova]
   ;;:java-source-paths ["src/java"]
   :source-paths ["src/clojure"]
-  :profiles {:dev {:dependencies [[midje "1.4.0"]]}})
+  :profiles {:dev {:dependencies [[midje "1.4.0"]
+                                  [clj-time "0.4.4"]]}})

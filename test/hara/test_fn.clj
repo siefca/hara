@@ -1,7 +1,7 @@
 (ns hara.test-iotam
-  (:use midje.sweet
-        hara.iotam)
-  (:require [hara.fn :as f]))
+  (:use midje.sweet)
+  (:require [hara.fn :as f]
+            [clj-time.core :as t] :reload))
 
 (facts "call-if-not-nil only executes fn if the input to fn is not nil
 
@@ -85,44 +85,85 @@
   (f/manipulate* vector [1 {2 3}]) => [[1] {[2] [3]}]
   (f/manipulate* #(* % 2) {1 [2 3] #{4 5} 6 7 '(8 (9 (10)))}) => {2 [4 6] #{8 10} 12 14 '(16 (18 (20)))})
 
-(facts "manipulate* advanced uses"
+(fact "A specialised function can be used for custom manipulation"
+  (f/manipulate* (fn [x] (* 2
+                           (cond (string? x) (Integer/parseInt x)
+                                 :else x)))
+                 {1 "2" 3 ["4" 5 #{6 "7"}]})
+  => {2 4 6 [8 10 #{12 14}]})
 
-  (fact "A specialised function can be used for custom manipulation"
-    (f/manipulate* (fn [x] (* 2
-                             (cond (string? x) (Integer/parseInt x)
-                                   :else x)))
-                   {1 "2" 3 ["4" 5 #{6 "7"}]})
-    => {2 4 6 [8 10 #{12 14}]})
+(fact "Customized type functions can be used for deconstruction and construction"
+  (f/manipulate* (fn [x] (* 2 x))
+                 {1 "2" 3 ["4" 5 #{6 "7"}]}
+                 [{:pred String
+                   :dtor (fn [x] (Integer/parseInt x))}])
+  => {2 4 6 [8 10 #{12 14}]}
 
-  (fact "Customized type functions can be used for deconstruction and construction"
-    (f/manipulate* (fn [x] (* 2 x))
-                       {1 "2" 3 ["4" 5 #{6 "7"}]}
-                       [{:type String
-                         :dtor (fn [x] (Integer/parseInt x))
-                         :ctor identity}])
-    => {2 4 6 [8 10 #{12 14}]}
+  (f/manipulate* (fn [x] (* 2 x))
+                 {1 "2" 3 ["4" 5 #{6 "7"}]}
+                 [{:pred String
+                   :dtor (fn [x] (Integer/parseInt x))
+                   :ctor (fn [x] (.toString x))}])
+  => {2 "4" 6 ["8" 10 #{12 "14"}]}
 
-    (f/manipulate* (fn [x] (* 2 x))
-                   {1 "2" 3 ["4" 5 #{6 "7"}]}
-                   [{:type String
-                     :dtor (fn [x] (Integer/parseInt x))
-                     :ctor (fn [x] (.toString x))}])
-    => {2 "4" 6 ["8" 10 #{12 "14"}]})
+  (f/manipulate* (fn [x] (* 2 x))
+                 {1 "2" 3 ["4" 5 #{6 "7"}]}
+                 [{:pred String
+                   :dtor (fn [x] (Integer/parseInt x))
+                   :ctor (fn [x] [(.toString x)])}])
+  => {2 ["4"] 6 [["8"] 10 #{12 ["14"]}]}
 
-  (fact "Different types of containers"
-    (f/manipulate* #(* 2 %)
-                   (java.util.Vector. [1 2 3])
-                   [{:type java.util.Vector
-                     :dtor seq
-                     :ctor identity}])
-    => '(2 4 6)
+  (f/manipulate* (fn [x] (* 2 x))
+                 {1 "2" 3 ["4" 5 #{6 "7"}]}
+                 [{:pred String
+                   :dtor (fn [x] [(Integer/parseInt x)])
+                   :ctor (fn [x] (.toString x))}])
+  => {2 "[4]" 6 ["[8]" 10 #{12 "[14]"}]})
 
-    (f/manipulate* #(* 2 %)
-                   (java.util.Vector. [1 2 3])
-                   [{:type java.util.Vector
-                     :dtor seq
-                     :ctor (fn [x] (apply hash-set x))}])
-    => #{2 4 6}))
+(fact "Different types of containers"
+  (f/manipulate* #(* 2 %)
+                 (java.util.Vector. [1 2 3])
+                 [{:pred java.util.Vector
+                   :dtor seq}])
+  => '(2 4 6)
+
+  (f/manipulate* #(* 2 %)
+                 (java.util.Vector. [1 2 3])
+                 [{:pred java.util.Vector
+                   :dtor seq
+                   :ctor (fn [x] (apply hash-set x))}])
+  => #{2 4 6})
+
+(fact "Predictates on numbers"
+  (f/manipulate* identity
+                 [1 2 3 4 5]
+                 [{:pred #(= 2 %)
+                   :dtor (fn [x] 10)}])
+  => [1 10 3 4 5])
+
+(fact "Predictates on vectors"
+  (f/manipulate* identity
+                 [1 [:date 2 3 4 5] 6 7]
+                 [{:pred #(and (vector? %) (= (first %) :date))
+                   :dtor #(apply t/date-time (rest %))}])
+  => [1 (t/date-time 2 3 4 5) 6 7])
+
+(fact "Predictates on vectors"
+  (f/manipulate* identity
+                 [1 (t/date-time 2 3 4 5) 6 7]
+                 [{:pred org.joda.time.DateTime
+                   :dtor (fn [dt] [:date (t/year dt) (t/month dt)])}])
+  => [1 [:date 2 3] 6 7])
+
+(fact "Predictates on numbers"
+  (f/manipulate* identity
+                 [1 2 3 4 5]
+                 [{:pred #(= 2 %)
+                   :ctor (fn [x] 10)}])
+  => (throws StackOverflowError))
+
+
+
 
 
 (facts "deref* dereferences nested elements
@@ -140,6 +181,6 @@
   @(f/deref* #(atom (* 2 %)) (atom 1)) => 2 ;; stupid but plausible
   (f/deref* #(* 2 %)
             (atom (atom (atom "1")))
-            [{:type String
+            [{:pred String
               :dtor (fn [x] (Integer/parseInt x))
               :ctor (fn [x] (.toString x))}]) => "2")

@@ -1,5 +1,5 @@
 (ns hara.ova
-  (:refer-clojure :exclude [map map-indexed update-in sort filter reverse concat])
+  (:refer-clojure :exclude [map map-indexed update-in sort filter reverse concat dissoc])
   (:use [hara.data.ova :only [sel add-iwatch del-iwatch]]
         [hara.fn :only [look-up]])
   (:import hara.data.Ova))
@@ -123,6 +123,9 @@
 
 (defn update [ova chk val]
   (smap ova chk #(into % val)))
+
+(defn dissoc [ova chk & ks]
+  (smap ova chk #(apply clojure.core/dissoc % ks)))
 
 (defn set-val [ova chk val]
   (smap ova chk (constantly val)))

@@ -20,11 +20,15 @@
   ([f x] (manipulate* f x {}))
   ([f x cs]
      (let [m-fn    #(manipulate* f % cs)
-           custom? #(instance? (:type %) x)
+           pred-fn (fn [pd]
+                     (cond (instance? Class pd) #(instance? pd %)
+                           (fn? pd) pd
+                           :else (constantly false)))
+           custom? #((pred-fn (:pred %)) x)
            c (first (filter custom? cs))]
        (cond (not (nil? c))
-             (let [ctor (:ctor c)
-                   dtor (:dtor c)]
+             (let [ctor (or (:ctor c) identity)
+                   dtor (or (:dtor c) identity)]
                (ctor (manipulate* f (dtor x) cs)))
 
              :else
@@ -57,6 +61,6 @@
   ([f x cs]
      (manipulate* f
                   x
-                  (conj cs {:type clojure.lang.IDeref
+                  (conj cs {:pred clojure.lang.IDeref
                             :ctor identity
                             :dtor deref}))))
