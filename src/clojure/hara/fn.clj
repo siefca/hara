@@ -1,12 +1,23 @@
 (ns hara.fn)
 
-(defn call-if-not-nil [f v]
-  (if-not (nil? v) (f v)))
+(defn call-if-not-nil
+  ([f] (if-not (nil? f) (f)) )
+  ([f v] (if-not (nil? f) (f v)))
+  ([f v1 v2] (if-not (nil? f) (f v1 v2)))
+  ([f v1 v2 & vs] (if-not (nil? f) (apply f v1 v2 vs))))
 
-(defn look-up [m ks]
-  (reduce (fn [acc f] (call-if-not-nil #(f %) acc))
-          m
+(defn look-up [coll ks]
+  (reduce (fn [coll k] (call-if-not-nil coll k))
+          coll
           ks))
+
+(defn msg
+  ([obj kw] (call-if-not-nil (obj kw)))
+  ([obj kw v] (call-if-not-nil (obj kw) v))
+  ([obj kw v1 v2] (call-if-not-nil (obj kw) v1 v2))
+  ([obj kw v1 v2 & vs] (apply call-if-not-nil (obj kw) v1 v2 vs)))
+
+;; watch
 
 (defn watch-for-change [kv f]
   (fn [k rf p n & xs] ;; xs := [t func args]
@@ -15,6 +26,9 @@
       (cond (and (nil? pv) (nil? nv)) nil
             (= pv nv) nil
             :else (apply f k rf pv nv xs)))))
+
+
+;; higher order functions
 
 (defn manipulate*
   ([f x] (manipulate* f x {}))
@@ -50,7 +64,7 @@
 
                :else (f x))))))
 
-(defn deref+ [x]
+(defn- deref+ [x]
   (cond
    (instance? clojure.lang.IDeref x) @x
    :else x))

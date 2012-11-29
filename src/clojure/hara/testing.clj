@@ -22,3 +22,8 @@
   (fn [x]
     (and (sequential? x)
          (some #(= % (count x)) lens))))
+
+;; urls for ring
+
+(defn url-request [url & [params]]
+  {:request-method :get :uri url :params params})
