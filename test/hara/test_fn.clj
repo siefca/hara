@@ -35,7 +35,8 @@
   (f/look-up [0 1 2 3 4 5] [2]) => 2
   (f/look-up [{1 [0 0 {3 4}]}] [0 1 2 3]) => 4
   (f/look-up {:a [{:b 0} {:b 1}]} [:a 0 :b]) => 0
-  (f/look-up {:a [{:b 0} {:b 1}]} [:a 1 :b]) => 1)
+  (f/look-up {:a [{:b 0} {:b 1}]} [:a 1 :b]) => 1
+  (f/look-up [1 {:a {:b [{:c 1}]}}] [1 :a :b 0]) => {:c 1})
 
 (declare ops)
 (facts "msg uses a map as a 'object'

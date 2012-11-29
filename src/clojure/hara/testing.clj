@@ -23,6 +23,10 @@
     (and (sequential? x)
          (some #(= % (count x)) lens))))
 
+(defn has-items [ks items]
+  (fn [coll]
+    (= items (map #(select-keys % ks) (vals coll)))))
+
 ;; urls for ring
 
 (defn url-request [url & [params]]
