@@ -190,8 +190,6 @@
   => (throws StackOverflowError))
 
 
-
-
 (facts "deref* dereferences nested elements
 
          @usage: (deref* fn data-structure)"

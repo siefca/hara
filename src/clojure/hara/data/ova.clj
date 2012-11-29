@@ -73,8 +73,14 @@
 (defn -valAt
   ([this k] (-valAt this k nil))
   ([this k nv]
+    (cond 
+     (integer? k) 
      (if-let [evm (get (-deref this) k nil)]
-       @evm nv)))
+       @evm nv)
+     :else
+     (->> (map deref (-deref this))
+         (filter (fn [m] (= k (:id m))))
+         first))))
 
 (defn -seq [this] (map deref (seq (-deref this))))
 

@@ -34,6 +34,19 @@
       (.persistent ev)     => [{:id :0}])
       (persistent! ev)     => [{:id :0}]))
 
+(fact "indices"
+  (let [ev (Ova.)]
+    (dosync (conj! ev {:id :0})
+            (conj! ev {:id :1})
+            (conj! ev {:id "hello"}))
+    (ev 0) => {:id :0}    ;; indices
+    (ev 1) => {:id :1}       
+    (ev 2) => {:id "hello"}       
+    (ev 3) => nil       
+    (ev :0) => {:id :0}   ;; or use :id
+    (ev :1) => {:id :1}
+    (ev "hello") => {:id "hello"}))
+
 (fact "testing append and pop operations"
   (against-background
     (before :checks (def a (Ova.))))
