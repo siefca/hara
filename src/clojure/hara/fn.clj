@@ -1,21 +1,29 @@
-(ns hara.fn)
+(ns hara.fn
+  (:refer-clojure :exclude [send]))
+
 
 (defn call-if-not-nil
   ([f] (if-not (nil? f) (f)) )
   ([f v] (if-not (nil? f) (f v)))
   ([f v1 v2] (if-not (nil? f) (f v1 v2)))
-  ([f v1 v2 & vs] (if-not (nil? f) (apply f v1 v2 vs))))
+  ([f v1 v2 v3] (if-not (nil? f) (f v1 v2 v3)))
+  ([f v1 v2 v3 v4] (if-not (nil? f) (f v1 v2 v3 v4)))
+  ([f v1 v2 v3 v4 v5] (if-not (nil? f) (f v1 v2 v3 v4 v5)))
+  ([f v1 v2 v3 v4 v5 v6] (if-not (nil? f) (f v1 v2 v3 v4 v5 v6)))
+  ([f v1 v2 v3 v4 v5 v6 & vs] (if-not (nil? f) (apply f v1 v2 v3 v4 v5 v6 vs))))
 
 (defn look-up [coll ks]
   (reduce (fn [coll k] (call-if-not-nil coll k))
           coll
           ks))
 
-(defn msg
-  ([obj kw] (call-if-not-nil (obj kw)))
-  ([obj kw v] (call-if-not-nil (obj kw) v))
-  ([obj kw v1 v2] (call-if-not-nil (obj kw) v1 v2))
-  ([obj kw v1 v2 & vs] (apply call-if-not-nil (obj kw) v1 v2 vs)))
+(defn send
+  ([obj kw] (call-if-not-nil (obj kw) obj))
+  ([obj kw v] (call-if-not-nil (obj kw) obj v))
+  ([obj kw v1 v2] (call-if-not-nil (obj kw) obj v1 v2))
+  ([obj kw v1 v2 v3] (call-if-not-nil (obj kw) obj v1 v2 v3))
+  ([obj kw v1 v2 v3 v4] (call-if-not-nil (obj kw) obj v1 v2 v3 v4))
+  ([obj kw v1 v2 v3 v4 & vs] (apply call-if-not-nil (obj kw) obj v1 v2 v3 v4 vs)))
 
 ;; watch
 

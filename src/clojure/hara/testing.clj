@@ -27,7 +27,13 @@
   (fn [coll]
     (= items (map #(select-keys % ks) (vals coll)))))
 
+(defn has-keys [ks]
+  (fn [m]
+    (let [s (apply hash-set (keys m))]
+      (every? s ks))))
+
 ;; urls for ring
 
-(defn url-request [url & [params]]
-  {:request-method :get :uri url :params params})
+(defn url-request [url & [method params]]
+  {:request-method (or method :get) :uri url :params params})
+

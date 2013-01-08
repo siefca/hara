@@ -13,7 +13,9 @@
   (f/call-if-not-nil + 1 1 1) => 3
   (f/call-if-not-nil + 1 1 1 1) => 4
   (f/call-if-not-nil + 1 1 1 1 1) => 5
-  (f/call-if-not-nil + 1 1 1 1 1 1) => 6)
+  (f/call-if-not-nil + 1 1 1 1 1 1) => 6
+  (f/call-if-not-nil nil) => nil
+  (f/call-if-not-nil nil 1 1 1) => nil)
 
 (facts "look-up returns the nested value of a map according to nested keys :k0 to :kn
         if the value is not present, then the function returns nil
@@ -39,19 +41,20 @@
   (f/look-up [1 {:a {:b [{:c 1}]}}] [1 :a :b 0]) => {:c 1})
 
 (declare ops)
-(facts "msg uses a map as a 'object'
-          @usage (msg obj :action arg1 arg2
+(facts "send uses a map as a 'object'
+          @usage (send obj :action arg1 arg2
        "
-  (against-background (ops) => {:add + :sub -})
-  (f/msg (ops) :add) => 0
-  (f/msg (ops) :add 1) => 1
-  (f/msg (ops) :add 1 1) => 2
-  (f/msg (ops) :add 1 1 1) => 3
-  (f/msg (ops) :add 1 1 1 1) => 4
-  (f/msg (ops) :sub 3) => -3
-  (f/msg (ops) :sub 3 1) => 2
-  (f/msg (ops) :sub 3 1 1) => 1
-  (f/msg (ops) :sub 3 1 1 1) => 0)
+  (against-background (ops) => {:add (fn [_ & xs] (apply + xs))
+                                :sub (fn [_ & xs] (apply - xs))})
+  (f/send (ops) :add) => 0
+  (f/send (ops) :add 1) => 1
+  (f/send (ops) :add 1 1) => 2
+  (f/send (ops) :add 1 1 1) => 3
+  (f/send (ops) :add 1 1 1 1) => 4
+  (f/send (ops) :sub 3) => -3
+  (f/send (ops) :sub 3 1) => 2
+  (f/send (ops) :sub 3 1 1) => 1
+  (f/send (ops) :sub 3 1 1 1) => 0)
 
 (facts "watch-for-change produces another function that can be used in watching
         the nested values of maps contained in atoms and iotams.
