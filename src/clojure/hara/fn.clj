@@ -86,3 +86,10 @@
                   (conj cs {:pred clojure.lang.IDeref
                             :ctor identity
                             :dtor deref}))))
+
+;; multi-threaded
+(defmacro exec-seq [threaded bindings & body]
+  `(cond (= ~threaded :single)
+         (doseq ~bindings ~@body)
+         (= ~threaded :multi)
+         (doseq ~bindings (future ~@body))))
