@@ -35,6 +35,14 @@
             (= pv nv) nil
             :else (apply f k rf pv nv xs)))))
 
+(defn watch-elem-for-change [kv f]
+  (fn [k ov rf p n]
+    (let [pv (look-up p kv)
+          nv (look-up n kv)]
+      (cond (and (nil? pv) (nil? nv)) nil
+            (= pv nv) nil
+            :else (f k ov rf pv nv)))))
+
 
 ;; higher order functions
 
