@@ -115,7 +115,11 @@
        output)))
 
 (defn replace-walk
-  "Replaces all values in coll with the replacements defined as a lookup"
+  "Replaces all values in coll with the replacements defined as a lookup
+
+    (replace-walk {:a 1 :b {:c 1}} {1 2})
+    => {:a 2 :b {:c 2}}
+  "
   [coll rep]
   (cond (vector? coll)   (mapv #(replace-walk % rep) coll)
         (list? coll)     (apply list (map #(replace-walk % rep) coll))
@@ -478,6 +482,7 @@
 (defn datmap-keys
   "Returns the set of keys in `fm` that has keyword namespace
   of `ns`.
+
     (datmap-keys {:hello/a 1 :hello/b 2
                    :there/a 3 :there/b 4})
     ;=> {:there #{:there/a :there/b}, :hello #{:hello/b :hello/a}}
@@ -757,3 +762,20 @@
            :else (dissoc m k)))
   ([m k1 k2 & ks]
      (apply dissocs (dissocs m k1) k2 ks)))
+
+(clojure.repl/source assoc-in)
+
+#_(defn assoc-in
+  "Associates a value in a nested associative structure, where ks is a
+  sequence of keys and v is the new value and returns a new nested structure.
+  If any levels do not exist, hash-maps will be created."
+  [m [k & ks] v]
+  (if ks
+    (assoc m k (assoc-in (get m k) ks v))
+    (assoc m k v)))
+
+(defn assocs-in
+  [m [k & ks] v ]
+  (if ks
+    (assoc m k (assocs-in (get m k) ks v))
+    (assoc m k v)))
