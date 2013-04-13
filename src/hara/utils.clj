@@ -732,12 +732,8 @@
          (combine-internal cmp rd))))
 
 (defn merges
-  ([m1 m2] (merges m1 m2 {}))
-  ([m1 m2 output]
-     (if-let [[k v] (first m2)]
-       (recur (dissoc m1 k) (rest m2)
-              (assoc output k (combine (m1 k) v)))
-       (merge m1 output)))
+  ([m1 m2] (merges m1 m2 identity combine {}))
+  ([m1 m2 cmp] (merges m1 m2 cmp combine {}))
   ([m1 m2 cmp rd] (merges m1 m2 cmp rd {}))
   ([m1 m2 cmp rd output]
      (if-let [[k v] (first m2)]
@@ -746,17 +742,8 @@
        (merge m1 output))))
 
 (defn merges-in
-  ([m1 m2] (merges-in m1 m2 {}))
-  ([m1 m2 output]
-     (if-let [[k v2] (first m2)]
-       (let [v1 (m1 k)]
-         (cond (not (and (hash-map? v1) (hash-map? v2)))
-               (recur (dissoc m1 k) (rest m2)
-                      (assoc output k (combine v1 v2)))
-               :else
-               (recur (dissoc m1 k) (rest m2)
-                            (assoc output k (merges-in v1 v2)))))
-       (merge m1 output)))
+  ([m1 m2] (merges-in m1 m2 identity combine {}))
+  ([m1 m2 cmp] (merges-in m1 m2 cmp combine {}))
   ([m1 m2 cmp rd] (merges-in m1 m2 cmp rd {}))
   ([m1 m2 cmp rd output]
      (if-let [[k v2] (first m2)]
@@ -797,12 +784,7 @@
            (combine m1 m2))))
 
 (defn assocs
-  ([m k v]
-     (let [z (get m k)]
-       (cond (nil? z) (assoc m k v)
-             :else
-             (assoc m k (combine z v)))))
-
+  ([m k v] (assocs m k v identity combine))
   ([m k v cmp rd]
      (let [z (get m k)]
        (cond (nil? z) (assoc m k v)
@@ -870,43 +852,47 @@
          assocs-in-keyword assocs-in-filtered)
 
 (defn assocs-in
-  [m [k & ks :as all-ks] v]
-  (cond (nil? ks)
-        (cond (vector? k) (error "cannot allow vector-form on last key " k)
-              (or (nil? m) (hash-map? m)) (assocs m k v)
-              (nil? k) (combine m v)
-              :else (error m " is not an associative map"))
+  ([m all-ks v] (assocs-in m all-ks v identity combine))
+  ([m [k & ks :as all-ks] v cmp rd]
+      (cond (nil? ks)
+            (cond (vector? k) (error "cannot allow vector-form on last key " k)
+                  (or (nil? m) (hash-map? m)) (assocs m k v cmp rd)
+                  (nil? k) (combine m v cmp rd)
+                  :else (error m " is not an associative map"))
 
-        (or (nil? m) (hash-map? m))
-        (cond (vector? k) (assocs-in-filtered m all-ks v)
-              :else (assocs-in-keyword m all-ks v))
-        :else (error m " is required to be a map")))
+            (or (nil? m) (hash-map? m))
+            (cond (vector? k) (assocs-in-filtered m all-ks v cmp rd)
+                  :else (assocs-in-keyword m all-ks v cmp rd))
+            :else (error m " is required to be a map"))))
 
 (defn assocs-in-keyword
-  [m [k & ks :as all-ks] v]
-  (let [val (get m k)]
-    (cond (hash-set? val)
-          (assoc m k (set (map #(assocs-in-keyword % ks v) val)))
-          :else (assoc m k (assocs-in val ks v)))))
+  ([m all-ks v] (assocs-in-keyword m all-ks v identity combine))
+  ([m [k & ks :as all-ks] v cmp rd]
+      (let [val (get m k)]
+        (cond (hash-set? val)
+              (assoc m k (set (map #(assocs-in-keyword % ks v cmp rd) val)))
+              :else (assoc m k (assocs-in val ks v cmp rd))))))
 
 (defn assocs-in-filtered
-  [m [[k pred] & ks :as all-ks] v]
-  (let [subm (get m k)]
-    (cond (nil? subm) m
+  ([m all-ks v] (assocs-in-filtered m all-ks v identity combine))
+  ([m [[k pred] & ks :as all-ks] v cmp rd]
+      (let [subm (get m k)]
+        (cond (nil? subm) m
 
-          (and (hash-set? subm) (every? hash-map? subm))
-          (let [ori-set (set (filter #(assocs-in-ok? % pred) subm))
-                new-set (set (map #(assocs-in % ks v) ori-set))]
-            (assoc m k (-> subm
-                           (set/difference ori-set)
-                           (set/union new-set))))
+              (and (hash-set? subm) (every? hash-map? subm))
+              (let [ori-set (set (filter #(assocs-in-ok? % pred) subm))
+                    new-set (set (map #(assocs-in % ks v cmp rd) ori-set))]
+                (assoc m k (-> subm
+                               (set/difference ori-set)
+                               (set/union new-set))))
 
-          (hash-map? subm)
-          (if (assocs-in-ok? subm pred)
-            (assoc m k (assocs-in subm ks v))
-            m)
+              (hash-map? subm)
+              (if (assocs-in-ok? subm pred)
+                (assoc m k (assocs-in subm ks v cmp rd))
+                m)
 
-          :else (error subm "needs to be hash-map or hash-set"))))
+              :else (error subm "needs to be hash-map or hash-set")))))
 
 (defn gets-in
-  [m [k & ks :as all-ks]])
+  [m [k & ks :as all-ks]]
+  )
