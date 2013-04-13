@@ -345,10 +345,10 @@
   (h/combine 1 1) => 1
   (h/combine 1 2) => #{1 2}
   (h/combine #{1} 1) => #{1}
-  (h/combine 1 nil) => #{1 nil}
+  (h/combine 1 nil) => 1
   (h/combine 1 #{1}) => #{1}
   (h/combine 1 #{2}) => #{1 2}
-  (h/combine 1 #{nil}) => #{1 nil})
+  (h/combine 1 #{}) => #{1})
 
 (fact "combine-obj"
   (h/combine-obj #{1 2 3} 2 identity)
@@ -375,6 +375,13 @@
   => #{{:id 1 :val 1} {:id 2 :val 2}})
 
 (fact "combine"
+  (h/combine 4 2 even? max) => 4
+  (h/combine #{4} 2 even? max) => #{4}
+  (h/combine 4 #{2} even? max) => #{4}
+  (h/combine #{4} #{2} even? max) => #{4}
+  (h/combine #{4} #{2 6} even? max) => #{6}
+  (h/combine #{4 6} #{2} even? max) => #{6}
+
   (h/combine #{{:id 1} {:id 2}}
              {:id 1 :val 1}
              :id merge)
@@ -400,6 +407,139 @@
              :id merge)
   => #{{:val 1, :id 1} {:id 2}})
 
+(fact "merges"
+  (h/merges {:a 1} {:b 1}) => {:a 1 :b 1}
+  (h/merges {:a 1} {:a 1}) => {:a 1}
+  (h/merges {:a 1} {:a 2}) => {:a #{1 2}}
+  (h/merges {:a {:id 1 :val 1}}
+            {:a {:id 1 :val 2}})
+  => {:a #{{:id 1 :val 1} {:id 1 :val 2}}}
+
+  (h/merges {:a {:id 1 :val 1}}
+            {:a {:id 1 :val 2}} :id merge)
+  => {:a {:id 1 :val 2}}
+
+  (h/merges {:a {:id 1 :val 1}}
+            {:a {:id 1 :val 2}} :id h/merges)
+  => {:a {:id 1 :val #{1 2}}}
+
+  (h/merges {:a #{{:id 1}}}
+            {:a #{{:id 1 :val 1}}}
+            :id merge)
+  => {:a #{{:id 1 :val 1}}}
+
+  (h/merges {:a #{{:id 1 :val 1}}}
+            {:a #{{:id 1 :val 2}}}
+            :id merge)
+  => {:a #{{:id 1 :val 2}}}
+
+  (h/merges {:a #{{:id 1 :val 1}}}
+            {:a #{{:id 1 :val 2}}}
+            :id h/merges)
+  => {:a #{{:id 1 :val #{1 2}}}}
+
+  (h/merges {:a {:foo {:bar {:baz 1}}}}
+            {:a {:foo {:bar {:baz 2}}}}
+            h/hash-map?
+            (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+                                 (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+                                                      h/merges)))))
+  => {:a {:foo {:bar {:baz #{1 2}}}}}
+
+  (h/merges {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
+            {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
+            h/hash-map?
+            (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+                                 (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+                                                      h/merges)))))
+  => {:a #{{:foo #{{:bar #{{:baz #{1 2}}}}}}}}
+
+  (h/merges {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
+            {:a {:foo {:bar {:baz 2}}}}
+            h/hash-map?
+            (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+                                 (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+                                                      h/merges)))))
+  => {:a #{{:foo #{{:bar #{{:baz #{1 2}}}}}}}}
+
+  (h/merges {:a {:id 3 :foo {:bar :A}}}
+            {:a {:id 3 :foo {:bar :B}}}
+            :id
+            (fn [m1 m2] (h/merges m1 m2 :id h/merges)))
+  => {:a {:foo #{{:bar #{:A :B}}}, :id 3}}
+
+  (h/merges {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 1}}}}
+            {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 2}}}}
+            :id
+            (fn [m1 m2] (h/merges m1 m2 :id
+                                 (fn [m1 m2] (h/merges m1 m2 :id
+                                                      h/merges))))))
+
+(fact "merges-in"
+  (h/merges-in {} {:a 1}) => {:a 1}
+  (h/merges-in {:a 1} {:a 1}) => {:a 1}
+  (h/merges-in {:a 1} {:b 1}) => {:a 1 :b 1}
+  (h/merges-in {:a 1} {:a 2}) => {:a #{1 2}}
+  (h/merges-in {:a {:b 1}} {:a {:b 1}}) => {:a {:b 1}}
+  (h/merges-in {:a {:b 1}} {:a {:b 2}}) => {:a {:b #{1 2}}}
+  (h/merges-in {:a 1} {:a {:b 2}}) => {:a #{1 {:b 2}}}
+  (h/merges-in {:a {}} {:a {:b 2}}) => {:a {:b 2}}
+  (h/merges-in {:a #{{:id 1} {:id 2}}}
+               {:a #{{:id 1 :val 1} {:id 2 :val 2}}})
+  => {:a #{ {:id 1} {:id 2} {:id 1 :val 1} {:id 2 :val 2}}}
+  (h/merges-in {:a #{{:id 1} {:id 2}}}
+               {:a #{{:id 1 :val 1} {:id 2 :val 2}}}
+               :id merge)
+  => {:a #{{:val 1, :id 1} {:val 2, :id 2}}}
+  (h/merges-in {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
+               {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
+               h/hash-map?
+               (fn [m1 m2] (h/merges-in m1 m2 h/hash-map?
+                                       (fn [m1 m2] (h/merges-in m1 m2 h/hash-map?
+                                                               h/merges-in)))))
+  => {:a #{{:foo #{{:bar #{{:baz #{1 2}}}}}}}}
+
+  (h/merges-in {:a #{1}} {:a 2}
+               number?
+               +)
+  => {:a #{3}})
+
+(fact "merges-in*"
+  (h/merges-in* {:a 1} {:a 2} h/hash-map?)
+  => {:a #{1 2}}
+
+  (h/merges-in* {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 1}}}}}}}
+                {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 2}}}}}}}
+                :id)
+  => {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz #{1 2}}}}}}}}
+
+  (h/merges-in* {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 1}}}}}}}
+                {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 2}}}}}}}
+                :id +)
+  {:a #{{:id 2 :foo #{{:id 4 :bar #{{:id 6 :baz 3}}}}}}}
+
+  (h/merges-in* {:a {:id 1 :b 1}} {:a {:b 2}})
+  => {:a {:id 1 :b #{1 2}}}
+  (h/merges-in* {:a {:id 1 :b 1}} {:a #{{:b 2}}} identity)
+  => {:a #{{:id 1 :b 1} {:b 2}}}
+  (h/merges-in* {:a {:id 1 :b 1}} {:a #{{:b 2}}})
+  => {:a #{{:id 1 :b #{1 2}}}}
+  (h/merges-in* {:a {:id 1 :b 1}} {:a #{{:id 1 :b 2}}})
+  => {:a #{{:id 1 :b #{1 2}}}}
+  (h/merges-in* {:a {:id 1 :b 1}} {:a #{{:id 2 :b 2}}})
+  => {:a #{{:b #{1 2}, :id #{1 2}}}}
+  (h/merges-in* {:a {:id 1 :b 1}} {:a #{{:id 2 :b 2}}} identity)
+  => {:a #{{:id 1 :b 1} {:id 2 :b 2}}}
+  (h/merges-in* {:a {:id 1 :b 1}} {:a #{{:id 2 :b 2}}} :id)
+  => {:a #{{:id 1 :b 1} {:id 2 :b 2}}}
+
+  (h/merges-in* {:a {:db {:id 1} :tags "hello" :u1 1}}
+                {:a {:db {:id 1} :tags "stuff" :u2 2}} #(-> % :db :id))
+  => {:a {:db {:id 1} :tags #{"hello" "stuff"} :u1 1 :u2 2}}
+  (h/merges-in* {:a {:db {:id 1} :tags "hello" :u1 1}}
+                {:a {:db {:id 1} :tags "stuff" :u2 2}} [:db :id])
+  => {:a {:db {:id 1} :tags #{"hello" "stuff"} :u1 1 :u2 2}})
+
 (fact "decombine"
   (h/decombine #{1 2 3 4} 1)
   => #{2 3 4}
@@ -420,11 +560,23 @@
   (h/assocs {:a 1} :a #{2}) => {:a #{1 2}})
 
 (fact "assocs will also do more complicated merges"
+  (h/assocs {:a #{1}} :a #{2 3 4}) => {:a #{1 2 3 4}}
+  (h/assocs {:a #{1 3}} :a #{2 3} even? +) => {:a #{3 6}}
+  (h/assocs {:a 1} :a 2 number? +) => {:a 3}
+  (h/assocs {:a #{1}} :a #{2 3 4} number? +) => {:a #{10}}
   (h/assocs {:a {:id 1}} :a {:id 1 :val 1} :id merge)
   => {:a {:val 1, :id 1}}
 
   (h/assocs {:a {:id 1}} :a {:id 2} :id merge)
-  {:a #{{:id 1} {:id 2}}})
+  => {:a #{{:id 1} {:id 2}}}
+
+  (h/assocs {:a #{{:id 1 :val 2}
+                  {:id 1 :val 3}}} :a nil :id h/merges)
+  => {:a #{{:id 1 :val #{2 3}}}}
+
+  (h/assocs {:a #{{:id 1 :val 2}
+                  {:id 1 :val 3}}} :a {:id 1 :val 4} :id h/merges)
+  => {:a #{{:id 1 :val #{2 3 4}}}})
 
 (fact "dissocs will unmerge "
   (h/dissocs {:a 1} :a) => {}
@@ -440,3 +592,64 @@
   (h/dissocs {:a #{1 2}} [:a even?]) => {:a #{1}}
   (h/dissocs {:a #{{:id 1} {:id 2}}} [:a #(= 1 (:id %))]) => {:a #{{:id 2}}}
   (h/dissocs {:a 1 :b 2} :a :b) => {})
+
+(fact "eq-or-chk"
+  (h/eq-or-chk 2 2) => true
+  (h/eq-or-chk even? 2) => true)
+
+(fact "assocs-in-ok?"
+  (h/assocs-in-ok? {:a 1} h/hash-map?) => true
+  (h/assocs-in-ok? {:a 1} h/hash-set?) => false
+  (h/assocs-in-ok? {:a 1 :val 1} #(= 1 (% :val))) => true
+  (h/assocs-in-ok? {:a 1 :val 1} #(= 2 (% :val))) => false
+  (h/assocs-in-ok? {:a 1 :val 1} [:val 1]) => true
+  (h/assocs-in-ok? {:a 1 :val 1} [:val even?]) => false
+  (h/assocs-in-ok? {:a {:b 1}} [[:a :b] odd?]) => true)
+
+
+(fact "assocs-in-keyword"
+  (h/assocs-in-keyword {:a 1 :val 1} [:val] 2)
+  => {:a 1, :val #{1 2}}
+  (h/assocs-in-keyword {:a {:b {:c 1}}} [:a :b :c] 2)
+  => {:a {:b {:c #{1 2}}}}
+  (h/assocs-in-keyword {:a {:b {:c #{1 2}}}} [:a :b :c] 3)
+  => {:a {:b {:c #{1 2 3}}}}
+  (h/assocs-in-keyword {:a 1 :v1 {:b 2 :v2 {:c 3}}} [:v1 :v2 :v3] 3)
+  => {:a 1 :v1 {:b 2 :v2 {:c 3 :v3 3}}})
+
+(fact "assocs-in simple"
+  (h/assocs-in {} [:a :b :c] 1)
+  => {:a {:b {:c 1}}})
+
+(fact "assocs-in-filtered"
+  (h/assocs-in-filtered {:a 1 :val 1} [[:val [:id 1]]] 2)
+  => (throws Exception)
+  (h/assocs-in-filtered {:a 1 :val #{1}} [[:val [:id 1]]] 2)
+  => (throws Exception)
+  (h/assocs-in-filtered {:a 1 :v1 #{{:id 1}}} [[:v1 [:id 1]] :v2] 2)
+  => {:a 1, :v1 #{{:id 1 :v2 2}}}
+  (h/assocs-in-filtered {:a 1 :v1 #{{:id 2}}} [[:v1 [:id 1]] :v2] 2)
+  => {:a 1 :v1 #{{:id 2}}}
+  (h/assocs-in-filtered {:a 1 :v1 #{{:id 1}{:id 2}}}
+                        [[:v1 [:id 1]] :v2 :v3] 3)
+  => {:a 1 :v1 #{{:id 1 :v2 {:v3 3}} {:id 2}}}
+  (h/assocs-in-filtered {:b {:id 1}} [[:b #(= (:id %) 1)] :c] 2)
+  => {:b {:c 2, :id 1}}
+  )
+
+(fact "assocs-in"
+  (h/assocs-in {} [:a] 1) => {:a 1}
+  (h/assocs-in {:a 1} [:a] 2) => {:a #{1 2}}
+  (h/assocs-in {:a 1} [:a :b] 2) => (throws Exception)
+  (h/assocs-in {:a {:b 1}} [:a :b] 2) => {:a {:b #{1 2}}}
+  (h/assocs-in {:a #{{:b 1}}} [:a :b] 2) => {:a #{{:b #{1 2}}}}
+  (h/assocs-in {:a {:b {:id 1}}} [:a [:b #(= (:id %) 1)] :c] 2)
+  => {:a {:b {:id 1 :c 2}}}
+  (h/assocs-in {:a {:b {:id 1}}} [:a [:b [:id 1]] :c] 2)
+  => {:a {:b {:id 1 :c 2}}}
+  (h/assocs-in {:a {:b {:id 1}}} [:a [:b [:id #(= % 1)]] :c] 2)
+  {:a {:b {:id 1 :c 2}}})
+
+(fact "gets"
+  (h/gets-in {:a 1} [:a]) => #{1}
+  (h/gets-in {:a 1} [:b]) => #{})
