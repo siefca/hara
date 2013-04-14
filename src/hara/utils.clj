@@ -2,87 +2,188 @@
   (:require [clojure.string :as st]
             [clojure.set :as set]))
 
+;; ## Exceptions
+
+(defn error
+  "Throws an exception when called.
+
+    (error \"This is an error\")
+    ;=> (throws Exception)
+  "
+  ([e] (throw (Exception. (str e))))
+  ([e & more]
+     (throw (Exception. (apply str e more)))))
+
+(defmacro suppress
+  "Suppresses any errors thrown.
+
+    (suppress (error \"Error\"))
+    ;=> nil
+  "
+  [& body]
+  `(try ~@body (catch Throwable ~'t)))
+
+;; ## Constructors
+
+(defn queue
+  "Returns a `clojure.lang.PersistentQueue` object.
+
+    (def a (queue 1 2 3 4))
+    (seq (pop a) ;=> [2 3 4]
+  "
+  ([] (clojure.lang.PersistentQueue/EMPTY))
+  ([x] (conj (queue) x))
+  ([x & xs] (apply conj (queue) x xs)))
+
+(defn uuid
+  "Returns a `java.util.UUID` object
+
+    (uuid) ;=> <random uuid>
+
+    (uuid \"00000000-0000-0000-0000-000000000000\")
+    ;=> #uuid \"00000000-0000-0000-0000-000000000000\"
+  "
+  ([] (java.util.UUID/randomUUID))
+  ([id]
+     (cond (string? id)
+           (java.util.UUID/fromString id)
+           (bytes? id)
+           (java.util.UUID/nameUUIDFromBytes id)
+           :else (error id " can only be a string or byte array")))
+  ([^java.lang.Long msb ^java.lang.Long lsb]
+     (java.util.UUID. msb lsb)))
+
+(defn instant
+  "Returns a `java.util.Date` object
+
+    (instant) ;=> <current time>
+
+    (instant 0) ;=> 1970-01-01T00:00:00.000-00:00
+  "
+  ([] (java.util.Date.))
+  ([val] (java.util.Date. val)))
+
+(defn uri
+  "Returns a `java.net.URI` object
+
+    (uri \"http://www.google.com\")
+    ;=> #<URI http://www.google.com>
+  "
+  [path] (java.net.URI/create path))
+
 ;; ## String Methods
 
 (defn replace-all
   "Returns a string with all instances of `old` in `s` replaced with
-   the value of `new`."
+   the value of `new`.
+
+    (h/replace-all \"hello there, hello again\"
+                   \"hello\" \"bye\")
+    ;=> \"bye there, bye again\"
+  "
   [s old new]
   (.replaceAll s old new))
 
 (defn starts-with
-  "Returns `true` if `s` begins with `pre`."
+  "Returns `true` if `s` begins with `pre`.
+
+    (h/starts-with \"prefix\" \"pre\") ;=> true
+
+    (h/starts-with \"prefix\" \"suf\") ;=> false
+  "
   [s pre]
   (.startsWith s pre))
-
-(defn queue []
-  (clojure.lang.PersistentQueue/EMPTY))
 
 ;; ## Type Predicates
 
 (defn boolean?
-  "Returns `true` if `x` is of type `java.lang.Boolean`."
+  "Returns `true` if `x` is of type `java.lang.Boolean`.
+
+    (boolean? false) ;=> true
+  "
   [x] (instance? java.lang.Boolean x))
 
 (defn hash-map?
-  "Returns `true` if `x` implements `clojure.lang.IPersistentMap`."
+  "Returns `true` if `x` implements `clojure.lang.IPersistentMap`.
+
+    (hash-map? {}) ;=> true
+  "
   [x] (instance? clojure.lang.IPersistentMap x))
 
 (defn hash-set?
-  "Returns `true` if `x` implements `clojure.lang.IPersistentHashSet`."
+  "Returns `true` if `x` implements `clojure.lang.IPersistentHashSet`.
+
+    (hash-set? #{}) ;=> true
+  "
   [x] (instance? clojure.lang.PersistentHashSet x))
 
 (defn long?
-  "Returns `true` if `x` is of type `java.lang.Long`."
+  "Returns `true` if `x` is of type `java.lang.Long`.
+
+    (h/long? 1) ;=> true
+
+    (h/long? 1N) ;=> false
+  "
   [x] (instance? java.lang.Long x))
 
 (defn bigint?
-  "Returns `true` if `x` is of type `clojure.lang.BigInt`."
+  "Returns `true` if `x` is of type `clojure.lang.BigInt`.
+
+    (h/bigint? 1N) ;=> true
+  "
   [x] (instance? clojure.lang.BigInt x))
 
 (defn bigdec?
-  "Returns `true` if `x` is of type `java.math.BigDecimal`."
+  "Returns `true` if `x` is of type `java.math.BigDecimal`.
+
+     (h/bigdec? 1M) ;=> true
+  "
   [x] (instance? java.math.BigDecimal x))
 
 (defn instant?
-  "Returns `true` if `x` is of type `java.util.Date`."
+  "Returns `true` if `x` is of type `java.util.Date`.
+
+    (instant? (instant 0)) => true
+  "
   [x] (instance? java.util.Date x))
 
 (defn uuid?
-  "Returns `true` if `x` is of type `java.util.UUID`."
+  "Returns `true` if `x` is of type `java.util.UUID`.
+
+    (uuid? (uuid)) ;=> true
+  "
   [x] (instance? java.util.UUID x))
 
 (defn uri?
-  "Returns `true` if `x` is of type `java.net.URI`."
+  "Returns `true` if `x` is of type `java.net.URI`.
+
+    (uri? (uri \"http://www.google.com\"))
+    ;=> true
+  "
   [x] (instance? java.net.URI x))
 
 (defn bytes?
-  "Returns `true` if `x` is a primitive `byte` array."
+  "Returns `true` if `x` is a primitive `byte` array.
+
+    (bytes? (byte-array 8)) ;=> true
+
+  "
   [x] (= (Class/forName "[B")
          (.getClass x)))
 
 (defn type-checker
   "Returns the checking function associated with keyword `k`
 
-     (type-checker :string)
-     ;=> #'clojure.core/string?
+    (type-checker :string)
+    ;=> #'clojure.core/string?
 
-     (type-checker :bytes)
-     ;=> #'adi.utils/bytes?
+    (type-checker :bytes)
+    ;=> #'adi.utils/bytes?
    "
   [k]
   (resolve (symbol (str (name k) "?"))))
 
  ;; ## Misc Methods
-
-(defn error
-  "Throws an error when called. "
-  ([e] (throw (Exception. (str e))))
-  ([e & more]
-     (throw (Exception. (apply str e more)))))
-
-(defmacro suppress [& body]
-  `(try ~@body (catch Throwable ~'t)))
 
 (defn func-map
   "Returns a hash-map `m`, with the the values of `m` being
@@ -118,7 +219,7 @@
   "Replaces all values in coll with the replacements defined as a lookup
 
     (replace-walk {:a 1 :b {:c 1}} {1 2})
-    => {:a 2 :b {:c 2}}
+    ;=> {:a 2 :b {:c 2}}
   "
   [coll rep]
   (cond (vector? coll)   (mapv #(replace-walk % rep) coll)
@@ -132,7 +233,11 @@
 (defn group-bys
   "Returns a map of the elements of coll keyed by the result of
   f on each element. The value at each key will be a set of the
-  corresponding elements, in the order they appeared in coll."
+  corresponding elements, in the order they appeared in coll.
+
+    (group-bys even? [1 2 3 4 5])
+    ;=> {false #{1 3 5}, true #{2 4}}
+  "
   [f coll]
   (persistent!
    (reduce
@@ -461,7 +566,7 @@
   "Returns the set of keyword namespaces within `fm`.
 
     (datmap-ns {:hello/a 1 :hello/b 2
-                      :there/a 3 :there/b 4})
+                :there/a 3 :there/b 4})
     ;=> #{:hello :there}
   "
   [fm]
@@ -484,10 +589,11 @@
   of `ns`.
 
     (datmap-keys {:hello/a 1 :hello/b 2
-                   :there/a 3 :there/b 4})
+                  :there/a 3 :there/b 4})
     ;=> {:there #{:there/a :there/b}, :hello #{:hello/b :hello/a}}
+
     (datmap-keys {:hello/a 1 :hello/b 2
-                   :there/a 3 :there/b 4} :hello)
+              :there/a 3 :there/b 4} :hello)
     ;=> #{:hello/a :hello/b})
   "
   ([fm] (let [ks (keys fm)]
@@ -527,13 +633,19 @@
 
 (defn flatten-keys-nested
   "Returns a single associative map with all of the nested
-  keys of `m` flattened.
+   keys of `m` flattened. If `keep` is added, it preserves all the
+   empty sets.
 
     (flatten-keys-nested {:a {:b {:c 3 :d 4}
                               :e {:f 5 :g 6}}
-                          :h {:i 7}
-                          :j 8 })
-    ;=> {:a/b/c 3 :a/b/d 4 :a/e/f 5 :a/e/g 6 :h/i 7 :j 8}
+                          :h {:i {}}})
+    ;=> {:a/b/c 3 :a/b/d 4 :a/e/f 5 :a/e/g 6}
+
+    (flatten-keys-nested {:a {:b {:c 3 :d 4}
+                              :e {:f 5 :g 6}}
+                          :h {:i {}}}
+                          true)
+    ;=> {:a/b/c 3 :a/b/d 4 :a/e/f 5 :a/e/g 6 :h/i {}}
   "
   ([m] (flatten-keys-nested m [] {}))
   ([m nskv output]
@@ -610,8 +722,6 @@
     (reduce (fn [m [k v]] (assoc-in m (keyword-split k) v))
             outm vs)))
 
-
-
 (defn nest-keys
   "Returns a map that takes `m` and extends all keys with the
    `nskv` vector. `ex` is the list of keys that are not extended.
@@ -656,23 +766,72 @@
                    (assoc-in {} ex x-map))))))
 
 (defn eq-cmp
+  "A shortcut to compare if two vals are equal.
+
+    (eq-cmp {:id 1 :a 1} {:id 1 :a 2} :id)
+    ;=> true
+
+    (eq-cmp {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id])
+    ;=> true
+  "
   [v1 v2 cmp]
   (cond (vector? cmp)
         (= (get-in v1 cmp) (get-in v2 cmp))
 
         :else
-        (= (cmp v1) (cmp v2))))
+        (if-let [c1 (cmp v1)]
+          (= c1 (cmp v2)))))
+
+
+(defn eq-chk
+  "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
+
+    (eq-chk 2 2) ;=> true
+
+    (eq-chk 2 even?) ;=> true
+  "
+  [v chk]
+  (or (= v chk)
+      (and (ifn? chk) (chk v))))
+
+(defn val-chk
+  "Returns `true` if `(cmp v)` satisfies `eq-chk`
+
+    (val-chk {:a {:b 1}} :a hash-map?) ;=> true
+
+    (val-chk {:a {:b 1}} [:a :b] 1) ;=> true
+  "
+  [v cmp chk]
+  (cond (vector? cmp)
+        (eq-chk (get-in v cmp) chk)
+        :else
+        (eq-chk (cmp v) chk)))
+
+(defn val-pred?
+  "Shorthand ways of checking where `m` fits `pred`
+
+    (val-pred? {:a 1} :a) ;=> truthy
+
+    (val-pred? {:a 1 :val 1} [:val 1]) ;=> true
+
+    (val-pred? {:a {:b 1}} [[:a :b] odd?]) ;=> true
+  "
+  [m pred]
+  (cond (vector? pred)
+        (let [[cmp chk] pred]
+          (val-chk m cmp chk))
+        (ifn? pred) (pred m)))
 
 (defn combine-obj
-  "Looks for the value within the set `s` that is the same as `v` when
+  "Looks for the value within the set `s` that matches `v` when
    `cmp` is applied to both.
 
-    (h/combine-obj #{1 2 3} 2 identity)
+    (combine-obj #{1 2 3} 2 identity)
     ;=> 2
 
-    (h/combine-obj #{{:id 1}} {:id 1 :val 1} :id)
-    ;=> {:id 1}"
-
+    (combine-obj #{{:id 1}} {:id 1 :val 1} :id)
+    ;=> {:id 1}
+  "
   [s v cmp]
   (if-let [sv (first s)]
     (if (eq-cmp sv v cmp)
@@ -680,24 +839,56 @@
       (recur (next s) v cmp))))
 
 (defn combine-to-set
-  ""
+  "Returns `s` with either v added or combined to an existing set member.
+
+    (combine-to-set #{{:id 1 :a 1} {:id 2}}
+                    {:id 1 :b 1}
+                    :id merge)
+    ;=> #{{:id 1 :a 1 :b} {:id 2}}
+  "
   [s v cmp rd]
   (if-let [sv (combine-obj s v cmp)]
     (conj (disj s sv) (rd sv v))
     (conj s v)))
 
 (defn combine-sets
+  "Returns the combined set of `s1` and `s2`.
+
+    (combine-sets #{{:id 1} {:id 2}}
+                  #{{:id 1 :val 1} {:id 2 :val 2}}
+                  :id merge)
+    ;=> #{{:id 1 :val 1} {:id 2 :val 2}}
+  "
   [s1 s2 cmp rd]
   (if-let [v (first s2)]
     (recur (combine-to-set s1 v cmp rd) (next s2) cmp rd)
     s1))
 
 (defn combine-internal
+  "Combines elements in `s` using rules defined by `cmp` and `rd`.
+
+    (combine-internal #{{:id 1} {:id 2} {:id 1 :val 1} {:id 2 :val 2}}
+                      :id merge)
+    ;=> #{{:id 1 :val 1} {:id 2 :val 2}}
+  "
   [s cmp rd]
   (if-not (hash-set? s) s
           (combine-sets #{} s cmp rd)))
 
 (defn combine
+  "Generic function that looks at `v1` and `v2`, which can be either
+   values or sets of values and merges them into a new set.
+
+    (combine 1 2) ;=> #{1 2}
+
+    (combine #{1} 1) ;=> #{1}
+
+    (combine #{{:id 1} {:id 2}}
+             #{{:id 1 :val 1} {:id 2 :val 2}}
+             :id merge)
+    ;=> #{{:id 1 :val 1} {:id 2 :val 2}}
+
+   "
   ([v1 v2]
      (cond (nil? v2) v1
            (nil? v1) v2
@@ -723,15 +914,51 @@
                (cond (hash-set? v2)
                      (combine-to-set v2 v1 cmp rd)
 
-                     (and (eq-cmp v1 v2 cmp)
-                          (not= nil (cmp v1)))
+                     (eq-cmp v1 v2 cmp)
                      (rd v1 v2)
 
                      (= v1 v2) v1
                      :else #{v1 v2}))
          (combine-internal cmp rd))))
 
+(defn decombine
+  "Returns `v` without every single member of `dv`.
+
+    (decombine 1 1) => nil
+
+    (decombine 1 2) => 1
+
+    (decombine #{1} 1) => nil
+
+    (decombine #{1 2 3 4} #{1 2}) => #{3 4}
+
+    (decombine #{1 2 3 4} even?) => #{1 3}
+  "
+  [v dv]
+  (cond (hash-set? v)
+        (let [res (cond (hash-set? dv)
+                        (set/difference v dv)
+
+                        (ifn? dv)
+                        (set (filter (complement dv) v))
+
+                        :else (disj v dv))]
+          (if-not (empty? res) res))
+        :else
+        (if-not (eq-chk v dv) v)))
+
 (defn merges
+  "Like `merge` but works across sets and will also
+   combine duplicate key/value pairs together into sets of values.
+
+    (merges {:a 1} {:a 2}) ;=> {:a #{1 2}}
+
+    (merges {:a #{{:id 1 :val 1}}}
+            {:a {:id 1 :val 2}}
+            :id merges)
+    ;=> {:a #{{:id 1 :val #{1 2}}}}
+
+  "
   ([m1 m2] (merges m1 m2 identity combine {}))
   ([m1 m2 cmp] (merges m1 m2 cmp combine {}))
   ([m1 m2 cmp rd] (merges m1 m2 cmp rd {}))
@@ -742,6 +969,18 @@
        (merge m1 output))))
 
 (defn merges-in
+  "Like `merges` but works on nested maps
+
+    (merges-in {:a {:b 1}} {:a {:b 2}})
+    ;=> {:a {:b #{1 2}}}
+
+    (merges-in {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
+               {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
+               hash-map?
+               merges-in)
+    => {:a #{{:foo #{{:bar #{{:baz 2}}}
+                     {:bar #{{:baz 1}}}}}}}
+  "
   ([m1 m2] (merges-in m1 m2 identity combine {}))
   ([m1 m2 cmp] (merges-in m1 m2 cmp combine {}))
   ([m1 m2 cmp rd] (merges-in m1 m2 cmp rd {}))
@@ -757,6 +996,19 @@
        (merge m1 output))))
 
 (defn merges-in*
+  "Like `merges-in but can recursively merge nested sets.
+
+    h/merges-in* {:a #{{:id 1 :foo
+                              #{{:id 2 :bar
+                                       #{{:id 3 :baz 1}}}}}}}
+                 {:a #{{:id 1 :foo
+                              #{{:id 2 :bar
+                                       #{{:id 3 :baz 2}}}}}}}
+                 :id)
+    ;=> {:a #{{:id 1 :foo
+                     #{{:id 2 :bar
+                              #{{:id 3 :baz #{1 2}}}}}}}}
+"
   ([m1 m2] (merges-in* m1 m2 hash-map? combine {}))
   ([m1 m2 cmp] (merges-in* m1 m2 cmp combine {}))
   ([m1 m2 cmp rd] (merges-in* m1 m2 cmp rd {}))
@@ -784,6 +1036,20 @@
            (combine m1 m2))))
 
 (defn assocs
+  "Similar to `assoc` but conditions of association is specified
+  through `cmp` (default: `identity`) and well as merging specified
+  through `rd` (default: `combine`).
+
+    (assocs {:a #{1}} :a #{2 3 4}) ;=> {:a #{1 2 3 4}}
+
+    (assocs {:a {:id 1}} :a {:id 1 :val 1} :id merge)
+    ;=> {:a {:val 1, :id 1}}
+
+    (assocs {:a #{{:id 1 :val 2}
+                  {:id 1 :val 3}}} :a {:id 1 :val 4} :id merges)
+    ;=> {:a #{{:id 1 :val #{2 3 4}}}})
+
+  "
   ([m k v] (assocs m k v identity combine))
   ([m k v cmp rd]
      (let [z (get m k)]
@@ -791,108 +1057,160 @@
              :else
              (assoc m k (combine z v cmp rd))))))
 
-(defn decombine
-  [s1 v]
-  (cond (hash-set? v)
-        (set/difference s1 v)
-
-        (ifn? v)
-        (set (filter (complement v) s1))
-
-        :else (disj s1 v)))
-
-(defn dissocs-vec
-  [m [k v]]
-  (let [z (get m k)]
-    (cond (hash-set? z)
-          (let [hs (decombine z v)]
-            (if (empty? hs)
-              (dissoc m k)
-              (assoc m k hs)))
-          :else
-          (if (or (= v z)
-                  (and (or (hash-set? v)
-                           (ifn? v))
-                       (v z)))
-            (dissoc m k) m))))
-
 (defn dissocs
-  ([m k]
-     (cond (vector? k)
-           (dissocs-vec m k)
-           :else (dissoc m k)))
-  ([m k1 k2 & ks]
-     (apply dissocs (dissocs m k1) k2 ks)))
+  "Similar to `dissoc` but allows dissassociation of sets of values from a map.
 
-(defn eq-cmp
-  [v1 v2 cmp]
-  (cond (vector? cmp)
-        (= (get-in v1 cmp) (get-in v2 cmp))
+    (dissocs {:a 1} :a) ;=> {}
 
+    (dissocs {:a #{1 2}} [:a #{0 1}]) ;=> {:a #{2}}
+
+    (dissocs {:a #{1 2}} [:a #{1 2}]) ;=> {}
+  "
+  [m k]
+  (cond (vector? k)
+        (let [[k v] k
+              z (get m k)
+              res (decombine z v)]
+          (if (nil? res)
+            (dissoc m k)
+            (assoc m k res)))
         :else
-        (= (cmp v1) (cmp v2))))
+        (dissoc m k)))
 
-(defn eq-chk-fn [v chk]
-  (or (= v chk)
-      (and (ifn? chk) (chk v))))
+(defn gets
+  "Returns the associated values either specified by a key or a key and predicate pair.
 
-(defn eq-chk [v chk cmp]
-  (cond (vector? cmp)
-        (eq-chk-fn (get-in v cmp) chk)
+    (gets {:a 1} :a) => 1
+
+    (gets {:a #{0 1}} [:a zero?]) => #{0}
+
+    (gets {:a #{{:b 1} {}}} [:a :b]) => #{{:b 1}}
+  "
+  [m k]
+  (if-not (vector? k) (get m k)
+          (let [[k pred] k
+                val (get m k)]
+            (if-not (hash-set? val) val
+                    (-> (filter #(val-pred? % pred) val) set)))))
+
+(declare gets-in gets-in-loop)
+
+(defn gets-in
+  "Similar in style to `get-in` with operations on sets. Returns a set of values.
+
+    (gets-in {:a 1} [:a]) => #{1}
+
+    (gets-in {:a 1} [:b]) => #{}
+
+    (gets-in {:a #{{:b 1} {:b 2}}} [:a :b]) => #{1 2}
+  "
+  [m ks]
+  (-> (gets-in-loop m ks) set (disj nil)))
+
+(defn- gets-in-loop
+  [m [k & ks :as all-ks]]
+  (cond (nil? ks)
+        (let [val (gets m k)]
+          (cond (hash-set? val) val
+                :else (list val)))
         :else
-        (eq-chk-fn (cmp v) chk)))
-
-(defn assocs-in-ok? [m pred]
-  (cond (vector? pred)
-        (let [[cmp chk] pred]
-          (eq-chk m chk cmp))
-        (ifn? pred) (pred m)))
+        (let [val (gets m k)]
+          (cond (hash-set? val)
+                (apply concat (map #(gets-in-loop % ks) val))
+                :else (gets-in-loop val ks)))))
 
 (declare assocs-in
          assocs-in-keyword assocs-in-filtered)
 
 (defn assocs-in
+  "Similar to assoc-in but with power of moving through sets
+
+    (h/assocs-in {:a {:b 1}} [:a :b] 2)
+    ;=> {:a {:b #{1 2}}}
+
+    (h/assocs-in {:a #{{:b 1}}} [:a :b] 2)
+    ;=> {:a #{{:b #{1 2}}}}
+
+    (h/assocs-in {:a #{{:b {:id 1}} {:b {:id 2}}}}
+                 [:a [:b [:id 1]] :c] 2)
+    ;=> {:a #{{:b {:id 1 :c 2}} {:b {:id 2}}}}
+  "
   ([m all-ks v] (assocs-in m all-ks v identity combine))
   ([m [k & ks :as all-ks] v cmp rd]
-      (cond (nil? ks)
-            (cond (vector? k) (error "cannot allow vector-form on last key " k)
-                  (or (nil? m) (hash-map? m)) (assocs m k v cmp rd)
-                  (nil? k) (combine m v cmp rd)
-                  :else (error m " is not an associative map"))
+     (cond (nil? ks)
+           (cond (vector? k) (error "cannot allow vector-form on last key " k)
+                 (or (nil? m) (hash-map? m)) (assocs m k v cmp rd)
+                 (nil? k) (combine m v cmp rd)
+                 :else (error m " is not an associative map"))
 
-            (or (nil? m) (hash-map? m))
-            (cond (vector? k) (assocs-in-filtered m all-ks v cmp rd)
-                  :else (assocs-in-keyword m all-ks v cmp rd))
-            :else (error m " is required to be a map"))))
-
-(defn assocs-in-keyword
-  ([m all-ks v] (assocs-in-keyword m all-ks v identity combine))
-  ([m [k & ks :as all-ks] v cmp rd]
-      (let [val (get m k)]
-        (cond (hash-set? val)
-              (assoc m k (set (map #(assocs-in-keyword % ks v cmp rd) val)))
-              :else (assoc m k (assocs-in val ks v cmp rd))))))
+           (or (nil? m) (hash-map? m))
+           (cond (vector? k) (assocs-in-filtered m all-ks v cmp rd)
+                 :else
+                 (let [val (get m k)]
+                   (cond (hash-set? val)
+                         (assoc m k (set (map #(assocs-in % ks v cmp rd) val)))
+                         :else (assoc m k (assocs-in val ks v cmp rd)))))
+           :else (error m " is required to be a map"))))
 
 (defn assocs-in-filtered
   ([m all-ks v] (assocs-in-filtered m all-ks v identity combine))
   ([m [[k pred] & ks :as all-ks] v cmp rd]
-      (let [subm (get m k)]
-        (cond (nil? subm) m
+     (let [subm (get m k)]
+       (cond (nil? subm) m
 
-              (and (hash-set? subm) (every? hash-map? subm))
-              (let [ori-set (set (filter #(assocs-in-ok? % pred) subm))
-                    new-set (set (map #(assocs-in % ks v cmp rd) ori-set))]
-                (assoc m k (-> subm
-                               (set/difference ori-set)
-                               (set/union new-set))))
+             (and (hash-set? subm) (every? hash-map? subm))
+             (let [ori-set (set (filter #(val-pred? % pred) subm))
+                   new-set (set (map #(assocs-in % ks v cmp rd) ori-set))]
+               (assoc m k (-> subm
+                              (set/difference ori-set)
+                              (set/union new-set))))
 
-              (hash-map? subm)
-              (if (assocs-in-ok? subm pred)
-                (assoc m k (assocs-in subm ks v cmp rd))
-                m)
+             (hash-map? subm)
+             (if (val-pred? subm pred)
+               (assoc m k (assocs-in subm ks v cmp rd))
+               m)
 
-              :else (error subm "needs to be hash-map or hash-set")))))
+             :else (error subm "needs to be hash-map or hash-set")))))
 
-(defn gets-in
+(declare dissocs-in dissocs-in-filtered)
+
+(defn dissocs-in
+  "Similiar to `dissoc-in` but with sets manipulation.
+
+    (dissocs-in {:a #{{:b 1 :c 1} {:b 2 :c 2}}}
+                [:a :b])
+    ;=> {:a #{{:c 1} {:c 2}}}
+
+    (dissocs-in {:a #{{:b #{1 2 3} :c 1}
+                      {:b #{1 2 3} :c 2}}}
+                [[:a [:c 1]] [:b 1]])
+    ;=> {:a #{{:b #{2 3} :c 1} {:b #{1 2 3} :c 2}}}
+  "
   [m [k & ks :as all-ks]]
-  )
+  (cond (nil? ks) (dissocs m k)
+
+        (vector? k) (dissocs-in-filtered m all-ks)
+
+        :else
+        (let [val (get m k)]
+          (cond (hash-set? val)
+                (assoc m k (set (map #(dissocs-in % ks) val)))
+                :else (assoc m k (dissocs-in m ks))))))
+
+(defn dissocs-in-filtered
+  ([m [[k pred] & ks :as all-ks]]
+     (let [subm (get m k)]
+       (cond (nil? subm) m
+             (and (hash-set? subm) (every? hash-map? subm))
+             (let [ori-set (set (filter #(val-pred? % pred) subm))
+                   new-set (set (map #(dissocs-in % ks) ori-set))]
+               (assoc m k (-> subm
+                              (set/difference ori-set)
+                              (set/union new-set))))
+
+             (hash-map? subm)
+             (if (val-pred? subm pred)
+               (assoc m k (dissocs-in subm ks))
+               m)
+
+             :else (error subm "needs to be hash-map or hash-set")))))

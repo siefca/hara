@@ -3,17 +3,55 @@
         [hara.utils :only [bytes?]])
   (:require [hara.utils :as h]))
 
-(fact "type-checker"
-  (h/type-checker :string) => (exactly #'clojure.core/string?)
-  (h/type-checker :bytes) =>  (exactly #'hara.utils/bytes?)
-  (h/type-checker :other) =>  nil)
-
 (fact "error"
-  (h/error "something") => throws Exception)
+  (h/error "something") => (throws Exception))
 
 (fact "suppress"
   (h/suppress 2) => 2
   (h/suppress (h/error "e")) => nil)
+
+(fact "queue"
+  (h/queue 1 2 3 4) => [1 2 3 4]
+  (pop (h/queue 1 2 3 4)) => [2 3 4])
+
+(fact "uuid"
+  (h/uuid) => h/uuid?
+  (h/uuid "00000000-0000-0000-0000-000000000000") => h/uuid?
+  (h/uuid 0 0) => h/uuid?)
+
+(fact "uri"
+  (h/uri "http://www.google.com") => h/uri?
+  (h/uri "ssh://github.com") => h/uri?)
+
+(fact "instant"
+  (h/instant) => h/instant?
+  (h/instant 0) => h/instant?)
+
+(fact "replace-all"
+  (h/replace-all "hello there, hello again" "hello" "bye")
+  => "bye there, bye again")
+
+(fact "starts-with"
+  (h/starts-with "prefix" "pre") => true
+  (h/starts-with "prefix" "suf") => false)
+
+(fact "type-predicates"
+  (h/boolean? true) => true
+  (h/boolean? false) => true
+  (h/hash-map? {}) => true
+  (h/hash-set? #{}) => true
+  (h/long? 1) => true
+  (h/long? 1N) => false
+  (h/bigint? 1N) => true
+  (h/bigdec? 1M) => true
+  (h/instant? (h/instant 0)) => true
+  (h/uuid? (h/uuid)) => true
+  (h/bytes? (byte-array 8)) => true)
+
+(fact "type-checker"
+  (h/type-checker :string) => (exactly #'clojure.core/string?)
+  (h/type-checker :bytes) =>  (exactly #'hara.utils/bytes?)
+  (h/type-checker :other) =>  nil)
 
 (fact "func-map creates a hashmap using as key the function applied to each
        element of the collection."
@@ -48,6 +86,10 @@
 
   (h/replace-walk '{:a 1 :b {:c [1 (1 [1 1])]}} {1 2})
   => '{:a 2 :b {:c [2 (2 [2 2])]}})
+
+(fact "group-bys"
+  (h/group-bys even? [1 2 3 4 5])
+  {false #{1 3 5}, true #{2 4}})
 
 (fact "dissoc-in"
   (h/dissoc-in {:a 2 :b 2} [:a]) => {:b 2}
@@ -340,15 +382,33 @@
                   :there/a 3 :there/b 4} [:hello] [:+])
   => {:a 1 :b 2 :+ {:there {:a 3 :b 4}}})
 
-(fact "combine"
-  (h/combine nil nil) => nil
-  (h/combine 1 1) => 1
-  (h/combine 1 2) => #{1 2}
-  (h/combine #{1} 1) => #{1}
-  (h/combine 1 nil) => 1
-  (h/combine 1 #{1}) => #{1}
-  (h/combine 1 #{2}) => #{1 2}
-  (h/combine 1 #{}) => #{1})
+(fact "eq-cmp"
+  (h/eq-cmp 2 4 even?) => true
+  (h/eq-cmp 2 5 even?) => false
+  (h/eq-cmp {:id 1 :a 1} {:id 1 :a 2} :id) => true
+  (h/eq-cmp {:id 1 :a 1} {:id 1 :a 2} [:id]) => true
+  (h/eq-cmp {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
+
+(fact "eq-chk"
+  (h/eq-chk 2 2) => true
+  (h/eq-chk 2 even?) => true)
+
+(fact "val-chk"
+  (h/val-chk {:a {:b 1}} #(get % :a) {:b 1}) => true
+  (h/val-chk {:a {:b 1}} :a {:b 1}) => true
+  (h/val-chk {:a {:b 1}} :a h/hash-map?) => true
+  (h/val-chk {:a {:b 1}} [:a :b] 1) => true
+  (h/val-chk {:a {:b 1}} [:a :b] odd?) => true)
+
+(fact "val-pred?"
+  (h/val-pred? {:a 1} :a) => truthy
+  (h/val-pred? {:a 1} h/hash-map?) => true
+  (h/val-pred? {:a 1} h/hash-set?) => false
+  (h/val-pred? {:a 1 :val 1} #(= 1 (% :val))) => true
+  (h/val-pred? {:a 1 :val 1} #(= 2 (% :val))) => false
+  (h/val-pred? {:a 1 :val 1} [:val 1]) => true
+  (h/val-pred? {:a 1 :val 1} [:val even?]) => false
+  (h/val-pred? {:a {:b 1}} [[:a :b] odd?]) => true)
 
 (fact "combine-obj"
   (h/combine-obj #{1 2 3} 2 identity)
@@ -373,6 +433,21 @@
                   #{{:id 1 :val 1} {:id 2 :val 2}}
                   :id merge)
   => #{{:id 1 :val 1} {:id 2 :val 2}})
+
+(fact "combine-interval"
+  (h/combine-internal #{{:id 1} {:id 2} {:id 1 :val 1} {:id 2 :val 2}}
+                      :id merge)
+  => #{{:id 1 :val 1} {:id 2 :val 2}})
+
+(fact "combine"
+  (h/combine nil nil) => nil
+  (h/combine 1 1) => 1
+  (h/combine 1 2) => #{1 2}
+  (h/combine #{1} 1) => #{1}
+  (h/combine 1 nil) => 1
+  (h/combine 1 #{1}) => #{1}
+  (h/combine 1 #{2}) => #{1 2}
+  (h/combine 1 #{}) => #{1})
 
 (fact "combine"
   (h/combine 4 2 even? max) => 4
@@ -407,6 +482,19 @@
              :id merge)
   => #{{:val 1, :id 1} {:id 2}})
 
+
+(fact "decombine"
+  (h/decombine 1 1) => nil
+  (h/decombine 1 #{1}) => nil
+  (h/decombine 1 2) => 1
+  (h/decombine #{1} 1) => nil
+  (h/decombine #{1 2 3 4} 1) => #{2 3 4}
+  (h/decombine #{1 2 3 4} #{1 2}) => #{3 4}
+  (h/decombine #{1 2 3 4} even?) => #{1 3}
+  (h/decombine #{{:id 1} {:id 2}}
+               #(= 1 (:id %)))
+  => #{{:id 2}})
+
 (fact "merges"
   (h/merges {:a 1} {:b 1}) => {:a 1 :b 1}
   (h/merges {:a 1} {:a 1}) => {:a 1}
@@ -438,6 +526,11 @@
             :id h/merges)
   => {:a #{{:id 1 :val #{1 2}}}}
 
+  (h/merges {:a #{{:id 1 :val 1}}}
+            {:a {:id 1 :val 2}}
+            :id h/merges)
+  => {:a #{{:id 1 :val #{1 2}}}}
+
   (h/merges {:a {:foo {:bar {:baz 1}}}}
             {:a {:foo {:bar {:baz 2}}}}
             h/hash-map?
@@ -465,8 +558,14 @@
   (h/merges {:a {:id 3 :foo {:bar :A}}}
             {:a {:id 3 :foo {:bar :B}}}
             :id
-            (fn [m1 m2] (h/merges m1 m2 :id h/merges)))
-  => {:a {:foo #{{:bar #{:A :B}}}, :id 3}}
+            (fn [m1 m2] (h/merges m1 m2)))
+  => {:a {:id 3 :foo #{{:bar :A} {:bar :B}}}}
+
+  (h/merges {:a {:id 3 :foo {:bar :A}}}
+            {:a {:id 3 :foo {:bar :B}}}
+            :id
+            (fn [m1 m2] (h/merges m1 m2 h/hash-map? h/merges)))
+  => {:a {:id 3 :foo {:bar #{:A :B}}}}
 
   (h/merges {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 1}}}}
             {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 2}}}}
@@ -494,6 +593,13 @@
   (h/merges-in {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
                {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
                h/hash-map?
+               h/merges-in)
+  => {:a #{{:foo #{{:bar #{{:baz 2}}}
+                   {:bar #{{:baz 1}}}}}}}
+
+  (h/merges-in {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
+               {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
+               h/hash-map?
                (fn [m1 m2] (h/merges-in m1 m2 h/hash-map?
                                        (fn [m1 m2] (h/merges-in m1 m2 h/hash-map?
                                                                h/merges-in)))))
@@ -510,6 +616,16 @@
 
   (h/merges-in* {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 1}}}}}}}
                 {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 2}}}}}}}
+                :id)
+  => {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz #{1 2}}}}}}}}
+
+  (h/merges-in* {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 1}}}}}}}
+                {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 2}}}}
+                :id)
+  => {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz #{1 2}}}}}}}}
+
+  (h/merges-in* {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 2}}}}
+                {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 1}}}}}}}
                 :id)
   => {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz #{1 2}}}}}}}}
 
@@ -540,17 +656,6 @@
                 {:a {:db {:id 1} :tags "stuff" :u2 2}} [:db :id])
   => {:a {:db {:id 1} :tags #{"hello" "stuff"} :u1 1 :u2 2}})
 
-(fact "decombine"
-  (h/decombine #{1 2 3 4} 1)
-  => #{2 3 4}
-  (h/decombine #{1 2 3 4} #{1 2})
-  => #{3 4}
-  (h/decombine #{1 2 3 4} even?)
-  => #{1 3}
-  (h/decombine #{{:id 1} {:id 2}}
-               #(= 1 (:id %)))
-  => #{{:id 2}})
-
 (fact "assocs will merge values into a set when added"
   (h/assocs {} :b 1) => {:b 1}
   (h/assocs {:a 1} :b 1) => {:a 1 :b 1}
@@ -561,7 +666,6 @@
 
 (fact "assocs will also do more complicated merges"
   (h/assocs {:a #{1}} :a #{2 3 4}) => {:a #{1 2 3 4}}
-  (h/assocs {:a #{1 3}} :a #{2 3} even? +) => {:a #{3 6}}
   (h/assocs {:a 1} :a 2 number? +) => {:a 3}
   (h/assocs {:a #{1}} :a #{2 3 4} number? +) => {:a #{10}}
   (h/assocs {:a {:id 1}} :a {:id 1 :val 1} :id merge)
@@ -588,38 +692,36 @@
   (h/dissocs {:a #{1 2}} [:a #{1}]) => {:a #{2}}
   (h/dissocs {:a #{1 2}} [:a #{0 1}]) => {:a #{2}}
   (h/dissocs {:a #{1 2}} [:a #{1 2}]) => {}
-  (h/dissocs {:a #{1 2}} [:a #{1 2}]) => {}
+  (h/dissocs {:a #{1 2}} [:a #{1 2 3}]) => {}
   (h/dissocs {:a #{1 2}} [:a even?]) => {:a #{1}}
   (h/dissocs {:a #{{:id 1} {:id 2}}} [:a #(= 1 (:id %))]) => {:a #{{:id 2}}}
-  (h/dissocs {:a 1 :b 2} :a :b) => {})
-
-(fact "eq-or-chk"
-  (h/eq-or-chk 2 2) => true
-  (h/eq-or-chk even? 2) => true)
-
-(fact "assocs-in-ok?"
-  (h/assocs-in-ok? {:a 1} h/hash-map?) => true
-  (h/assocs-in-ok? {:a 1} h/hash-set?) => false
-  (h/assocs-in-ok? {:a 1 :val 1} #(= 1 (% :val))) => true
-  (h/assocs-in-ok? {:a 1 :val 1} #(= 2 (% :val))) => false
-  (h/assocs-in-ok? {:a 1 :val 1} [:val 1]) => true
-  (h/assocs-in-ok? {:a 1 :val 1} [:val even?]) => false
-  (h/assocs-in-ok? {:a {:b 1}} [[:a :b] odd?]) => true)
+  (h/dissocs {:a 1 :b 2} :b) => {:a 1})
 
 
-(fact "assocs-in-keyword"
-  (h/assocs-in-keyword {:a 1 :val 1} [:val] 2)
-  => {:a 1, :val #{1 2}}
-  (h/assocs-in-keyword {:a {:b {:c 1}}} [:a :b :c] 2)
-  => {:a {:b {:c #{1 2}}}}
-  (h/assocs-in-keyword {:a {:b {:c #{1 2}}}} [:a :b :c] 3)
-  => {:a {:b {:c #{1 2 3}}}}
-  (h/assocs-in-keyword {:a 1 :v1 {:b 2 :v2 {:c 3}}} [:v1 :v2 :v3] 3)
-  => {:a 1 :v1 {:b 2 :v2 {:c 3 :v3 3}}})
+(fact "gets"
+  (h/gets {:a 1} :a) => 1
+  (h/gets {:a #{1}} :a) => #{1}
+  (h/gets {:a #{0 1}} [:a zero?]) => #{0}
+  (h/gets {:a #{{:b 1} {}}} [:a :b]) => #{{:b 1}})
+
+(fact "gets-in"
+  (h/gets-in {:a 1} [:a]) => #{1}
+  (h/gets-in {:a 1} [:b]) => #{}
+  (h/gets-in {:a #{{:b 1} {:b 2}}} [:a :b]) => #{1 2})
 
 (fact "assocs-in simple"
   (h/assocs-in {} [:a :b :c] 1)
   => {:a {:b {:c 1}}})
+
+(fact "assocs-in-keyword"
+  (h/assocs-in {:a 1 :val 1} [:val] 2)
+  => {:a 1, :val #{1 2}}
+  (h/assocs-in {:a {:b {:c 1}}} [:a :b :c] 2)
+  => {:a {:b {:c #{1 2}}}}
+  (h/assocs-in {:a {:b {:c #{1 2}}}} [:a :b :c] 3)
+  => {:a {:b {:c #{1 2 3}}}}
+  (h/assocs-in {:a 1 :v1 {:b 2 :v2 {:c 3}}} [:v1 :v2 :v3] 3)
+  => {:a 1 :v1 {:b 2 :v2 {:c 3 :v3 3}}})
 
 (fact "assocs-in-filtered"
   (h/assocs-in-filtered {:a 1 :val 1} [[:val [:id 1]]] 2)
@@ -635,6 +737,7 @@
   => {:a 1 :v1 #{{:id 1 :v2 {:v3 3}} {:id 2}}}
   (h/assocs-in-filtered {:b {:id 1}} [[:b #(= (:id %) 1)] :c] 2)
   => {:b {:c 2, :id 1}}
+
   )
 
 (fact "assocs-in"
@@ -647,9 +750,17 @@
   => {:a {:b {:id 1 :c 2}}}
   (h/assocs-in {:a {:b {:id 1}}} [:a [:b [:id 1]] :c] 2)
   => {:a {:b {:id 1 :c 2}}}
+  (h/assocs-in {:a #{{:b {:id 1}}
+                     {:b {:id 2}}}}
+               [:a [:b [:id 1]] :c] 2)
+  => {:a #{{:b {:id 1 :c 2}}
+           {:b {:id 2}}}}
   (h/assocs-in {:a {:b {:id 1}}} [:a [:b [:id #(= % 1)]] :c] 2)
-  {:a {:b {:id 1 :c 2}}})
+  => {:a {:b {:id 1 :c 2}}})
 
-(fact "gets"
-  (h/gets-in {:a 1} [:a]) => #{1}
-  (h/gets-in {:a 1} [:b]) => #{})
+(fact "dissocs-in"
+  (h/dissocs-in {:a #{{:b 1 :c 1} {:b 2 :c 2}}} [:a :b])
+  => {:a #{{:c 1} {:c 2}}}
+
+  (h/dissocs-in {:a #{{:b #{1 2 3} :c 1} {:b #{1 2 3} :c 2}}} [[:a [:c 1]] [:b 1]])
+  => {:a #{{:b #{2 3} :c 1} {:b #{1 2 3} :c 2}}})
