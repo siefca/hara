@@ -381,21 +381,6 @@
                    x-map
                    (assoc-in {} ex x-map))))))
 
-(defn val-pred?
-  "Shorthand ways of checking where `m` fits `pred`
-
-    (val-pred? {:a 1} :a) ;=> truthy
-
-    (val-pred? {:a 1 :val 1} [:val 1]) ;=> true
-
-    (val-pred? {:a {:b 1}} [[:a :b] odd?]) ;=> true
-  "
-  [m pred]
-  (cond (vector? pred)
-        (let [[cmp chk] pred]
-          (val-chk m cmp chk))
-        (ifn? pred) (pred m)))
-
 (defn combine-obj
   "Looks for the value within the set `s` that matches `v` when
    `cmp` is applied to both.

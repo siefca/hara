@@ -1,5 +1,7 @@
 # hara
 
+A set of utilities for working with state based data in multithreaded applications.
+
 Stateful data structures for clojure (and the functions to operate on them)
 
 ### Huh?
@@ -22,42 +24,9 @@ In project.clj, add to dependencies:
 
      [hara "0.6.1"]
 
-## hara.fn/manipulate
-
-manipulate is a higher order function for manipulating entire data trees. 
-it is useful for type conversion for serialization/deserialization
-
-    (require '[hara.fn :as f])
-
-    (f/manipulate* (fn [x] (* 2
-                               (cond (string? x) (Integer/parseInt x)
-                                     :else x)))
-                     {1 "2" 3 ["4" 5 #{6 "7"}]})
-    ;; => {2 4 6 [8 10 #{12 14}]
-
-    (f/manipulate* (fn [x] (* 2 x))
-                 {1 "2" 3 ["4" 5 #{6 "7"}]}
-                 [{:pred String
-                   :dtor (fn [x] (Integer/parseInt x))
-                   :ctor (fn [x] [(.toString x)])}])
-    ;; => {2 ["4"] 6 [["8"] 10 #{12 ["14"]}]
-
-    (f/manipulate* identity
-                 [1 [:date 2 3 4 5] 6 7]
-                 [{:pred #(and (vector? %) (= (first %) :date))
-                   :dtor #(apply t/date-time (rest %))}])
-    ;; => [1 (t/date-time 2 3 4 5) 6 7])
-
-    (f/manipulate* identity
-                 [1 (t/date-time 2 3 4 5) 6 7]
-                 [{:pred org.joda.time.DateTime
-                   :dtor (fn [dt] [:date (t/year dt) (t/month dt)])}])
-    ;; => [1 [:date 2 3] 6 7])
-
-
 ## hara.ova
 
-There is `hara.ova`, the main data structure supporting state-based manipulation of records. Its a useful structure to have as a shared state. I use it as a transactional general purpose store that is the intermediary between the main application, the database and the web presentation layer when there is a need for data to be stored in memory and acted upon in some way by multiple threads. 
+There is `hara.ova`, the main data structure supporting state-based manipulation of records. Its a useful structure to have as a shared state. I use it as a transactional general purpose store that is the intermediary between the main application, the database and the web presentation layer when there is a need for data to be stored in memory and acted upon in some way by multiple threads.
 
     (require '[hara.ova :as v])
 
@@ -65,7 +34,7 @@ There is `hara.ova`, the main data structure supporting state-based manipulation
 
 #### select
 
-`select` tries to be as sql-ish as possible and data can be selected in many different ways
+`select` gives many options to filter data:
 
     (v/select ov)   ;; select all
     ;; => [{:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2} {:id 4 :val 2}]
@@ -102,13 +71,13 @@ There is `hara.ova`, the main data structure supporting state-based manipulation
     ;; => [0 2]
 
 
-#### set-val
+#### set
 
-`set-val` sets the value using the matching function
+`set>` sets the value using the matching function
 
     (def ov (v/ova [1 2 3 4 5 6]))))
   
-    (dosync (v/set-val ov 0 :a)) ;; set-val by index 
+    (dosync (v/set> ov 0 :a)) ;; set-val by index 
     (v/select ov)
     ;; => [:a 2 3 4 5 6]
 
@@ -120,7 +89,7 @@ There is `hara.ova`, the main data structure supporting state-based manipulation
 
 #### update
 
-`update` uses the same checking convention as select. it should be used only when data is in the form of hashmaps. it will simultaneously update multiple entries if the checking function returns true for each of them
+`update>` uses the same checking convention as select. it should be used only when data is in the form of hashmaps. it will simultaneously update multiple entries if the checking function returns true for each of them
 
     (def ov (v/ova [{:id 1 :val 1} {:id 2 :val 2} 0]))))
 
@@ -196,6 +165,41 @@ tried to be as clojurish as possible:
     - filter
     - reverse
     - MORE ADDED AS NEEDED
+
+
+    ## hara.fn/manipulate
+
+    manipulate is a higher order function for manipulating entire data trees. 
+    it is useful for type conversion for serialization/deserialization
+
+        (require '[hara.fn :as f])
+
+        (f/manipulate* (fn [x] (* 2
+                                   (cond (string? x) (Integer/parseInt x)
+                                         :else x)))
+                         {1 "2" 3 ["4" 5 #{6 "7"}]})
+        ;; => {2 4 6 [8 10 #{12 14}]
+
+        (f/manipulate* (fn [x] (* 2 x))
+                     {1 "2" 3 ["4" 5 #{6 "7"}]}
+                     [{:pred String
+                       :dtor (fn [x] (Integer/parseInt x))
+                       :ctor (fn [x] [(.toString x)])}])
+        ;; => {2 ["4"] 6 [["8"] 10 #{12 ["14"]}]
+
+        (f/manipulate* identity
+                     [1 [:date 2 3 4 5] 6 7]
+                     [{:pred #(and (vector? %) (= (first %) :date))
+                       :dtor #(apply t/date-time (rest %))}])
+        ;; => [1 (t/date-time 2 3 4 5) 6 7])
+
+        (f/manipulate* identity
+                     [1 (t/date-time 2 3 4 5) 6 7]
+                     [{:pred org.joda.time.DateTime
+                       :dtor (fn [dt] [:date (t/year dt) (t/month dt)])}])
+        ;; => [1 [:date 2 3] 6 7])
+
+
 
 ## TODOS:
 

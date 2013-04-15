@@ -25,6 +25,17 @@
 
 ;; ## Comparison operators
 
+(defn eq-chk
+  "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
+
+      (eq-chk 2 2) ;=> true
+
+      (eq-chk 2 even?) ;=> true
+    "
+  [v chk]
+  (or (= v chk)
+      (and (ifn? chk) (chk v))))
+
 (defn eq-cmp
   "A shortcut to compare if two vals are equal.
 
@@ -42,35 +53,41 @@
         (if-let [c1 (cmp v1)]
           (= c1 (cmp v2)))))
 
-
-(defn eq-chk
-  "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
-
-      (eq-chk 2 2) ;=> true
-
-      (eq-chk 2 even?) ;=> true
-    "
-  [v chk]
-  (or (= v chk)
-      (and (ifn? chk) (chk v))))
-
 (defn get-cmp [m cmp]
   "Returns `(get-in m cmp)` if `cmp` is a vector."
   (if (vector? cmp)
     (get-in m cmp)
     (cmp m)))
 
-
-(defn cmp-chk
-  "Returns `true` if `(cmp v)` satisfies `eq-chk`
+(defn eq-cmp-chk
+  "Returns `true` if `(cmp obj)` satisfies `eq-chk`
 
     (cmp-chk {:a {:b 1}} :a hash-map?) ;=> true
 
     (val-chk {:a {:b 1}} [:a :b] 1) ;=> true
   "
-  [v cmp chk]
-  (eq-chk (get-cmp v cmp) chk))
+  [obj cmp chk]
+  (eq-chk (get-cmp obj cmp) chk))
 
+(defn eq-cmp-chk-all
+  [obj ccs]
+  (let [ccp (partition 2 cmp-v)]
+    (every? (fn [cc] (let [[cmp chk] cc] cmp-chk obj cmp chk)) ccp)))
+        
+(defn eq-pred
+  "Shorthand ways of checking where `m` fits `pred`
+
+    (eq-pred {:a 1} :a) ;=> truthy
+
+    (eq-pred {:a 1 :val 1} [:val 1]) ;=> true
+
+    (eq-pred {:a {:b 1}} [[:a :b] odd?]) ;=> true
+  "
+  [m pred]
+  (cond (vector? pred)
+        (let [[cmp chk] pred]
+          (eq-cmp-chk m cmp chk))
+        (ifn? pred) (pred m)))
 
 ;; ## Exceptions
 
