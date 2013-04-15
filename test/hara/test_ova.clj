@@ -1,7 +1,7 @@
 (ns hara.test-ova
   (:use midje.sweet
         hara.testing
-        [hara.fn :only [deref*]])
+        [hara.common :only [deref*]])
   (:require [hara.ova :as v] :reload))
 
 (declare ov)

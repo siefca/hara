@@ -1,162 +1,8 @@
-(ns hara.test-utils
+(ns hara.test-hash-map
+  (:require [hara.hash-map :as h])
   (:use midje.sweet
-        [hara.utils :only [bytes?]])
-  (:require [hara.utils :as h]))
-
-(fact "error"
-  (h/error "something") => (throws Exception))
-
-(fact "suppress"
-  (h/suppress 2) => 2
-  (h/suppress (h/error "e")) => nil)
-
-(fact "queue"
-  (h/queue 1 2 3 4) => [1 2 3 4]
-  (pop (h/queue 1 2 3 4)) => [2 3 4])
-
-(fact "uuid"
-  (h/uuid) => h/uuid?
-  (h/uuid "00000000-0000-0000-0000-000000000000") => h/uuid?
-  (h/uuid 0 0) => h/uuid?)
-
-(fact "uri"
-  (h/uri "http://www.google.com") => h/uri?
-  (h/uri "ssh://github.com") => h/uri?)
-
-(fact "instant"
-  (h/instant) => h/instant?
-  (h/instant 0) => h/instant?)
-
-(fact "replace-all"
-  (h/replace-all "hello there, hello again" "hello" "bye")
-  => "bye there, bye again")
-
-(fact "starts-with"
-  (h/starts-with "prefix" "pre") => true
-  (h/starts-with "prefix" "suf") => false)
-
-(fact "type-predicates"
-  (h/boolean? true) => true
-  (h/boolean? false) => true
-  (h/hash-map? {}) => true
-  (h/hash-set? #{}) => true
-  (h/long? 1) => true
-  (h/long? 1N) => false
-  (h/bigint? 1N) => true
-  (h/bigdec? 1M) => true
-  (h/instant? (h/instant 0)) => true
-  (h/uuid? (h/uuid)) => true
-  (h/bytes? (byte-array 8)) => true)
-
-(fact "type-checker"
-  (h/type-checker :string) => (exactly #'clojure.core/string?)
-  (h/type-checker :bytes) =>  (exactly #'hara.utils/bytes?)
-  (h/type-checker :other) =>  nil)
-
-(fact "func-map creates a hashmap using as key the function applied to each
-       element of the collection."
-  (h/func-map identity [1 2 3]) => {1 1 2 2 3 3}
-  (h/func-map #(* 2 %) [1 2 3]) => {2 1 4 2 6 3}
-  (h/func-map #(* 2 %) [1 1 1]) => {2 1}
-
-  (h/func-map :id [{:id 1 :val 1} {:id 2 :val 2}])
-  => {1 {:id 1 :val 1} 2 {:id 2 :val 2}}
-
-  "Same :ids will cause the first to be overwritten"
-  (h/func-map :id [{:id 1 :val 1} {:id 1 :val 2}])
-  => {1 {:id 1 :val 2}})
-
-(fact "remove-repeats outputs a filtered list of values"
-  (h/remove-repeats [1 1 2 2 3 3 4 5 6]) => [1 2 3 4 5 6]
-  (h/remove-repeats :n [{:n 1} {:n 1} {:n 1} {:n 2} {:n 2}]) => [{:n 1} {:n 2}]
-  (h/remove-repeats even? [2 4 6 1 3 5]) => [2 1])
-
-(fact "replace-walk"
-  (h/replace-walk 1 {1 2})
-  => 2
-
-  (h/replace-walk [1 2 3] {1 2})
-  => [2 2 3]
-
-  (h/replace-walk '[1 (1 2 [1 2 3])] {1 3 3 1})
-  => '[3 (3 2 [3 2 1])]
-
-  (h/replace-walk {:a 1 :b {:c 1}} {1 2})
-  => {:a 2 :b {:c 2}}
-
-  (h/replace-walk '{:a 1 :b {:c [1 (1 [1 1])]}} {1 2})
-  => '{:a 2 :b {:c [2 (2 [2 2])]}})
-
-(fact "group-bys"
-  (h/group-bys even? [1 2 3 4 5])
-  {false #{1 3 5}, true #{2 4}})
-
-(fact "dissoc-in"
-  (h/dissoc-in {:a 2 :b 2} [:a]) => {:b 2}
-  (h/dissoc-in {:a 2 :b 2} [:a] true) => {:b 2}
-
-  (h/dissoc-in {:a {:b 2 :c 3}} [:a :b]) => {:a {:c 3}}
-  (h/dissoc-in {:a {:b 2 :c 3}} [:a :b] true) => {:a {:c 3}}
-
-  (h/dissoc-in {:a {:c 3}} [:a :c]) => {}
-  (h/dissoc-in {:a {:c 3}} [:a :c] true) => {:a {}}
-
-  (h/dissoc-in {:a {:b {:c 3}}} [:a :b :c]) => {}
-  (h/dissoc-in {:a {:b {:c 3}}} [:a :b :c] true) => {:a {:b {}}})
-
-(fact "keys-nested will output all keys in a map"
-  (h/keys-nested {:a {:b 1 :c 2}})
-  => #{:a :b :c}
-  (h/keys-nested {:a {:b 1 :c {:d 2 :e {:f 3}}}})
-  => #{:a :b :c :d :e :f})
-
-(fact "dissoc-nested will dissoc all nested keys in a map"
-  (h/dissoc-nested {:a 1} [:a])
-  => {}
-
-  (h/dissoc-nested {:a 1 :b 1} [:a :b])
-  => {}
-
-  (h/dissoc-nested {:a {:b 1 :c {:b 1}}} [:b])
-  => {:a {:c {}}}
-
-  (h/dissoc-nested {:a {:b 1 :c {:b 1}}} [:a :b])
-  => {})
-
-
-(fact "diff-nested will take two maps and compare what in the first is different to that in the second"
-  (h/diff-nested {} {}) => {}
-  (h/diff-nested {:a 1} {}) => {:a 1}
-  (h/diff-nested {:a {:b 1}} {})=> {:a {:b 1}}
-  (h/diff-nested {:a {:b 1}} {:a {:b 1}}) => {}
-  (h/diff-nested {:a {:b 1}} {:a {:b 1 :c 1}}) => {}
-  (h/diff-nested {:a {:b 1 :c 1}} {:a {:b 1}}) => {:a {:c 1}}
-  (h/diff-nested {:a 1 :b {:c {:d {:e 1}}}}
-                {:a 1 :b {:c {:d {:e 1}}}})
-  => {}
-  (h/diff-nested {:a 1 :b {:c {:d {:e 1}}}}
-                {:a 1 :b {:c 1}})
-  => {:b {:c {:d {:e 1}}}})
-
-
-(fact "merge-nested will take two maps and merge them recursively"
-  (h/merge-nested {} {}) => {}
-  (h/merge-nested {:a 1} {}) => {:a 1}
-  (h/merge-nested {} {:a 1}) => {:a 1}
-  (h/merge-nested {:a {:b 1}} {:a {:c 2}}) => {:a {:b 1 :c 2}}
-  (h/merge-nested {:a {:b {:c 1}}} {:a {:b {:c 2}}}) => {:a {:b {:c 2}}}
-  (h/merge-nested {:a {:b 3}} {:a {:b {:c 3}}}) => {:a {:b {:c 3}}}
-  (h/merge-nested {:a {:b {:c 3}}} {:a {:b 3}}) => {:a {:b 3}}
-  (h/merge-nested {:a {:b {:c 1 :d 2}}} {:a {:b {:c 3}}}) => {:a {:b {:c 3 :d 2}}})
-
-
-(fact "remove-nested"
-  (h/remove-nested {}) => {}
-  (h/remove-nested {:a {}}) => {}
-  (h/remove-nested {:a {} :b 1}) => {:b 1}
-  (h/remove-nested {:a {:b {:c 1}}}) => {:a {:b {:c 1}}}
-  (h/remove-nested {:a {:b {:c {}}}}) => {}
-  (h/remove-nested {:a {:b {:c {} :d 1}}}) => {:a {:b {:d 1}}})
+        hara.common)
+  (:refer-clojure :exclude [send]))
 
 (fact "keyword-str returns the string representation with the colon"
   (h/keyword-str nil) => ""
@@ -396,14 +242,14 @@
 (fact "val-chk"
   (h/val-chk {:a {:b 1}} #(get % :a) {:b 1}) => true
   (h/val-chk {:a {:b 1}} :a {:b 1}) => true
-  (h/val-chk {:a {:b 1}} :a h/hash-map?) => true
+  (h/val-chk {:a {:b 1}} :a hash-map?) => true
   (h/val-chk {:a {:b 1}} [:a :b] 1) => true
   (h/val-chk {:a {:b 1}} [:a :b] odd?) => true)
 
 (fact "val-pred?"
   (h/val-pred? {:a 1} :a) => truthy
-  (h/val-pred? {:a 1} h/hash-map?) => true
-  (h/val-pred? {:a 1} h/hash-set?) => false
+  (h/val-pred? {:a 1} hash-map?) => true
+  (h/val-pred? {:a 1} hash-set?) => false
   (h/val-pred? {:a 1 :val 1} #(= 1 (% :val))) => true
   (h/val-pred? {:a 1 :val 1} #(= 2 (% :val))) => false
   (h/val-pred? {:a 1 :val 1} [:val 1]) => true
@@ -533,25 +379,25 @@
 
   (h/merges {:a {:foo {:bar {:baz 1}}}}
             {:a {:foo {:bar {:baz 2}}}}
-            h/hash-map?
-            (fn [m1 m2] (h/merges m1 m2 h/hash-map?
-                                 (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+            hash-map?
+            (fn [m1 m2] (h/merges m1 m2 hash-map?
+                                 (fn [m1 m2] (h/merges m1 m2 hash-map?
                                                       h/merges)))))
   => {:a {:foo {:bar {:baz #{1 2}}}}}
 
   (h/merges {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
             {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
-            h/hash-map?
-            (fn [m1 m2] (h/merges m1 m2 h/hash-map?
-                                 (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+            hash-map?
+            (fn [m1 m2] (h/merges m1 m2 hash-map?
+                                 (fn [m1 m2] (h/merges m1 m2 hash-map?
                                                       h/merges)))))
   => {:a #{{:foo #{{:bar #{{:baz #{1 2}}}}}}}}
 
   (h/merges {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
             {:a {:foo {:bar {:baz 2}}}}
-            h/hash-map?
-            (fn [m1 m2] (h/merges m1 m2 h/hash-map?
-                                 (fn [m1 m2] (h/merges m1 m2 h/hash-map?
+            hash-map?
+            (fn [m1 m2] (h/merges m1 m2 hash-map?
+                                 (fn [m1 m2] (h/merges m1 m2 hash-map?
                                                       h/merges)))))
   => {:a #{{:foo #{{:bar #{{:baz #{1 2}}}}}}}}
 
@@ -564,7 +410,7 @@
   (h/merges {:a {:id 3 :foo {:bar :A}}}
             {:a {:id 3 :foo {:bar :B}}}
             :id
-            (fn [m1 m2] (h/merges m1 m2 h/hash-map? h/merges)))
+            (fn [m1 m2] (h/merges m1 m2 hash-map? h/merges)))
   => {:a {:id 3 :foo {:bar #{:A :B}}}}
 
   (h/merges {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 1}}}}
@@ -592,16 +438,16 @@
   => {:a #{{:val 1, :id 1} {:val 2, :id 2}}}
   (h/merges-in {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
                {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
-               h/hash-map?
+               hash-map?
                h/merges-in)
   => {:a #{{:foo #{{:bar #{{:baz 2}}}
                    {:bar #{{:baz 1}}}}}}}
 
   (h/merges-in {:a #{{:foo #{{:bar #{{:baz 1}}}}}}}
                {:a #{{:foo #{{:bar #{{:baz 2}}}}}}}
-               h/hash-map?
-               (fn [m1 m2] (h/merges-in m1 m2 h/hash-map?
-                                       (fn [m1 m2] (h/merges-in m1 m2 h/hash-map?
+               hash-map?
+               (fn [m1 m2] (h/merges-in m1 m2 hash-map?
+                                       (fn [m1 m2] (h/merges-in m1 m2 hash-map?
                                                                h/merges-in)))))
   => {:a #{{:foo #{{:bar #{{:baz #{1 2}}}}}}}}
 
@@ -611,7 +457,7 @@
   => {:a #{3}})
 
 (fact "merges-in*"
-  (h/merges-in* {:a 1} {:a 2} h/hash-map?)
+  (h/merges-in* {:a 1} {:a 2} hash-map?)
   => {:a #{1 2}}
 
   (h/merges-in* {:a #{{:id 1 :foo #{{:id 2 :bar #{{:id 3 :baz 1}}}}}}}

@@ -1,8 +1,7 @@
 (ns hara.ova
-  (:refer-clojure :exclude [map map-indexed update-in sort filter reverse concat dissoc])
-  (:use [hara.data.ova :only [sel add-iwatch del-iwatch]]
-        [hara.fn :only [look-up]])
-  (:import hara.data.Ova))
+  (:use [hara.ova.impl :only [sel add-iwatch del-iwatch]]
+        [hara.common :only [get-cmp]])
+  (:import hara.ova.Ova))
 
 (defn ova
   ([] (Ova.))
@@ -13,34 +12,25 @@
           (conj! ova e)))
        ova)))
 
-(defn add-elem-watch [^hara.data.Ova ova k f]
+(defn add-elem-watch [^hara.ova.Ova ova k f]
   (.addElemWatch ova k f))
 
-(defn remove-elem-watch [^hara.data.Ova ova k]
+(defn remove-elem-watch [^hara.ova.Ova ova k]
   (.removeElemWatch ova k))
 
-(defn get-elem-watches [^hara.data.Ova ova]
+(defn get-elem-watches [^hara.ova.Ova ova]
   (.getElemWatches ova))
 
-(defn set-elem-validator [^hara.data.Ova ova v]
+(defn set-elem-validator [^hara.ova.Ova ova v]
   (.setElemValidator ova v))
 
-(defn get-elem-validator [^hara.data.Ova ova]
+(defn get-elem-validator [^hara.ova.Ova ova]
   (.getElemValidator ova))
-
-(defn- try-chk [chk val res] ;; returns `res` if `(chk val)` succeeds, otherwise returns nil. Will swallow all thrown exceptions.
-  (try (if (chk val) res)
-       (catch Throwable t)))
-
-(defn- get-val [obj k] ;; if k is a vector, then do a lookup of obj using keys contained in k, else do a normal lookup
-  (if (vector? k)
-    (look-up obj k)
-    (get obj k)))
 
 (defn- match? [obj k chk]
   (cond
     (fn? chk)
-    (try (chk (get-val obj k))
+    (try (chk (get-cmp obj k))
          (catch Throwable t))
 
     :else
@@ -60,125 +50,125 @@
     (mapcat #(indices ova %) chk)
 
     (fn? chk)
-    (clojure.core/filter (comp not nil?)
-            (clojure.core/map-indexed (fn [i obj] (try-chk chk obj i))
+    (filter (comp not nil?)
+            (map-indexed (fn [i obj] (try-chk chk obj i))
                          ova))
 
     (vector? chk)
-    (clojure.core/filter (comp not nil?)
-            (clojure.core/map-indexed (fn [i obj] (if (all-match? obj chk) i))
+    (filter (comp not nil?)
+            (map-indexed (fn [i obj] (if (all-match? obj chk) i))
                          ova))))
 
 (defn select [ova & [chk]]
   (cond
     (nil? chk)
-    (clojure.core/map deref @(sel ova))
+    (map deref @(sel ova))
 
     (number? chk)
     (if-let [val (ova chk)]
       [val] [])
 
     (vector? chk)
-    (clojure.core/filter #(all-match? % chk) ova)
+    (filter #(all-match? % chk) ova)
 
     (set? chk)
-    (clojure.core/map val (clojure.core/sort (select-keys (vec (seq ova)) chk)))
+    (map val (clojure.core/sort (select-keys (vec (seq ova)) chk)))
 
     (fn? chk)
     (clojure.core/filter (fn [obj] (try-chk chk obj true)) ova)))
 
-(defn map [ova f & args]
+(defn map! [ova f & args]
   (doseq [evm @ova]
     (apply alter evm f args))
   ova)
 
-(defn map-indexed [ova f & args]
+(defn map-indexed! [ova f & args]
   (doseq [i  (range (count ova))]
     (alter (nth @ova i) (fn [x]
                           (apply f i x args)) ))
   ova)
 
-(defn smap [ova chk f & args]
+(defn smap! [ova chk f & args]
   (cond
     (number? chk)
     (if-let [evm (@ova chk)]
       (apply alter evm f args))
 
     (vector? chk)
-    (map ova (fn [obj]
+    (map! ova (fn [obj]
                (if (all-match? obj chk)
                  (apply f obj args) obj)))
 
     (set? chk)
-    (dorun (clojure.core/map-indexed (fn [i obj]
+    (dorun (map-indexed (fn [i obj]
                           (if (chk i)
                             (apply alter obj f args)))
                         @ova))
 
     (fn? chk)
-    (map ova (fn [obj]
+    (map! ova (fn [obj]
                 (if (try-chk chk obj true)
                   (apply f obj args) obj))))
   ova)
 
-(defn update [ova chk val]
+(defn update! [ova chk val]
   (smap ova chk #(into % val)))
 
-(defn dissoc [ova chk & ks]
-  (smap ova chk #(apply clojure.core/dissoc % ks)))
+(defn dissoc! [ova chk & ks]
+  (smap ova chk #(apply dissoc % ks)))
 
-(defn set-val [ova chk val]
+(defn set-val! [ova chk val]
   (smap ova chk (constantly val)))
 
-(defn update-in [ova chk ks f]
-  (smap ova chk #(clojure.core/update-in % ks f)))
+(defn update-in! [ova chk ks f]
+  (smap ova chk #(update-in % ks f)))
 
-(defn set-in [ova chk ks val]
-  (smap ova chk #(clojure.core/update-in % ks (constantly val)) ))
+(defn set-in! [ova chk ks val]
+  (smap ova chk #(update-in % ks (constantly val)) ))
 
-(defn- -delete [v indices ova]
+(defn delete-fn [v indices ova]
   (let [sdx (apply hash-set indices)]
     (->> v
-         (clojure.core/map-indexed (fn [i obj]
-                        (if-not (sdx i)
+         (map-indexed! (fn [i obj]
+                         (if-not (sdx i)
                           obj
                           (do (del-iwatch ova obj) nil))))
-         (clojure.core/filter (comp not nil?))
+         (filter (comp not nil?))
          vec)))
 
-(defn delete [ova chk]
+(defn delete! [ova chk]
   (let [idx (indices ova chk)]
-    (alter (sel ova) -delete idx ova))
+    (alter (sel ova) delete-fn idx ova))
   ova)
 
-(defn- -insert [v val & [i]]
+(defn- insert-fn [v val & [i]]
   (if (nil? i)
     (conj v val)
-    (vec (clojure.core/concat (conj (subvec v 0 i) val)
+    (vec (concat (conj (subvec v 0 i) val)
                  (subvec v i)))))
 
-(defn insert [ova val & [i]]
+(defn insert! [ova val & [i]]
   (let [evm (ref val)]
     (add-iwatch ova evm)
-    (alter (sel ova) -insert evm i))
+    (alter (sel ova) insert-fn evm i))
   ova)
 
-(defn sort [ova & comp]
+(defn sort! [ova & comp]
   (let [s-fn (fn [x y] ((or comp compare) @x @y))]
     (alter (sel ova) (fn [evm] (clojure.core/sort s-fn evm))))
   ova)
 
-(defn filter [ova pred]
+(defn filter! [ova pred]
   (let [ft-fn (fn [pred]
                 (fn [x] (true? (pred @x))))]
-    (alter (sel ova) #(clojure.core/filter (ft-fn pred) %)))
+    (alter (sel ova) #(filter (ft-fn pred) %)))
   ova)
 
-(defn reverse [ova]
-  (alter (sel ova) clojure.core/reverse)
+(defn reverse! [ova]
+  (alter (sel ova) reverse)
   ova)
 
-(defn concat [ova es]
+(defn concat! [ova es]
   (doseq [e es]
-    (insert ova e))
+    (insert! ova e))
   ova)

@@ -1,51 +1,63 @@
 (ns hara.test-ova-aot
   (:use midje.sweet
-        hara.testing
-        [hara.fn :only [deref*]])
-  (:import hara.data.Ova))
+        hara.checkers
+        [hara.common :only [deref*]])
+  (:import hara.ova.Ova))
 
-(fact "testing the Ova constructor"
-  (Ova.) => (is-ova))
+(def *ova* (Ova.))
 
-(fact "simple specification"
-  (let [ev (Ova.)]
-    (dosync (conj! ev {:id :0}))
+(fact "Testing the Ova constructor"
+  *ova* => (is-ova))
+
+(against-background
+    [(before :facts (do (dosync (.empty *ova*)
+                                (conj! *ova* {:id :0}))))]
     (facts "seq"
-      ev => (is-ova {:id :0})
-      (first @ev) => (is-ref {:id :0})
-      (count ev) => 1
-      (first (.seq ev))   => {:id :0}
-      (seq ev)            => '({:id :0})
-      (first (seq ev))    => {:id :0})
-    (facts "valAt"
-      (.valAt ev 0)       => {:id :0}
-      (.valAt ev 0 :na)   => {:id :0}
-      (.valAt ev 1 :na)    => :na)
-    (facts "nth"
-      (.nth ev 0)         => {:id :0}
-      (.nth ev 0 :na)     => {:id :0}
-      (.nth ev 1)          => nil
-      (.nth ev 1 :na)      => :na
-      (nth ev 0)          => {:id :0}
-      (nth ev 0 :na)      => {:id :0}
-      (nth ev 1)           => nil
-      (nth ev 1 :na)       => :na)
-    (facts "persistent"
-      (.persistent ev)     => [{:id :0}])
-      (persistent! ev)     => [{:id :0}]))
+      *ova* => (is-ova {:id :0})
+      (first @*ova*) => (is-ref {:id :0})
+      (count *ova*) => 1
+      (first (.seq *ova*))   => {:id :0}
+      (seq *ova*)            => '({:id :0})
+      (first (seq *ova*))    => {:id :0})
 
-(fact "indices"
-  (let [ev (Ova.)]
-    (dosync (conj! ev {:id :0})
-            (conj! ev {:id :1})
-            (conj! ev {:id "hello"}))
-    (ev 0) => {:id :0}    ;; indices
-    (ev 1) => {:id :1}       
-    (ev 2) => {:id "hello"}       
-    (ev 3) => nil       
-    (ev :0) => {:id :0}   ;; or use :id
-    (ev :1) => {:id :1}
-    (ev "hello") => {:id "hello"}))
+    (facts "valAt"
+      (.valAt *ova* 0)       => {:id :0}
+      (.valAt *ova* 0 :na)   => {:id :0}
+      (.valAt *ova* 1 :na)    => :na)
+
+    (facts "nth"
+      (.nth *ova* 0)         => {:id :0}
+      (.nth *ova* 0 :na)     => {:id :0}
+      (.nth *ova* 1)          => nil
+      (.nth *ova* 1 :na)      => :na
+      (nth *ova* 0)          => {:id :0}
+      (nth *ova* 0 :na)      => {:id :0}
+      (nth *ova* 1)           => nil
+      (nth *ova* 1 :na)       => :na)
+
+    (facts "persistent"
+      (.persistent *ova*)     => [{:id :0}]
+      (persistent! *ova*)     => [{:id :0}]))
+
+
+(against-background
+  [(before :facts (do (dosync (.empty *ova*)
+                              (conj! *ova* {:id :0})
+                              (conj! *ova* {:id :1})
+                              (conj! *ova* {:id "hello"}))))]
+
+  (fact "indices"
+    (*ova* 0) => {:id :0}    ;; indices
+    (*ova* 1) => {:id :1}
+    (*ova* 2) => {:id "hello"}
+    (*ova* 3) => nil
+
+    (*ova* :0) => {:id :0}   ;; or use :id
+    (*ova* :1) => {:id :1}
+    (*ova* "hello") => {:id "hello"}
+    (.val *ova* :id)
+    (hara.ova.impl/-valAt *ova* :0 :NA)
+    (hara.ova.impl/-valAt *ova* :0 #(:id %) :NA)))
 
 (fact "testing append and pop operations"
   (against-background
@@ -167,7 +179,7 @@
       norm-out => (is-atom 3))))
 
 
-(fact "tests that watches do not propagate when the evom is not
+(fact "tests that watches do not propagate when the ova is not
        contained anymore"
   (let [a         (dosync (conj! (Ova.) 1))
         elem-out  (atom nil)

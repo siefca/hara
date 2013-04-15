@@ -1,8 +1,8 @@
-(ns hara.data.ova
-  (:use [hara.fn :only [deref*]])
+(ns hara.ova.impl
+  (:use [hara.common :only [deref* cmp-chk]])
   (:require [clojure.string :as s])
   (:gen-class
-   :name hara.data.Ova
+   :name hara.ova.Ova
    :prefix "-"
    :init init
    :constructors {[] []}
@@ -12,12 +12,16 @@
                 clojure.lang.Seqable
                 clojure.lang.ILookup
                 clojure.lang.ITransientVector]
-   :methods [[addElemWatch [java.lang.Object clojure.lang.IFn] void]
+   :methods [[empty [] hara.ova.Ova]
+             [reset [] hara.ova.Ova]
+             [boo [] hara.ova.Ova]
+             [clearWatches [] void]
+             [addElemWatch [java.lang.Object clojure.lang.IFn] void]
              [removeElemWatch [java.lang.Object] void]
-             [getElemWatches [] clojure.lang.IPersistentMap]]))
+             [getElemWatches [] clojure.lang.IPersistentMap]
+             [clearElemWatches [] void]]))
 
-(defn -trigger-watch [eva ])
-
+(defn -boo [this] this)
 (defn make-keyword [this]
   (keyword (str "__" (.hashCode this) "__")))
 
@@ -56,6 +60,10 @@
 (defn -removeWatch [this k]
   (remove-watch (sel this) k))
 
+(defn -clearWatches [this]
+  (doseq [[k _] (-getWatches this)]
+    (remove-watch (sel this) k)))
+
 (defn -getElemWatches [this]
   (deref (:watches (.state this))))
 
@@ -65,48 +73,61 @@
 (defn -removeElemWatch [this k]
   (swap! (:watches (.state this)) dissoc k))
 
-(defn- -toString [this]
+(defn -clearElemWatches [this]
+  (reset! (:watches (.state this)) {}))
+
+(defn -toString [this]
   (->> @this (map #(-> % deref str)) (s/join "\n")))
 
 (defn -deref [this] @(sel this))
 
-(defn -valAt
-  ([this k] (-valAt this k nil))
-  ([this k nv]
-    (cond 
-     (integer? k) 
-     (if-let [evm (get (-deref this) k nil)]
-       @evm nv)
-     :else
-     (->> (map deref (-deref this))
-         (filter (fn [m] (= k (:id m))))
-         first))))
+(defn -persistent [this]
+  (deref* (sel this)))
 
-(defn -seq [this] (map deref (seq (-deref this))))
+(defn -seq [this]
+  (let [res (map deref (seq (-deref this)))]
+    (if-not (empty? res) res)))
 
 (defn -count [this] (count (-deref this)))
 
 (defn -nth
-  ([this i] (-valAt this i))
-  ([this i nv] (-valAt this i nv)))
+  ([this i] (-nth this i nil))
+  ([this i nv]
+     (if-let [evm (nth (-deref this) i)]
+       @evm nv)))
+
+(defn -valAt
+  ([this k] (-valAt this k nil nil))
+  ([this k nv] (-valAt this k nil nv))
+  ([this k cmp nv]
+    (cond
+     (and (nil? cmp) (integer? k))
+     (-nth this k nv)
+
+     :else
+     (let [res (->> (map deref (-deref this))
+                    (filter (fn [m] (cmp-chk m (or cmp :id) k)))
+                    first)]
+       (or res nv)))))
 
 (defn -invoke
   ([this k] (-valAt this k))
-  ([this k nv] -valAt this k nv))
+  ([this k nv] (-valAt this k nv))
+  ([this k cmp nv] (-valAt this k cmp nv)))
 
 (defn -conj [this v]
   (let [ev (ref v)]
     (add-iwatch this ev)
-    (alter (sel this) conj ev)
-    this))
+    (alter (sel this) conj ev))
+  this)
 
 (defn -assoc [this k v]
-  (if-let [pv (get @this k)]
-    (reset! pv v)
+  (if-let [pv (get (-deref this) k)]
+    (ref-set pv v)
     (let [ev (ref v)]
       (add-iwatch this ev)
-      (alter (sel this) assoc k ev)
-      this)))
+      (alter (sel this) assoc k ev)))
+  this)
 
 (defn -assocN [this i v]
   (-assoc this i v))
@@ -117,11 +138,20 @@
   (alter (sel this) pop)
   this)
 
-(defn -persistent [this]
-  (deref* (sel this)))
+(defn -empty [this]
+  (for [rf (-deref this)]
+    (del-iwatch this rf))
+  (ref-set (sel this) [])
+  this)
+
+(defn -reset [this]
+  (-empty this)
+  (-clearWatches this)
+  (-clearElemWatches this)
+  this)
 
 (defmethod print-method
-  hara.data.Ova
+  hara.ova.Ova
   [this w]
   (print-method
    (let [hash (.hashCode this)]
