@@ -524,7 +524,7 @@
   ([m1 m2 sel rd output]
      (if-let [[k v] (first m2)]
        (recur (dissoc m1 k) (rest m2) sel rd
-              (assoc output k (combine (m1 k) v sel rd)))
+              (assoc output k (combine (get m1 k) v sel rd)))
        (merge m1 output))))
 
 (defn merges-in

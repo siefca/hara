@@ -382,16 +382,8 @@
   (h/merges {:a {:id 3 :foo {:bar :A}}}
             {:a {:id 3 :foo {:bar :B}}}
             :id
-            (fn [m1 m2] (h/merges m1 m2 hash-map? h/merges)))
-  => {:a {:id 3 :foo {:bar #{:A :B}}}}
-
-  (h/merges {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 1}}}}
-            {:a {:id 1 :foo {:id 2 :bar {:id 3 :baz 2}}}}
-            :id
-            (fn [m1 m2] (h/merges m1 m2 :id
-                                 (fn [m1 m2] (h/merges m1 m2 :id
-                                                      h/merges)))))
-  => nil)
+            h/merges)
+  => {:a {:id 3 :foo #{{:bar :B} {:bar :A}}}})
 
 (fact "merges-in"
   (h/merges-in {} {:a 1}) => {:a 1}
