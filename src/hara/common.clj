@@ -14,7 +14,7 @@
   ([f v1 v2 v3 v4 ] (if-not (nil? f) (f v1 v2 v3 v4)))
   ([f v1 v2 v3 v4 & vs] (if-not (nil? f) (apply f v1 v2 v3 v4 vs))))
 
-(defn send
+(defn msg
   "Object oriented style dispatch."
   ([obj kw] (call (obj kw) obj))
   ([obj kw v] (call (obj kw) obj v))
@@ -23,7 +23,15 @@
   ([obj kw v1 v2 v3 v4] (call (obj kw) obj v1 v2 v3 v4))
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
-;; ## Comparison operators
+(defn make-%? [f args]
+  (apply list 'fn ['?%]
+         (list (concat [f '?%] `[~@args]))))
+
+(defmacro %? [f & args]
+  (make-?hash f args))
+
+(defn functify [chk obj]
+  true)
 
 (defn eq-chk
   "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
@@ -35,6 +43,7 @@
   [obj chk]
   (or (= obj chk)
       (and (ifn? chk)
+           (list? chk) (functify chk obj)
            (-> (chk obj) not not))))
 
 (defn get-sel [obj sel]
@@ -64,10 +73,10 @@
 
     (sel-chk-all {:a {:b 1}} [:a {:b 1}] [:a hash-map?]) => true
   "
-  [obj & scv]
+  [obj scv]
   (every? (fn [[sel chk]]
             (sel-chk obj sel chk))
-          scv))
+          (partition 2 scv)))
 
 (defn eq-sel
   "A shortcut to compare if two vals are equal.
@@ -92,8 +101,7 @@
   "
   [obj pri]
   (cond (vector? pri)
-        (let [[sel chk] pri]
-          (sel-chk obj sel chk))
+        (sel-chk-all obj pri)
 
         :else
         (eq-chk obj pri)))
@@ -119,8 +127,9 @@
   [& body]
   `(try ~@body (catch Throwable ~'t)))
 
-(defn suppress-chk [chk val res]
-    (suppress (if (chk val) res)))
+(defn suppress-pri [obj pri res]
+  (suppress (if (eq-pri obj pri) res)))
+
 
 ;; ## String Methods
 
@@ -489,6 +498,30 @@
              :else
              (recur (dissoc m k) pri (assoc output k v)))
        output)))
+
+
+;; Reference methods
+
+(defn hash-keyword
+  [this & ids]
+  (keyword (str "__" (st/join "_" (cons (.hashCode this) (map name ids))) "__")))
+
+(defn atom? [obj] (instance? clojure.lang.Atom obj))
+(defn ref? [obj]  (instance? clojure.lang.Ref obj))
+
+(defn set-iref! [rf obj]
+  (cond (atom? rf) (reset! rf obj)
+        (ref? rf) (dosync (ref-set rf obj))))
+
+(defn follow
+  ([master slave id] (follow master slave id identity))
+  ([master slave id f]
+     (add-watch master (hash-keyword slave id)
+                (fn [_ _ _ v]
+                  (set-iref! slave (f v))))))
+
+(defn unfollow [master slave id]
+  (remove-watch master (hash-keyword slave id)))
 
 (defn manipulate*
  ([f x] (manipulate* f x {}))

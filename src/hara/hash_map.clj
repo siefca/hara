@@ -1,8 +1,7 @@
 (ns hara.hash-map
   (:use hara.common)
   (:require [clojure.string :as st]
-            [clojure.set :as set])
-  (:refer-clojure :exclude [send]))
+            [clojure.set :as set]))
 
 ;; ## Keyword Methods
 

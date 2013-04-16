@@ -13,18 +13,18 @@
   (h/call nil 1 1 1) => nil)
 
 (declare ops)
-(facts "send"
+(facts "msg"
   (against-background (ops) => {:add (fn [_ & xs] (apply + xs))
                                 :sub (fn [_ & xs] (apply - xs))})
-  (h/send (ops) :add) => 0
-  (h/send (ops) :add 1) => 1
-  (h/send (ops) :add 1 1) => 2
-  (h/send (ops) :add 1 1 1) => 3
-  (h/send (ops) :add 1 1 1 1) => 4
-  (h/send (ops) :sub 3) => -3
-  (h/send (ops) :sub 3 1) => 2
-  (h/send (ops) :sub 3 1 1) => 1
-  (h/send (ops) :sub 3 1 1 1) => 0)
+  (h/msg (ops) :add) => 0
+  (h/msg (ops) :add 1) => 1
+  (h/msg (ops) :add 1 1) => 2
+  (h/msg (ops) :add 1 1 1) => 3
+  (h/msg (ops) :add 1 1 1 1) => 4
+  (h/msg (ops) :sub 3) => -3
+  (h/msg (ops) :sub 3 1) => 2
+  (h/msg (ops) :sub 3 1 1) => 1
+  (h/msg (ops) :sub 3 1 1 1) => 0)
 
 (fact "eq-chk"
   (h/eq-chk 2 2) => true
@@ -44,7 +44,7 @@
   (h/sel-chk {:a {:b 1}} [:a :b] 1) => true)
 
 (fact "sel-chk-all"
-  (h/sel-chk-all {:a {:b 1}} [:a {:b 1}] [:a h/hash-map?]) => true)
+  (h/sel-chk-all {:a {:b 1}} [:a {:b 1} :a h/hash-map?]) => true)
 
 (fact "eq-sel"
   (h/eq-sel 2 4 even?) => true

@@ -2,7 +2,7 @@
   (:use midje.sweet)
   (:require [hara.fn :as f]
             [clj-time.core :as t] :reload))
-
+			(comment
 (facts "watch-for-change produces another function that can be used in watching
         the nested values of maps contained in atoms and iotams.
 
@@ -37,3 +37,4 @@
     (fact "assert that itm is updated  and out has been manipulated"
       @itm => {:a {:b {:c {:d 2}}}}
       @out1 => 2)))
+	  )

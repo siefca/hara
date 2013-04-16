@@ -1,5 +1,5 @@
 (ns hara.ova.impl
-  (:use [hara.common :only [deref* sel-chk]])
+  (:use [hara.common :only [deref* sel-chk suppress hash-keyword]])
   (:require [clojure.string :as s])
   (:gen-class
    :name hara.ova.Ova
@@ -20,22 +20,18 @@
              [getElemWatches [] clojure.lang.IPersistentMap]
              [clearElemWatches [] void]]))
 
-(defn make-keyword [this]
-  (keyword (str "__" (.hashCode this) "__")))
-
-(defn add-iwatch [this evm]
-  (let [k  (make-keyword this)
+(defn add-iwatch [this irf]
+  (let [k  (hash-keyword this)
         f  (fn [k & args]
              (doseq [w (deref (:watches (.state this)))]
                (let [wk (first w)
                      wf (second w)]
                  (apply wf wk this args))))]
-    (add-watch evm k f)))
+    (add-watch irf k f)))
 
-(defn del-iwatch [this evm]
-  (let [k  (make-keyword this)]
-    (remove-watch evm k)))
-
+(defn remove-iwatch [this irf]
+  (let [k  (hash-keyword this)]
+    (remove-watch irf k)))
 
 (defn sel [this] (:data (.state this)))
 
@@ -132,13 +128,13 @@
 
 (defn -pop [this]
   (if-let [lv (last @this)]
-    (del-iwatch this lv))
+    (remove-iwatch this lv))
   (alter (sel this) pop)
   this)
 
 (defn -empty [this]
   (for [rf (-deref this)]
-    (del-iwatch this rf))
+    (remove-iwatch this rf))
   (ref-set (sel this) [])
   this)
 

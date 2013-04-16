@@ -1,8 +1,7 @@
 (ns hara.test-hash-map
   (:require [hara.hash-map :as h])
   (:use midje.sweet
-        hara.common)
-  (:refer-clojure :exclude [send]))
+        hara.common))
 
 (fact "keyword-str returns the string representation with the colon"
   (h/keyword-str nil) => ""
