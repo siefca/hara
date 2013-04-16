@@ -6,7 +6,7 @@
   (:require [hara.ova.impl :as i])
   (:import hara.ova.Ova))
 
-(def ^:dynamic *ova* (Ova.))
+(def ^:dynamic *ova*)
 
 (against-background
   [(before :facts (dosync (i/-empty *ova*)))]
@@ -178,7 +178,7 @@
 
     (dosync (ref-set evm 2))
     (fact "both states should trigger"
-      a => (is-ova 2)
+      a => (is-ova [2])
       elem-out => (is-atom 2)
       norm-out => (is-atom 2))
 

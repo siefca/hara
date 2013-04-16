@@ -111,16 +111,15 @@
 
   (fact "filter!"
     (dosync (v/filter! *ova* odd?)) => (is-ova [1 3 5 7 9])
-    (dosync (v/filter! *ova* (%? not= 3))) => (is-ova [0 1 2 4 5 6 7 8 9])
-    (dosync (v/filter! *ova* #{(%? < 3) (%? > 6)})) => (is-ova [0 1 2 7 8 9])
-    (dosync (v/filter! *ova* [identity (%? >= 3) identity (%? <= 6)]))
+    (dosync (v/filter! *ova* (?% not= 3))) => (is-ova [0 1 2 4 5 6 7 8 9])
+    (dosync (v/filter! *ova* #{(?% < 3) (?% > 6)})) => (is-ova [0 1 2 7 8 9])
+    (dosync (v/filter! *ova* [identity (?% >= 3) identity (?% <= 6)]))
     => (is-ova [ 3 4 5 6]))
 
   (fact "remove!"
     (dosync (v/remove! *ova* odd?)) => (is-ova [0 2 4 6 8])
-    (dosync (v/remove! *ova* (%? not= 3))) => (is-ova [3])
-    (dosync (v/remove! *ova* #{(%? < 3) (%? > 6)})) => (is-ova [3 4 5 6]))
-)
+    (dosync (v/remove! *ova* (?% not= 3))) => (is-ova [3])
+    (dosync (v/remove! *ova* #{(?% < 3) (?% > 6)})) => (is-ova [3 4 5 6])))
 
 
 (comment
@@ -227,7 +226,7 @@
     (let [ov     (v/ova [1 2 3 4])
           out    (atom [])
           cj-fn  (fn  [o r k p v & args]
-                   ;;(println o r k p v args )
+                   ;;(prchkntln o r k p v args )
                    (swap! out conj [p v]))
           _      (v/add-elem-watch ov :conj cj-fn)
           _      (dosync (v/map ov inc))]
@@ -289,7 +288,7 @@
       ))
   (comment
     (def a (v/ova [5 4 3 2 6]))
-    (println a)
+    (prchkntln a)
     (dosync (v/sort a)))
   ;;(def a (v/ova [1 1 2 3 4 5]))
   ;;(v/map-indexed a (fn [i x] i))

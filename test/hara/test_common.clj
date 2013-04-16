@@ -1,6 +1,6 @@
 (ns hara.test-common
   (:use midje.sweet
-        [hara.common :only [bytes?]])
+        [hara.common :only [bytes? ?? ?%]])
   (:require [hara.common :as h]
             [clj-time.core :as t]))
 
@@ -26,9 +26,42 @@
   (h/msg (ops) :sub 3 1 1) => 1
   (h/msg (ops) :sub 3 1 1 1) => 0)
 
+(fact "error"
+  (h/error "something") => (throws Exception))
+
+(fact "suppress"
+  (h/suppress 2) => 2
+  (h/suppress (h/error "e")) => nil)
+
+(fact "make-??"
+  (h/make-?? '+ '(1 2 3)) => '(list  (symbol "?") (quote +) 1 2 3))
+
+(fact "??"
+  (?? + 1 2 3) => '(? + 1 2 3))
+
+(fact "make-?%"
+  (h/make-?% '+ '(1 2 3)) => '(fn [?%] (+ ?% 1 2 3)))
+
+(fact "?%"
+  ((?% < 4) 3) => true
+  ((?% + 1 2 3) 4) => 10)
+
+(fact "call->"
+  (h/call-> 4 '(? < 3)) => false
+  (h/call-> 4 (list #(< % 3))) => false
+  (h/call-> 4 `(< 3)) => false
+  (h/call-> 4 '(? < 5)) => true
+  (h/call-> 4 (list #(< % 5))) => true
+  (h/call-> 4 `(< 5)) => true
+  (h/call-> 4 `(+ 1 2 3)) => 10
+  (h/call-> 4 '(+ 1 2 3)) => 10
+  (h/call-> 4 '(? even?)) => true)
+
 (fact "eq-chk"
   (h/eq-chk 2 2) => true
-  (h/eq-chk 2 even?) => true)
+  (h/eq-chk 2 even?) => true
+  (h/eq-chk 2 (?% even?)) => true
+  (h/eq-chk 2 (?? even?)) => true)
 
 (fact "get-sel"
   (h/get-sel {"a" {:b {:c 1}}} "a") => {:b {:c 1}}
@@ -49,27 +82,27 @@
 (fact "eq-sel"
   (h/eq-sel 2 4 even?) => true
   (h/eq-sel 2 5 even?) => false
+  (h/eq-sel 2 5 (?% > 3)) => false
+  (h/eq-sel 2 5 (?% < 6)) => true
   (h/eq-sel {:id 1 :a 1} {:id 1 :a 2} h/hash-set?) => true
   (h/eq-sel {:id 1 :a 1} {:id 1 :a 2} :id) => true
   (h/eq-sel {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
 
 
-(fact "eq-pri"
-  (h/eq-pri {:a 1} :a) => true
-  (h/eq-pri {:a 1} h/hash-map?) => true
-  (h/eq-pri {:a 1} h/hash-set?) => false
-  (h/eq-pri {:a 1 :val 1} #(= 1 (% :val))) => true
-  (h/eq-pri {:a 1 :val 1} #(= 2 (% :val))) => false
-  (h/eq-pri {:a 1 :val 1} [:val 1]) => true
-  (h/eq-pri {:a 1 :val 1} [:val even?]) => false
-  (h/eq-pri {:a {:b 1}} [[:a :b] odd?]) => true)
-
-(fact "error"
-  (h/error "something") => (throws Exception))
-
-(fact "suppress"
-  (h/suppress 2) => 2
-  (h/suppress (h/error "e")) => nil)
+(fact "eq-prchk"
+  (h/eq-prchk {:a 1} :a) => true
+  (h/eq-prchk {:a 1} h/hash-map?) => true
+  (h/eq-prchk {:a 1} h/hash-set?) => false
+  (h/eq-prchk {:a 1 :val 1} #(= 1 (% :val))) => true
+  (h/eq-prchk {:a 1 :val 1} #(= 2 (% :val))) => false
+  (h/eq-prchk {:a 1 :val 1} [:val 1]) => true
+  (h/eq-prchk {:a 1 :val 1} [:val even?]) => false
+  (h/eq-prchk {:a 1 :val 1} [:val (?% = 1)]) => true
+  (h/eq-prchk {:a 1 :val 1} [:val (?% not= 1)]) => false
+  (h/eq-prchk {:a 1 :val 1} [:val (?? = 1)]) => true
+  (h/eq-prchk {:a 1 :val 1} [:val (?? not= 1)]) => false
+  (h/eq-prchk {:a {:b 1}} [[:a :b] odd?]) => true
+  (h/eq-prchk {:a {:b 1}} [[:a :b] (?? = 1) [:a] associative?]) => true)
 
 (fact "queue"
   (h/queue 1 2 3 4) => [1 2 3 4]
@@ -221,72 +254,76 @@
 
 
 
-(facts "manipulate* is a higher order function that acts on
+(facts "remould is a higher order function that acts on
           elements nested in clojure arrays and data-structures
 
-           @usage: (manipulate* fn data-structure)
+           @usage: (remould fn data-structure)
           "
   ;; Basic operations
-  (h/manipulate* nil nil)           => (throws Exception)
-  (h/manipulate* identity nil)      => nil
-  (h/manipulate* identity 1)        => 1
-  ;;(h/manipulate* identity (int-array 1 2))    => '(1 2)
-  (h/manipulate* identity [1 2])    => [1 2]
-  (h/manipulate* identity {:a :b})  => {:a :b}
-  (h/manipulate* identity #{:a :b}) => #{:a :b}
+  (h/remould nil nil)           => (throws Exception)
+  (h/remould identity nil)      => nil
+  (h/remould identity 1)        => 1
+  ;;(h/remould identity (int-array 1 2))    => '(1 2)
+  (h/remould identity [1 2])    => [1 2]
+  (h/remould identity {:a :b})  => {:a :b}
+  (h/remould identity #{:a :b}) => #{:a :b}
   ;; Atoms
-  (deref (h/manipulate* identity (atom [1 2])))    => [1 2]
+  (deref (h/remould identity (atom [1 2])))    => [1 2]
   ;; Functions
-  (h/manipulate* #(* % 2) nil)      => (throws Exception)
-  (h/manipulate* #(* % 2) 1)        => 2
-  (h/manipulate* #(* % 2) [1 2])    =>  [2 4]
-  (h/manipulate* #(* % 2) #{1 2})   => #{2 4}
-  (h/manipulate* vector [1 {2 3}]) => [[1] {[2] [3]}]
-  (h/manipulate* #(* % 2) {1 [2 3] #{4 5} 6 7 '(8 (9 (10)))}) => {2 [4 6] #{8 10} 12 14 '(16 (18 (20)))})
+  (h/remould #(* % 2) nil)      => (throws Exception)
+  (h/remould #(* % 2) 1)        => 2
+  (h/remould #(* % 2) [1 2])    =>  [2 4]
+  (h/remould #(* % 2) #{1 2})   => #{2 4}
+  (h/remould vector [1 {2 3}]) => [[1] {2 [3]}]
+  (h/remould vector [1 {2 3}]
+             [{:pred h/hash-map?
+                :ctor #(into {} %)
+                :dtor seq}]) => [[1] {[2] [3]}]
+  (h/remould #(* % 2) {1 [2 3] #{4 5} 6 7 '(8 (9 (10)))}) => {1 [4 6], #{4 5} 12, 7 '(16 (18 (20)))})
 
 (fact "A specialised function can be used for custom manipulation"
-  (h/manipulate* (fn [x] (* 2
+  (h/remould (fn [x] (* 2
                            (cond (string? x) (Integer/parseInt x)
                                  :else x)))
                  {1 "2" 3 ["4" 5 #{6 "7"}]})
-  => {2 4 6 [8 10 #{12 14}]})
+  => {1 4 3 [8 10 #{12 14}]})
 
   (fact "Customized type functions can be used for deconstruction and construction"
-    (h/manipulate* (fn [x] (* 2 x))
+    (h/remould (fn [x] (* 2 x))
                    {1 "2" 3 ["4" 5 #{6 "7"}]}
                    [{:pred String
                      :dtor (fn [x] (Integer/parseInt x))}])
-    => {2 4 6 [8 10 #{12 14}]}
+    => {1 4 3 [8 10 #{12 14}]}
 
-    (h/manipulate* (fn [x] (* 2 x))
+    (h/remould (fn [x] (* 2 x))
                    {1 "2" 3 ["4" 5 #{6 "7"}]}
                    [{:pred String
                      :dtor (fn [x] (Integer/parseInt x))
                      :ctor (fn [x] (.toString x))}])
-    => {2 "4" 6 ["8" 10 #{12 "14"}]}
+    => {1 "4" 3 ["8" 10 #{12 "14"}]}
 
-    (h/manipulate* (fn [x] (* 2 x))
+    (h/remould (fn [x] (* 2 x))
                    {1 "2" 3 ["4" 5 #{6 "7"}]}
                    [{:pred String
                      :dtor (fn [x] (Integer/parseInt x))
                      :ctor (fn [x] [(.toString x)])}])
-    => {2 ["4"] 6 [["8"] 10 #{12 ["14"]}]}
+    => {1 ["4"] 3 [["8"] 10 #{12 ["14"]}]}
 
-    (h/manipulate* (fn [x] (* 2 x))
+    (h/remould (fn [x] (* 2 x))
                    {1 "2" 3 ["4" 5 #{6 "7"}]}
                    [{:pred String
                      :dtor (fn [x] [(Integer/parseInt x)])
                      :ctor (fn [x] (.toString x))}])
-    => {2 "[4]" 6 ["[8]" 10 #{12 "[14]"}]})
+    => {1 "[4]" 3 ["[8]" 10 #{12 "[14]"}]})
 
   (fact "Different types of containers"
-    (h/manipulate* #(* 2 %)
+    (h/remould #(* 2 %)
                    (java.util.Vector. [1 2 3])
                    [{:pred java.util.Vector
                      :dtor seq}])
     => '(2 4 6)
 
-    (h/manipulate* #(* 2 %)
+    (h/remould #(* 2 %)
                    (java.util.Vector. [1 2 3])
                    [{:pred java.util.Vector
                      :dtor seq
@@ -294,28 +331,28 @@
     => #{2 4 6})
 
   (fact "Predictates on numbers"
-    (h/manipulate* identity
+    (h/remould identity
                    [1 2 3 4 5]
                    [{:pred #(= 2 %)
                      :dtor (fn [x] 10)}])
     => [1 10 3 4 5])
 
   (fact "Predictates on vectors"
-    (h/manipulate* identity
+    (h/remould identity
                    [1 [:date 2 3 4 5] 6 7]
                    [{:pred #(and (vector? %) (= (first %) :date))
                      :dtor #(apply t/date-time (rest %))}])
     => [1 (t/date-time 2 3 4 5) 6 7])
 
   (fact "Predictates on vectors"
-    (h/manipulate* identity
+    (h/remould identity
                    [1 (t/date-time 2 3 4 5) 6 7]
                    [{:pred org.joda.time.DateTime
                      :dtor (fn [dt] [:date (t/year dt) (t/month dt)])}])
     => [1 [:date 2 3] 6 7])
 
   (fact "Predictates on numbers"
-    (h/manipulate* identity
+    (h/remould identity
                    [1 2 3 4 5]
                    [{:pred #(= 2 %)
                      :ctor (fn [x] 10)}])

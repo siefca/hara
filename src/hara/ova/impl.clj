@@ -33,30 +33,30 @@
   (let [k  (hash-keyword this)]
     (remove-watch irf k)))
 
-(defn sel [this] (:data (.state this)))
+(defn state [this] (:data (.state this)))
 
 (defn -init
   ([]  [[]  {:data      (ref [])
              :watches   (atom {})}]))
 
 (defn -setValidator [this vf]
-  (.setValidator (sel this) vf))
+  (.setValidator (state this) vf))
 
 (defn -getValidator [this]
-  (.getValidator (sel this)))
+  (.getValidator (state this)))
 
 (defn -getWatches [this]
-  (.getWatches (sel this)))
+  (.getWatches (state this)))
 
 (defn -addWatch [this k f]
-  (add-watch (sel this) k f))
+  (add-watch (state this) k f))
 
 (defn -removeWatch [this k]
-  (remove-watch (sel this) k))
+  (remove-watch (state this) k))
 
 (defn -clearWatches [this]
   (doseq [[k _] (-getWatches this)]
-    (remove-watch (sel this) k)))
+    (remove-watch (state this) k)))
 
 (defn -getElemWatches [this]
   (deref (:watches (.state this))))
@@ -73,10 +73,10 @@
 (defn -toString [this]
   (->> @this (map #(-> % deref str)) (s/join "\n")))
 
-(defn -deref [this] @(sel this))
+(defn -deref [this] @(state this))
 
 (defn -persistent [this]
-  (deref* (sel this)))
+  (deref* (state this)))
 
 (defn -seq [this]
   (let [res (map deref (seq (-deref this)))]
@@ -112,7 +112,7 @@
 (defn -conj [this v]
   (let [ev (ref v)]
     (add-iwatch this ev)
-    (alter (sel this) conj ev))
+    (alter (state this) conj ev))
   this)
 
 (defn -assoc [this k v]
@@ -120,7 +120,7 @@
     (ref-set pv v)
     (let [ev (ref v)]
       (add-iwatch this ev)
-      (alter (sel this) assoc k ev)))
+      (alter (state this) assoc k ev)))
   this)
 
 (defn -assocN [this i v]
@@ -129,13 +129,13 @@
 (defn -pop [this]
   (if-let [lv (last @this)]
     (remove-iwatch this lv))
-  (alter (sel this) pop)
+  (alter (state this) pop)
   this)
 
 (defn -empty [this]
   (for [rf (-deref this)]
     (remove-iwatch this rf))
-  (ref-set (sel this) [])
+  (ref-set (state this) [])
   this)
 
 (defn -reset [this]
@@ -148,7 +148,11 @@
   hara.ova.Ova
   [this w]
   (print-method
-   (let [hash (.hashCode this)]
-     (->>  @this (map #(-> % deref))
-           (cons (symbol (str "Ova@" hash)))
-           vec)) w))
+   (let [hash (.hashCode this)
+         ovas (->>  @this
+                    (map #(-> % deref))
+                    (cons (symbol (str "Ova@" hash)))
+                    str)]
+     (-> ovas
+       (.replace "(" "<")
+       (.replace ")" ">"))) w))

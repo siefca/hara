@@ -3,7 +3,28 @@
             [clojure.set :as set])
   (:refer-clojure :exclude [send]))
 
-;; ## Object Orientated Control
+;; ## Exceptions
+
+(defn error
+  "Throws an exception when called.
+
+    (error \"This is an error\")
+    ;=> (throws Exception)
+  "
+  ([e] (throw (Exception. (str e))))
+  ([e & more]
+     (throw (Exception. (apply str e more)))))
+
+(defmacro suppress
+  "Suppresses any errors thrown.
+
+    (suppress (error \"Error\"))
+    ;=> nil
+  "
+  [& body]
+  `(try ~@body (catch Throwable ~'t)))
+
+;; ## Various calling styles
 
 (defn call
   "Only executes `(f v1 ... vn)` if `f` is not nil"
@@ -14,8 +35,17 @@
   ([f v1 v2 v3 v4 ] (if-not (nil? f) (f v1 v2 v3 v4)))
   ([f v1 v2 v3 v4 & vs] (if-not (nil? f) (apply f v1 v2 v3 v4 vs))))
 
+(defn call-> [obj [ff & args]]
+  (cond (= ff '?)
+        (recur obj args)
+
+        (fn? ff)
+        (apply ff obj args)
+
+        (symbol? ff)
+        (apply call (suppress (resolve ff)) obj args)))
+
 (defn msg
-  "Object oriented style dispatch."
   ([obj kw] (call (obj kw) obj))
   ([obj kw v] (call (obj kw) obj v))
   ([obj kw v1 v2] (call (obj kw) obj v1 v2))
@@ -23,30 +53,39 @@
   ([obj kw v1 v2 v3 v4] (call (obj kw) obj v1 v2 v3 v4))
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
-(defn make-%? [f args]
+;; ## Predicheck System
+
+(defn make-?? [f args]
+  (apply list 'list
+         (concat [(list 'symbol "?")
+                  (list 'quote f)]
+                  `[~@args])))
+
+(defmacro ?? [f & args]
+  (make-?? f args))
+
+(defn make-?% [f args]
   (apply list 'fn ['?%]
          (list (concat [f '?%] `[~@args]))))
 
-(defmacro %? [f & args]
-  (make-?hash f args))
-
-(defn functify [chk obj]
-  true)
+(defmacro ?% [f & args]
+  (make-?% f args))
 
 (defn eq-chk
   "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
 
-      (eq-chk 2 2) ;=> true
+    (eq-chk 2 2) ;=> true
 
-      (eq-chk 2 even?) ;=> true
-    "
+    (eq-chk 2 even?) ;=> true
+
+    (eq-chk 2 '(< 1)) ;=> true
+  "
   [obj chk]
   (or (= obj chk)
-      (and (ifn? chk)
-           (list? chk) (functify chk obj)
-           (-> (chk obj) not not))))
+      (and (list? chk) (call-> obj chk))
+      (and (ifn? chk) (-> (chk obj) not not))))
 
-(defn get-sel [obj sel]
+(defn get-sel
   "Provides a shorthand way of getting a return value.
    `sel` can be a function, a vector, or a value.
 
@@ -54,6 +93,7 @@
 
     (get-sel {:a {:b {:c 1}}} [:a :b]) => {:c 1}
   "
+  [obj sel]
   (cond (vector? sel) (get-in obj sel)
         (ifn? sel) (sel obj)
         :else (get obj sel)))
@@ -90,45 +130,25 @@
   [obj1 obj2 sel]
   (= (get-sel obj1 sel) (get-sel obj2 sel)))
 
-(defn eq-pri
-  "Shorthand ways of checking where `m` fits `pri`
+(defn eq-prchk
+  "Shorthand ways of checking where `m` fits `prchk`
 
-    (eq-pri {:a 1} :a) ;=> truthy
+    (eq-prchk {:a 1} :a) ;=> truthy
 
-    (eq-pri {:a 1 :val 1} [:val 1]) ;=> true
+    (eq-prchk {:a 1 :val 1} [:val 1]) ;=> true
 
-    (eq-pri {:a {:b 1}} [[:a :b] odd?]) ;=> true
+    (eq-prchk {:a {:b 1}} [[:a :b] odd?]) ;=> true
   "
-  [obj pri]
-  (cond (vector? pri)
-        (sel-chk-all obj pri)
+  [obj prchk]
+  (cond (vector? prchk)
+        (sel-chk-all obj prchk)
 
         :else
-        (eq-chk obj pri)))
+        (eq-chk obj prchk)))
 
-;; ## Exceptions
 
-(defn error
-  "Throws an exception when called.
-
-    (error \"This is an error\")
-    ;=> (throws Exception)
-  "
-  ([e] (throw (Exception. (str e))))
-  ([e & more]
-     (throw (Exception. (apply str e more)))))
-
-(defmacro suppress
-  "Suppresses any errors thrown.
-
-    (suppress (error \"Error\"))
-    ;=> nil
-  "
-  [& body]
-  `(try ~@body (catch Throwable ~'t)))
-
-(defn suppress-pri [obj pri res]
-  (suppress (if (eq-pri obj pri) res)))
+(defn suppress-prchk [obj prchk res]
+  (suppress (if (eq-prchk obj prchk) res)))
 
 
 ;; ## String Methods
@@ -223,7 +243,7 @@
   [x] (instance? java.net.URI x))
 
 (defn bytes?
-  "Returns `true` if `x` is a primitive `byte` array.
+  "Returns `true` if `x` is a prchkmitive `byte` array.
 
     (bytes? (byte-array 8)) ;=> true
 
@@ -483,50 +503,116 @@
     ;=> {:a {:b {:d 1}}}
   "
   ([m] (remove-nested m (constantly false) {}))
-  ([m pri] (remove-nested m pri {}))
-  ([m pri output]
+  ([m prchk] (remove-nested m prchk {}))
+  ([m prchk output]
      (if-let [[k v] (first m)]
-       (cond (or (nil? v) (suppress (eq-pri m pri)))
-             (recur (dissoc m k) pri output)
+       (cond (or (nil? v) (suppress (eq-prchk m prchk)))
+             (recur (dissoc m k) prchk output)
 
              (hash-map? v)
-             (let [rmm (remove-nested v pri)]
+             (let [rmm (remove-nested v prchk)]
                (if (empty? rmm)
-                 (recur (dissoc m k) pri output)
-                 (recur (dissoc m k) pri (assoc output k rmm))))
+                 (recur (dissoc m k) prchk output)
+                 (recur (dissoc m k) prchk (assoc output k rmm))))
 
              :else
-             (recur (dissoc m k) pri (assoc output k v)))
+             (recur (dissoc m k) prchk (assoc output k v)))
        output)))
 
 
-;; Reference methods
+;; Multithreading Methods
 
 (defn hash-keyword
   [this & ids]
   (keyword (str "__" (st/join "_" (cons (.hashCode this) (map name ids))) "__")))
 
 (defn atom? [obj] (instance? clojure.lang.Atom obj))
+
 (defn ref? [obj]  (instance? clojure.lang.Ref obj))
 
-(defn set-iref! [rf obj]
+(defn set-value! [rf obj]
   (cond (atom? rf) (reset! rf obj)
         (ref? rf) (dosync (ref-set rf obj))))
+
+(defn alter! [rf f & args]
+  (cond (atom? rf) (apply swap! rf f args)
+        (ref? rf) (dosync (apply alter rf f args))))
 
 (defn follow
   ([master slave id] (follow master slave id identity))
   ([master slave id f]
      (add-watch master (hash-keyword slave id)
                 (fn [_ _ _ v]
-                  (set-iref! slave (f v))))))
+                  (set-value! slave (f v))))))
 
 (defn unfollow [master slave id]
   (remove-watch master (hash-keyword slave id)))
 
-(defn manipulate*
- ([f x] (manipulate* f x {}))
+(defn make-change-watch [sel f]
+  (fn [k rf p n]
+    (let [pv (get-sel p sel)
+          nv (get-sel n sel)]
+      (if-not (and (nil? pv) (nil? nv)
+                   (= pv nv))
+        (f k rf pv nv)))))
+
+(defn add-change-watch [rf k sel f]
+  (add-watch rf k (make-change-watch sel f)))
+
+(defn return-val [p ms ret]
+  (cond (nil? ms) (deref p)
+        :else (deref p ms ret)))
+
+(defn wait
+  ([f rf] (wait f rf nil nil))
+  ([f rf ms] (wait f rf ms nil))
+  ([f rf ms ret]
+     (let [p (promise)
+           pk (hash-keyword p)
+           d-fn (fn [_ rf _ _]
+                  (remove-watch rf pk)
+                  (deliver p rf))]
+       (add-watch rf pk d-fn)
+       (f rf)
+       (return-val p ms ret))))
+
+(defn wait-for-change
+  ([f rf] (wait-for-change f rf identity))
+  ([f rf sel] (wait-for-change f rf sel nil nil))
+  ([f rf sel ms] (wait-for-change f rf sel ms nil))
+  ([f rf sel ms ret]
+     (let [p (promise)
+           pk (hash-keyword pr)
+           d-fn (fn [k rf old new]
+                  (when (eq-sel old new sel)
+                    (remove-watch rf pk)
+                    (deliver p rf)))]
+       (add-change-watch rf pk (or sel identity))
+       (f rf)
+       (return-val p ms ret))))
+
+(comment
+  (defn threaded-inc [rf]
+    (future
+      (Thread/sleep 10)
+      (alter! rf inc)))
+
+  (def arf (ref 0))
+
+  (threaded-inc arf)
+
+  (deref (wait threaded-inc arf))
+
+  (def p (promise))
+
+  p
+
+  )
+
+(defn remould
+ ([f x] (remould f x {}))
  ([f x cs]
-    (let [m-fn    #(manipulate* f % cs)
+    (let [m-fn    #(remould f % cs)
           pred-fn (fn [pd]
                     (cond (instance? Class pd) #(instance? pd %)
                           (fn? pd) pd
@@ -536,7 +622,7 @@
       (cond (not (nil? c))
             (let [ctor (or (:ctor c) identity)
                   dtor (or (:dtor c) identity)]
-              (ctor (manipulate* f (dtor x) cs)))
+              (ctor (remould f (dtor x) cs)))
 
             :else
             (cond
@@ -545,15 +631,14 @@
               (instance? clojure.lang.Agent x)  (agent (m-fn @x))
               (list? x)                         (apply list (map m-fn x))
               (vector? x)                       (vec (map m-fn x))
-
-              (instance? clojure.lang.ISeq x)
-              (map m-fn x)
-
               (instance? clojure.lang.IPersistentSet x)
               (set (map m-fn x))
 
               (instance? clojure.lang.IPersistentMap x)
-              (into {} (map m-fn x))
+              (zipmap (keys x) (map m-fn (vals x)))
+
+              (instance? clojure.lang.ISeq x)
+              (map m-fn x)
 
               :else (f x))))))
 
@@ -561,8 +646,8 @@
  ([x] (deref* identity x))
  ([f x] (deref* f x []))
  ([f x cs]
-    (manipulate* f
-                 x
-                 (conj cs {:pred clojure.lang.IDeref
-                           :ctor identity
-                           :dtor deref}))))
+    (remould f
+             x
+             (conj cs {:pred clojure.lang.IDeref
+                       :ctor identity
+                       :dtor deref}))))

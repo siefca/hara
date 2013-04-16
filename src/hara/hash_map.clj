@@ -646,10 +646,10 @@
   "
   [m k]
   (if-not (vector? k) (get m k)
-          (let [[k pri] k
+          (let [[k prchk] k
                 val (get m k)]
             (if-not (hash-set? val) val
-                    (-> (filter #(eq-pri % pri) val) set)))))
+                    (-> (filter #(eq-prchk % prchk) val) set)))))
 
 (declare gets-in gets-in-loop)
 
@@ -712,19 +712,19 @@
 
 (defn assocs-in-filtered
   ([m all-ks v] (assocs-in-filtered m all-ks v identity combine))
-  ([m [[k pri] & ks :as all-ks] v sel rd]
+  ([m [[k prchk] & ks :as all-ks] v sel rd]
      (let [subm (get m k)]
        (cond (nil? subm) m
 
              (and (hash-set? subm) (every? hash-map? subm))
-             (let [ori-set (set (filter #(eq-pri % pri) subm))
+             (let [ori-set (set (filter #(eq-prchk % prchk) subm))
                    new-set (set (map #(assocs-in % ks v sel rd) ori-set))]
                (assoc m k (-> subm
                               (set/difference ori-set)
                               (set/union new-set))))
 
              (hash-map? subm)
-             (if (eq-pri subm pri)
+             (if (eq-prchk subm prchk)
                (assoc m k (assocs-in subm ks v sel rd))
                m)
 
@@ -756,18 +756,18 @@
                 :else (assoc m k (dissocs-in m ks))))))
 
 (defn dissocs-in-filtered
-  ([m [[k pri] & ks :as all-ks]]
+  ([m [[k prchk] & ks :as all-ks]]
      (let [subm (get m k)]
        (cond (nil? subm) m
              (and (hash-set? subm) (every? hash-map? subm))
-             (let [ori-set (set (filter #(eq-pri % pri) subm))
+             (let [ori-set (set (filter #(eq-prchk % prchk) subm))
                    new-set (set (map #(dissocs-in % ks) ori-set))]
                (assoc m k (-> subm
                               (set/difference ori-set)
                               (set/union new-set))))
 
              (hash-map? subm)
-             (if (eq-pri subm pri)
+             (if (eq-prchk subm prchk)
                (assoc m k (dissocs-in subm ks))
                m)
 

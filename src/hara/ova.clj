@@ -1,6 +1,6 @@
 (ns hara.ova
-  (:use [hara.ova.impl :only [sel add-iwatch remove-iwatch]]
-        [hara.common :only [suppress-pri eq-pri]])
+  (:use [hara.ova.impl :only [state add-iwatch remove-iwatch]]
+        [hara.common :only [get-sel suppress eq-prchk suppress-prchk]])
   (:require [clojure.set :as set])
   (:import hara.ova.Ova))
 
@@ -33,48 +33,67 @@
        (dosync (concat! ova coll))
        ova)))
 
-(defn add-elem-watch [^hara.ova.Ova ova k f]
+(defn clear-watches [ova]
+  (.clearWatches ova))
+
+(defn add-elem-watch [ova k f]
   (.addElemWatch ova k f))
 
-(defn remove-elem-watch [^hara.ova.Ova ova k]
+(defn remove-elem-watch [ova k]
   (.removeElemWatch ova k))
 
-(defn get-elem-watches [^hara.ova.Ova ova]
+(defn get-elem-watches [ova]
   (.getElemWatches ova))
 
-(defn set-elem-validator [^hara.ova.Ova ova v]
-  (.setElemValidator ova v))
+(defn clear-elem-watches [ova]
+  (.clearElemWatches ova))
 
-(defn get-elem-validator [^hara.ova.Ova ova]
-  (.getElemValidator ova))
+(defn make-elem-change-watch [ks f]
+    (fn [k ov rf p n]
+      (let [pv (get-in p ks)
+            nv (get-in n ks)]
+        (if (not= pv nv)
+          (f k ov rf pv nv)))))
+
+(defn make-elem-change-watch [sel f]
+  (fn [k ov rf p n]
+    (let [pv (get-sel p sel)
+          nv (get-sel n sel)]
+      (if-not (and (nil? pv) (nil? nv)
+                   (= pv nv))
+        (f k ov rf pv nv)))))
+
+(defn add-elem-change-watch [ov k sel f]
+  (add-elem-watch ov k (make-elem-change-watch sel f)))
+
 
 (defn indices
-  [ova pri]
+  [ova prchk]
   (cond
-   (number? pri)
-   (if (suppress (get ova pri)) #{pri} #{})
+   (number? prchk)
+   (if (suppress (get ova prchk)) #{prchk} #{})
 
-   (set? pri)
-   (set (mapcat #(indices ova %) pri))
+   (set? prchk)
+   (set (mapcat #(indices ova %) prchk))
 
    :else
    (set (filter (comp not nil?)
                 (map-indexed (fn [i obj]
-                               (suppress-pri obj pri i))
+                               (suppress-prchk obj prchk i))
                              ova)))))
 
 (defn select
-  [ova pri]
+  [ova prchk]
   (cond
-   (number? pri)
-   (if-let [val (suppress (get ova pri))]
+   (number? prchk)
+   (if-let [val (suppress (get ova prchk))]
      #{val} #{})
 
-   (set? pri)
-   (set (mapcat #(select ova %) pri))
+   (set? prchk)
+   (set (mapcat #(select ova %) prchk))
 
    :else
-   (set (filter (fn [obj] (suppress-pri obj pri obj)) ova))))
+   (set (filter (fn [obj] (suppress-prchk obj prchk obj)) ova))))
 
 (defn map! [ova f & args]
   (doseq [evm @ova]
@@ -86,14 +105,14 @@
     (alter (@ova i) #(f i %) ))
   ova)
 
-(defn smap! [ova pri f & args]
-  (let [idx (indices ova pri)]
+(defn smap! [ova prchk f & args]
+  (let [idx (indices ova prchk)]
     (doseq [i idx]
       (apply alter (@ova i) f args)))
   ova)
 
-(defn smap-indexed! [ova pri f]
-  (let [idx (indices ova pri)]
+(defn smap-indexed! [ova prchk f]
+  (let [idx (indices ova prchk)]
     (doseq [i idx]
       (alter (@ova i) #(f i %))))
   ova)
@@ -107,17 +126,17 @@
 (defn insert! [ova val & [i]]
   (let [evm (ref val)]
     (add-iwatch ova evm)
-    (alter (sel ova) insert-fn evm i))
+    (alter (state ova) insert-fn evm i))
   ova)
 
 (defn sort! [ova comp]
-  (alter (sel ova)
+  (alter (state ova)
          #(sort (fn [x y]
                   ((or comp compare) @x @y)) %))
   ova)
 
 (defn reverse! [ova]
-  (alter (sel ova) clojure.core/reverse)
+  (alter (state ova) reverse)
   ova)
 
 (defn- delete-iwatches [ova idx]
@@ -134,39 +153,40 @@
        (filter (comp not nil?))
        vec))
 
-(defn remove! [ova pri]
-  (let [idx (indices ova pri)]
-    (delete-iwatches ova idx)
-    (alter (sel ova) delete-iobjs idx))
+(defn delete-indices [ova idx]
+  (delete-iwatches ova idx)
+  (alter (state ova) delete-iobjs idx)
   ova)
 
-(defn filter! [ova pri]
+(defn remove! [ova prchk]
+  (let [idx (indices ova prchk)]
+    (delete-indices ova idx))
+  ova)
+
+(defn filter! [ova prchk]
   (let [idx (set/difference
              (set (range (count ova)))
-             (indices ova pri))]
-    (delete-iwatches ova idx)
-    (alter (sel ova) delete-iobjs idx))
+             (indices ova prchk))]
+    (delete-indices ova idx))
   ova)
 
 
 (comment
 
-  (defn set! [ova chk val]
+  (defn vset! [ova chk val]
     (smap! ova chk (constantly val)))
 
-
-
-  (defn update! [ova chk val]
+  (defn vinto! [ova chk val]
     (smap! ova chk #(into % val)))
 
-  (defn assoc! [ova chk & kvs]
-    (smap! ova chk #(apply clojure.core/assoc % kvs)))
+  (defn vassoc! [ova chk & kvs]
+    (smap! ova chk #(apply assoc % kvs)))
 
-  (defn dissoc! [ova chk & ks]
-    (smap! ova chk #(apply clojure.core/dissoc % ks)))
+  (defn vassoc-in! [ova chk ks v]
+    (smap! ova chk #(assoc-in % ks v)))
 
-  (defn update-in! [ova chk ks f]
-    (smap! ova chk #(clojure.core/update-in % ks f)))
+  (defn vdissoc! [ova chk & ks]
+    (smap! ova chk #(apply dissoc % ks)))
 
-  (defn set-in! [ova chk ks val]
-    (smap! ova chk #(clojure.core/update-in % ks (constantly val)) )))
+  (defn vupdate-in! [ova chk ks f]
+    (smap! ova chk #(update-in % ks f))))
