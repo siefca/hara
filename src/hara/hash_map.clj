@@ -518,9 +518,9 @@
     ;=> {:a #{{:id 1 :val #{1 2}}}}
 
   "
-  ([m1 m2] (merges m1 m2 identity combine {}))
-  ([m1 m2 sel] (merges m1 m2 sel combine {}))
-  ([m1 m2 sel rd] (merges m1 m2 sel rd {}))
+  ([m1 m2] (merges m1 m2 identity combine nil))
+  ([m1 m2 sel] (merges m1 m2 sel combine nil))
+  ([m1 m2 sel rd] (merges m1 m2 sel rd nil))
   ([m1 m2 sel rd output]
      (if-let [[k v] (first m2)]
        (recur (dissoc m1 k) (rest m2) sel rd
