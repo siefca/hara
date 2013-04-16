@@ -1,5 +1,5 @@
 (ns hara.ova.impl
-  (:use [hara.common :only [deref* cmp-chk]])
+  (:use [hara.common :only [deref* sel-chk]])
   (:require [clojure.string :as s])
   (:gen-class
    :name hara.ova.Ova
@@ -14,14 +14,12 @@
                 clojure.lang.ITransientVector]
    :methods [[empty [] hara.ova.Ova]
              [reset [] hara.ova.Ova]
-             [boo [] hara.ova.Ova]
              [clearWatches [] void]
              [addElemWatch [java.lang.Object clojure.lang.IFn] void]
              [removeElemWatch [java.lang.Object] void]
              [getElemWatches [] clojure.lang.IPersistentMap]
              [clearElemWatches [] void]]))
 
-(defn -boo [this] this)
 (defn make-keyword [this]
   (keyword (str "__" (.hashCode this) "__")))
 
@@ -99,21 +97,21 @@
 (defn -valAt
   ([this k] (-valAt this k nil nil))
   ([this k nv] (-valAt this k nil nv))
-  ([this k cmp nv]
+  ([this k sel nv]
     (cond
-     (and (nil? cmp) (integer? k))
+     (and (nil? sel) (integer? k))
      (-nth this k nv)
 
      :else
      (let [res (->> (map deref (-deref this))
-                    (filter (fn [m] (cmp-chk m (or cmp :id) k)))
+                    (filter (fn [m] (sel-chk m (or sel :id) k)))
                     first)]
        (or res nv)))))
 
 (defn -invoke
   ([this k] (-valAt this k))
   ([this k nv] (-valAt this k nv))
-  ([this k cmp nv] (-valAt this k cmp nv)))
+  ([this k sel nv] (-valAt this k sel nv)))
 
 (defn -conj [this v]
   (let [ev (ref v)]

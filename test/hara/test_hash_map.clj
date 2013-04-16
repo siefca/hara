@@ -228,34 +228,6 @@
                   :there/a 3 :there/b 4} [:hello] [:+])
   => {:a 1 :b 2 :+ {:there {:a 3 :b 4}}})
 
-(fact "eq-cmp"
-  (h/eq-cmp 2 4 even?) => true
-  (h/eq-cmp 2 5 even?) => false
-  (h/eq-cmp {:id 1 :a 1} {:id 1 :a 2} :id) => true
-  (h/eq-cmp {:id 1 :a 1} {:id 1 :a 2} [:id]) => true
-  (h/eq-cmp {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
-
-(fact "eq-chk"
-  (h/eq-chk 2 2) => true
-  (h/eq-chk 2 even?) => true)
-
-(fact "val-chk"
-  (h/val-chk {:a {:b 1}} #(get % :a) {:b 1}) => true
-  (h/val-chk {:a {:b 1}} :a {:b 1}) => true
-  (h/val-chk {:a {:b 1}} :a hash-map?) => true
-  (h/val-chk {:a {:b 1}} [:a :b] 1) => true
-  (h/val-chk {:a {:b 1}} [:a :b] odd?) => true)
-
-(fact "val-pred?"
-  (h/val-pred? {:a 1} :a) => truthy
-  (h/val-pred? {:a 1} hash-map?) => true
-  (h/val-pred? {:a 1} hash-set?) => false
-  (h/val-pred? {:a 1 :val 1} #(= 1 (% :val))) => true
-  (h/val-pred? {:a 1 :val 1} #(= 2 (% :val))) => false
-  (h/val-pred? {:a 1 :val 1} [:val 1]) => true
-  (h/val-pred? {:a 1 :val 1} [:val even?]) => false
-  (h/val-pred? {:a {:b 1}} [[:a :b] odd?]) => true)
-
 (fact "combine-obj"
   (h/combine-obj #{1 2 3} 2 identity)
   => 2
@@ -418,7 +390,8 @@
             :id
             (fn [m1 m2] (h/merges m1 m2 :id
                                  (fn [m1 m2] (h/merges m1 m2 :id
-                                                      h/merges))))))
+                                                      h/merges)))))
+  => nil)
 
 (fact "merges-in"
   (h/merges-in {} {:a 1}) => {:a 1}

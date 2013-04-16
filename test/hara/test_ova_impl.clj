@@ -6,8 +6,6 @@
 
 (def ^:dynamic *ova* (Ova.))
 
-(.boo *ova*)
-
 (against-background
   [(before :facts (dosync (i/-empty *ova*)))]
 

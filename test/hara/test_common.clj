@@ -26,6 +26,44 @@
   (h/send (ops) :sub 3 1 1) => 1
   (h/send (ops) :sub 3 1 1 1) => 0)
 
+(fact "eq-chk"
+  (h/eq-chk 2 2) => true
+  (h/eq-chk 2 even?) => true)
+
+(fact "get-sel"
+  (h/get-sel {"a" {:b {:c 1}}} "a") => {:b {:c 1}}
+  (h/get-sel {:a {:b {:c 1}}} :a) => {:b {:c 1}}
+  (h/get-sel {:a {:b {:c 1}}} [:a :b]) => {:c 1}
+  (h/get-sel {:a {:b {:c 1}}} h/hash-map?) => true)
+
+(fact "sel-chk"
+  (h/sel-chk {:a {:b 1}} #(get % :a) {:b 1}) => true
+  (h/sel-chk {"a" {:b 1}} "a" {:b 1}) => true
+  (h/sel-chk {:a {:b 1}} :a h/hash-map?) => true
+  (h/sel-chk {:a {:b 1}} :a {:b 1}) => true
+  (h/sel-chk {:a {:b 1}} [:a :b] 1) => true)
+
+(fact "sel-chk-all"
+  (h/sel-chk-all {:a {:b 1}} [:a {:b 1}] [:a h/hash-map?]) => true)
+
+(fact "eq-sel"
+  (h/eq-sel 2 4 even?) => true
+  (h/eq-sel 2 5 even?) => false
+  (h/eq-sel {:id 1 :a 1} {:id 1 :a 2} h/hash-set?) => true
+  (h/eq-sel {:id 1 :a 1} {:id 1 :a 2} :id) => true
+  (h/eq-sel {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
+
+
+(fact "eq-pri"
+  (h/eq-pri {:a 1} :a) => true
+  (h/eq-pri {:a 1} h/hash-map?) => true
+  (h/eq-pri {:a 1} h/hash-set?) => false
+  (h/eq-pri {:a 1 :val 1} #(= 1 (% :val))) => true
+  (h/eq-pri {:a 1 :val 1} #(= 2 (% :val))) => false
+  (h/eq-pri {:a 1 :val 1} [:val 1]) => true
+  (h/eq-pri {:a 1 :val 1} [:val even?]) => false
+  (h/eq-pri {:a {:b 1}} [[:a :b] odd?]) => true)
+
 (fact "error"
   (h/error "something") => (throws Exception))
 

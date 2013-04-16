@@ -383,7 +383,7 @@
 
 (defn combine-obj
   "Looks for the value within the set `s` that matches `v` when
-   `cmp` is applied to both.
+   `sel` is applied to both.
 
     (combine-obj #{1 2 3} 2 identity)
     ;=> 2
@@ -391,11 +391,11 @@
     (combine-obj #{{:id 1}} {:id 1 :val 1} :id)
     ;=> {:id 1}
   "
-  [s v cmp]
+  [s v sel]
   (if-let [sv (first s)]
-    (if (eq-cmp sv v cmp)
+    (if (eq-sel sv v sel)
       sv
-      (recur (next s) v cmp))))
+      (recur (next s) v sel))))
 
 (defn combine-to-set
   "Returns `s` with either v added or combined to an existing set member.
@@ -405,8 +405,8 @@
                     :id merge)
     ;=> #{{:id 1 :a 1 :b} {:id 2}}
   "
-  [s v cmp rd]
-  (if-let [sv (combine-obj s v cmp)]
+  [s v sel rd]
+  (if-let [sv (combine-obj s v sel)]
     (conj (disj s sv) (rd sv v))
     (conj s v)))
 
@@ -418,21 +418,21 @@
                   :id merge)
     ;=> #{{:id 1 :val 1} {:id 2 :val 2}}
   "
-  [s1 s2 cmp rd]
+  [s1 s2 sel rd]
   (if-let [v (first s2)]
-    (recur (combine-to-set s1 v cmp rd) (next s2) cmp rd)
+    (recur (combine-to-set s1 v sel rd) (next s2) sel rd)
     s1))
 
 (defn combine-internal
-  "Combines elements in `s` using rules defined by `cmp` and `rd`.
+  "Combines elements in `s` using rules defined by `sel` and `rd`.
 
     (combine-internal #{{:id 1} {:id 2} {:id 1 :val 1} {:id 2 :val 2}}
                       :id merge)
     ;=> #{{:id 1 :val 1} {:id 2 :val 2}}
   "
-  [s cmp rd]
+  [s sel rd]
   (if-not (hash-set? s) s
-          (combine-sets #{} s cmp rd)))
+          (combine-sets #{} s sel rd)))
 
 (defn combine
   "Generic function that looks at `v1` and `v2`, which can be either
@@ -461,24 +461,24 @@
 
                  (= v1 v2) v1
                  :else #{v1 v2})))
-  ([v1 v2 cmp rd]
+  ([v1 v2 sel rd]
      (-> (cond (nil? v2) v1
                (nil? v1) v2
                (hash-set? v1)
                (cond (hash-set? v2)
-                     (combine-sets v1 v2 cmp rd)
+                     (combine-sets v1 v2 sel rd)
 
-                     :else (combine-to-set v1 v2 cmp rd))
+                     :else (combine-to-set v1 v2 sel rd))
                :else
                (cond (hash-set? v2)
-                     (combine-to-set v2 v1 cmp rd)
+                     (combine-to-set v2 v1 sel rd)
 
-                     (eq-cmp v1 v2 cmp)
+                     (eq-sel v1 v2 sel)
                      (rd v1 v2)
 
                      (= v1 v2) v1
                      :else #{v1 v2}))
-         (combine-internal cmp rd))))
+         (combine-internal sel rd))))
 
 (defn decombine
   "Returns `v` without every single member of `dv`.
@@ -519,12 +519,12 @@
 
   "
   ([m1 m2] (merges m1 m2 identity combine {}))
-  ([m1 m2 cmp] (merges m1 m2 cmp combine {}))
-  ([m1 m2 cmp rd] (merges m1 m2 cmp rd {}))
-  ([m1 m2 cmp rd output]
+  ([m1 m2 sel] (merges m1 m2 sel combine {}))
+  ([m1 m2 sel rd] (merges m1 m2 sel rd {}))
+  ([m1 m2 sel rd output]
      (if-let [[k v] (first m2)]
-       (recur (dissoc m1 k) (rest m2) cmp rd
-              (assoc output k (combine (m1 k) v cmp rd)))
+       (recur (dissoc m1 k) (rest m2) sel rd
+              (assoc output k (combine (m1 k) v sel rd)))
        (merge m1 output))))
 
 (defn merges-in
@@ -541,17 +541,17 @@
                      {:bar #{{:baz 1}}}}}}}
   "
   ([m1 m2] (merges-in m1 m2 identity combine {}))
-  ([m1 m2 cmp] (merges-in m1 m2 cmp combine {}))
-  ([m1 m2 cmp rd] (merges-in m1 m2 cmp rd {}))
-  ([m1 m2 cmp rd output]
+  ([m1 m2 sel] (merges-in m1 m2 sel combine {}))
+  ([m1 m2 sel rd] (merges-in m1 m2 sel rd {}))
+  ([m1 m2 sel rd output]
      (if-let [[k v2] (first m2)]
        (let [v1 (m1 k)]
          (cond (not (and (hash-map? v1) (hash-map? v2)))
-               (recur (dissoc m1 k) (rest m2) cmp rd
-                      (assoc output k (combine v1 v2 cmp rd)))
+               (recur (dissoc m1 k) (rest m2) sel rd
+                      (assoc output k (combine v1 v2 sel rd)))
                :else
-               (recur (dissoc m1 k) (rest m2) cmp rd
-                            (assoc output k (merges-in v1 v2 cmp rd)))))
+               (recur (dissoc m1 k) (rest m2) sel rd
+                            (assoc output k (merges-in v1 v2 sel rd)))))
        (merge m1 output))))
 
 (defn merges-in*
@@ -569,25 +569,25 @@
                               #{{:id 3 :baz #{1 2}}}}}}}}
 "
   ([m1 m2] (merges-in* m1 m2 hash-map? combine {}))
-  ([m1 m2 cmp] (merges-in* m1 m2 cmp combine {}))
-  ([m1 m2 cmp rd] (merges-in* m1 m2 cmp rd {}))
-  ([m1 m2 cmp rd output]
+  ([m1 m2 sel] (merges-in* m1 m2 sel combine {}))
+  ([m1 m2 sel rd] (merges-in* m1 m2 sel rd {}))
+  ([m1 m2 sel rd output]
      (cond (hash-map? m1)
            (if-let [[k v2] (first m2)]
              (let [v1 (m1 k)
                    nm1 (dissoc m1 k)
                    nm2 (rest m2)]
                (cond (and (hash-map? v1) (hash-map? v2))
-                     (recur nm1 nm2 cmp rd
-                            (assoc output k (merges-in* v1 v2 cmp rd)))
+                     (recur nm1 nm2 sel rd
+                            (assoc output k (merges-in* v1 v2 sel rd)))
 
                      (or (hash-set? v1) (hash-set? v2))
-                     (recur nm1 nm2 cmp rd
+                     (recur nm1 nm2 sel rd
                             (assoc output k
-                                   (combine v1 v2 cmp
-                                            #(merges-in* %1 %2 cmp rd))))
+                                   (combine v1 v2 sel
+                                            #(merges-in* %1 %2 sel rd))))
                      :else
-                     (recur nm1 nm2 cmp rd
+                     (recur nm1 nm2 sel rd
                             (assoc output k (rd v1 v2)))))
              (merge m1 output))
 
@@ -596,7 +596,7 @@
 
 (defn assocs
   "Similar to `assoc` but conditions of association is specified
-  through `cmp` (default: `identity`) and well as merging specified
+  through `sel` (default: `identity`) and well as merging specified
   through `rd` (default: `combine`).
 
     (assocs {:a #{1}} :a #{2 3 4}) ;=> {:a #{1 2 3 4}}
@@ -610,11 +610,11 @@
 
   "
   ([m k v] (assocs m k v identity combine))
-  ([m k v cmp rd]
+  ([m k v sel rd]
      (let [z (get m k)]
        (cond (nil? z) (assoc m k v)
              :else
-             (assoc m k (combine z v cmp rd))))))
+             (assoc m k (combine z v sel rd))))))
 
 (defn dissocs
   "Similar to `dissoc` but allows dissassociation of sets of values from a map.
@@ -647,10 +647,10 @@
   "
   [m k]
   (if-not (vector? k) (get m k)
-          (let [[k pred] k
+          (let [[k pri] k
                 val (get m k)]
             (if-not (hash-set? val) val
-                    (-> (filter #(val-pred? % pred) val) set)))))
+                    (-> (filter #(eq-pri % pri) val) set)))))
 
 (declare gets-in gets-in-loop)
 
@@ -695,38 +695,38 @@
     ;=> {:a #{{:b {:id 1 :c 2}} {:b {:id 2}}}}
   "
   ([m all-ks v] (assocs-in m all-ks v identity combine))
-  ([m [k & ks :as all-ks] v cmp rd]
+  ([m [k & ks :as all-ks] v sel rd]
      (cond (nil? ks)
            (cond (vector? k) (error "cannot allow vector-form on last key " k)
-                 (or (nil? m) (hash-map? m)) (assocs m k v cmp rd)
-                 (nil? k) (combine m v cmp rd)
+                 (or (nil? m) (hash-map? m)) (assocs m k v sel rd)
+                 (nil? k) (combine m v sel rd)
                  :else (error m " is not an associative map"))
 
            (or (nil? m) (hash-map? m))
-           (cond (vector? k) (assocs-in-filtered m all-ks v cmp rd)
+           (cond (vector? k) (assocs-in-filtered m all-ks v sel rd)
                  :else
                  (let [val (get m k)]
                    (cond (hash-set? val)
-                         (assoc m k (set (map #(assocs-in % ks v cmp rd) val)))
-                         :else (assoc m k (assocs-in val ks v cmp rd)))))
+                         (assoc m k (set (map #(assocs-in % ks v sel rd) val)))
+                         :else (assoc m k (assocs-in val ks v sel rd)))))
            :else (error m " is required to be a map"))))
 
 (defn assocs-in-filtered
   ([m all-ks v] (assocs-in-filtered m all-ks v identity combine))
-  ([m [[k pred] & ks :as all-ks] v cmp rd]
+  ([m [[k pri] & ks :as all-ks] v sel rd]
      (let [subm (get m k)]
        (cond (nil? subm) m
 
              (and (hash-set? subm) (every? hash-map? subm))
-             (let [ori-set (set (filter #(val-pred? % pred) subm))
-                   new-set (set (map #(assocs-in % ks v cmp rd) ori-set))]
+             (let [ori-set (set (filter #(eq-pri % pri) subm))
+                   new-set (set (map #(assocs-in % ks v sel rd) ori-set))]
                (assoc m k (-> subm
                               (set/difference ori-set)
                               (set/union new-set))))
 
              (hash-map? subm)
-             (if (val-pred? subm pred)
-               (assoc m k (assocs-in subm ks v cmp rd))
+             (if (eq-pri subm pri)
+               (assoc m k (assocs-in subm ks v sel rd))
                m)
 
              :else (error subm "needs to be hash-map or hash-set")))))
@@ -757,18 +757,18 @@
                 :else (assoc m k (dissocs-in m ks))))))
 
 (defn dissocs-in-filtered
-  ([m [[k pred] & ks :as all-ks]]
+  ([m [[k pri] & ks :as all-ks]]
      (let [subm (get m k)]
        (cond (nil? subm) m
              (and (hash-set? subm) (every? hash-map? subm))
-             (let [ori-set (set (filter #(val-pred? % pred) subm))
+             (let [ori-set (set (filter #(eq-pri % pri) subm))
                    new-set (set (map #(dissocs-in % ks) ori-set))]
                (assoc m k (-> subm
                               (set/difference ori-set)
                               (set/union new-set))))
 
              (hash-map? subm)
-             (if (val-pred? subm pred)
+             (if (eq-pri subm pri)
                (assoc m k (dissocs-in subm ks))
                m)
 

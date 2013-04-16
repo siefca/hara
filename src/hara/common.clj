@@ -32,62 +32,71 @@
 
       (eq-chk 2 even?) ;=> true
     "
-  [v chk]
-  (or (= v chk)
-      (and (ifn? chk) (chk v))))
+  [obj chk]
+  (or (= obj chk)
+      (and (ifn? chk)
+           (-> (chk obj) not not))))
 
-(defn eq-cmp
+(defn get-sel [obj sel]
+  "Provides a shorthand way of getting a return value.
+   `sel` can be a function, a vector, or a value.
+
+    (get-sel {:a {:b {:c 1}}} :a) => {:b {:c 1}}
+
+    (get-sel {:a {:b {:c 1}}} [:a :b]) => {:c 1}
+  "
+  (cond (vector? sel) (get-in obj sel)
+        (ifn? sel) (sel obj)
+        :else (get obj sel)))
+
+(defn sel-chk
+  "Returns `true` if `(sel obj)` satisfies `eq-chk`
+
+    (sel-chk {:a {:b 1}} :a hash-map?) ;=> true
+
+    (sel-chk {:a {:b 1}} [:a :b] 1) ;=> true
+  "
+  [obj sel chk]
+  (eq-chk (get-sel obj sel) chk))
+
+(defn sel-chk-all
+  "Returns `true` if `obj` satisfies all pairs of sel and chk
+
+    (sel-chk-all {:a {:b 1}} [:a {:b 1}] [:a hash-map?]) => true
+  "
+  [obj & scv]
+  (every? (fn [[sel chk]]
+            (sel-chk obj sel chk))
+          scv))
+
+(defn eq-sel
   "A shortcut to compare if two vals are equal.
 
-      (eq-cmp {:id 1 :a 1} {:id 1 :a 2} :id)
+      (eq-sel {:id 1 :a 1} {:id 1 :a 2} :id)
       ;=> true
 
-      (eq-cmp {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id])
+      (eq-sel {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id])
       ;=> true
-    "
-  [v1 v2 cmp]
-  (cond (vector? cmp)
-        (= (get-in v1 cmp) (get-in v2 cmp))
+  "
+  [obj1 obj2 sel]
+  (= (get-sel obj1 sel) (get-sel obj2 sel)))
+
+(defn eq-pri
+  "Shorthand ways of checking where `m` fits `pri`
+
+    (eq-pri {:a 1} :a) ;=> truthy
+
+    (eq-pri {:a 1 :val 1} [:val 1]) ;=> true
+
+    (eq-pri {:a {:b 1}} [[:a :b] odd?]) ;=> true
+  "
+  [obj pri]
+  (cond (vector? pri)
+        (let [[sel chk] pri]
+          (sel-chk obj sel chk))
 
         :else
-        (if-let [c1 (cmp v1)]
-          (= c1 (cmp v2)))))
-
-(defn get-cmp [m cmp]
-  "Returns `(get-in m cmp)` if `cmp` is a vector."
-  (if (vector? cmp)
-    (get-in m cmp)
-    (cmp m)))
-
-(defn eq-cmp-chk
-  "Returns `true` if `(cmp obj)` satisfies `eq-chk`
-
-    (cmp-chk {:a {:b 1}} :a hash-map?) ;=> true
-
-    (val-chk {:a {:b 1}} [:a :b] 1) ;=> true
-  "
-  [obj cmp chk]
-  (eq-chk (get-cmp obj cmp) chk))
-
-(defn eq-cmp-chk-all
-  [obj ccs]
-  (let [ccp (partition 2 cmp-v)]
-    (every? (fn [cc] (let [[cmp chk] cc] cmp-chk obj cmp chk)) ccp)))
-        
-(defn eq-pred
-  "Shorthand ways of checking where `m` fits `pred`
-
-    (eq-pred {:a 1} :a) ;=> truthy
-
-    (eq-pred {:a 1 :val 1} [:val 1]) ;=> true
-
-    (eq-pred {:a {:b 1}} [[:a :b] odd?]) ;=> true
-  "
-  [m pred]
-  (cond (vector? pred)
-        (let [[cmp chk] pred]
-          (eq-cmp-chk m cmp chk))
-        (ifn? pred) (pred m)))
+        (eq-chk obj pri)))
 
 ;; ## Exceptions
 
@@ -465,20 +474,20 @@
     ;=> {:a {:b {:d 1}}}
   "
   ([m] (remove-nested m (constantly false) {}))
-  ([m pred] (remove-nested m pred {}))
-  ([m pred output]
+  ([m pri] (remove-nested m pri {}))
+  ([m pri output]
      (if-let [[k v] (first m)]
-       (cond (or (nil? v) (suppress (pred v)))
-             (recur (dissoc m k) pred output)
+       (cond (or (nil? v) (suppress (eq-pri m pri)))
+             (recur (dissoc m k) pri output)
 
              (hash-map? v)
-             (let [rmm (remove-nested v pred)]
+             (let [rmm (remove-nested v pri)]
                (if (empty? rmm)
-                 (recur (dissoc m k) pred output)
-                 (recur (dissoc m k) pred (assoc output k rmm))))
+                 (recur (dissoc m k) pri output)
+                 (recur (dissoc m k) pri (assoc output k rmm))))
 
              :else
-             (recur (dissoc m k) pred (assoc output k v)))
+             (recur (dissoc m k) pri (assoc output k v)))
        output)))
 
 (defn manipulate*
