@@ -110,24 +110,24 @@
   (h/keyword-val? :hello/there/again :again) => true)
 
 
-(fact "datmap-ns will output all unique kns namespace"
-  (h/datmap-ns {:hello/a 1 :hello/b 2 :a 3 :b 4}) => #{nil :hello}
-  (h/datmap-ns {:hello/a 1 :hello/b 2 :there/a 3 :there/b 4}) => #{:hello :there})
+(fact "hashmap-ns will output all unique ns namespaces"
+  (h/hashmap-ns {:hello/a 1 :hello/b 2 :a 3 :b 4}) => #{nil :hello}
+  (h/hashmap-ns {:hello/a 1 :hello/b 2 :there/a 3 :there/b 4}) => #{:hello :there})
 
-(fact "datmap-ns?"
-  (h/datmap-ns? {:hello/a 1 :hello/b 2
+(fact "hashmap-ns?"
+  (h/hashmap-ns? {:hello/a 1 :hello/b 2
                 :there/a 3 :there/b 4} :not-there)
   => nil
 
-  (h/datmap-ns? {:hello/a 1 :hello/b 2
+  (h/hashmap-ns? {:hello/a 1 :hello/b 2
                 :there/a 3 :there/b 4} :hello)
   => true)
 
-(fact "datmap-keys will output all keys"
-  (h/datmap-keys {:hello/a 1 :hello/b 2 :there/a 3 :there/b 4})
+(fact "hashmap-keys will output all keys within a namespace"
+  (h/hashmap-keys {:hello/a 1 :hello/b 2 :there/a 3 :there/b 4})
   => {:there #{:there/a :there/b}, :hello #{:hello/b :hello/a}}
 
-  (h/datmap-keys {:hello/a 1 :hello/b 2 :there/a 3 :there/b 4} :hello)
+  (h/hashmap-keys {:hello/a 1 :hello/b 2 :there/a 3 :there/b 4} :hello)
   => #{:hello/a :hello/b})
 
 

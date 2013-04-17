@@ -18,16 +18,24 @@
 (defmacro suppress
   "Suppresses any errors thrown.
 
-    (suppress (error \"Error\"))
-    ;=> nil
+    (suppress (error \"Error\")) ;=> nil
+
+    (suppress (error \"Error\") :error) ;=> :error
   "
-  [& body]
-  `(try ~@body (catch Throwable ~'t)))
+  ([body]
+     `(try ~body (catch Throwable ~'t)))
+  ([body catch-val]
+     `(try ~body (catch Throwable ~'t ~catch-val))))
 
 ;; ## Various calling styles
 
 (defn call
-  "Only executes `(f v1 ... vn)` if `f` is not nil"
+  "Executes `(f v1 ... vn)` if `f` is not nil
+
+    (call nil 1 2 3) ;=> nil
+
+    (call + 1 2 3) ;=> 6
+  "
   ([f] (if-not (nil? f) (f)) )
   ([f v] (if-not (nil? f) (f v)))
   ([f v1 v2] (if-not (nil? f) (f v1 v2)))
@@ -35,7 +43,18 @@
   ([f v1 v2 v3 v4 ] (if-not (nil? f) (f v1 v2 v3 v4)))
   ([f v1 v2 v3 v4 & vs] (if-not (nil? f) (apply f v1 v2 v3 v4 vs))))
 
-(defn call-> [obj [ff & args]]
+(defn call->
+  "Indirect call, takes `obj` and a list containing either a function,
+   a symbol representing the function or the symbol `?` and any additional
+   arguments. Used for calling functions that have been stored as symbols.
+
+     (call-> 1 '(+ 2 3 4)) ;=> 10
+
+     (call-> 1 '(< 2)) ;=> true
+
+     (call-> 1 '(? < 2)) ;=> true
+   "
+  [obj [ff & args]]
   (cond (= ff '?)
         (recur obj args)
 
@@ -46,6 +65,14 @@
         (apply call (suppress (resolve ff)) obj args)))
 
 (defn msg
+  "Message dispatch for object orientated type calling convention.
+
+    (def obj {:a 10
+              :b 20
+              :get-sum (fn [this] (+ (:b this) (:a this)))})
+
+    (msg obj :get-sum) ;=> 30
+  "
   ([obj kw] (call (obj kw) obj))
   ([obj kw v] (call (obj kw) obj v))
   ([obj kw v1 v2] (call (obj kw) obj v1 v2))
@@ -55,20 +82,46 @@
 
 ;; ## Predicheck System
 
-(defn make-?? [f args]
+(defn make-??
+  "Helper function to `??` macro.
+
+    (h/make-?? '+ '(1 2 3))
+    ;=> '(list  (symbol \"?\") (quote +) 1 2 3))
+  "
+  [f args]
   (apply list 'list
          (concat [(list 'symbol "?")
                   (list 'quote f)]
                   `[~@args])))
 
-(defmacro ?? [f & args]
+(defmacro ??
+  "Constructs a list out of a function. Used for predicates
+
+    (?? + 1 2 3) ;=> '(? + 1 2 3)
+
+    (?? < 1) ;=> '(? < 1)
+   "
+  [f & args]
   (make-?? f args))
 
-(defn make-?% [f args]
+(defn make-?%
+  "Helper function to `?%` macro
+
+    (h/make-?% '+ '(1 2 3))
+    ;=> '(fn [?%] (+ ?% 1 2 3))
+  "
+  [f args]
   (apply list 'fn ['?%]
          (list (concat [f '?%] `[~@args]))))
 
-(defmacro ?% [f & args]
+(defmacro ?%
+  "Constructs a function of one argument, Used for predicate
+
+    ((?% < 4) 3) ;=> true
+
+    ((?% > 2) 3) ;=> true
+  "
+  [f & args]
   (make-?% f args))
 
 (defn eq-chk
@@ -146,10 +199,18 @@
         :else
         (eq-chk obj prchk)))
 
+(defn suppress-prchk
+  "Tests obj using prchk and returns `obj` or `res` if true
 
-(defn suppress-prchk [obj prchk res]
-  (suppress (if (eq-prchk obj prchk) res)))
+    (h/suppress-prchk :3 even?) => nil
 
+    (h/suppress-prchk 3 even?) => nil
+
+    (h/suppress-prchk 2 even?) => 2
+  "
+  ([obj prchk] (suppress-prchk obj prchk true))
+  ([obj prchk res]
+     (suppress (if (eq-prchk obj prchk) res))))
 
 ;; ## String Methods
 
@@ -520,11 +581,15 @@
        output)))
 
 
-;; Multithreading Methods
+;; ## Multithreading Methods
+
+(defn hash-code
+  [obj]
+  (.hashCode obj))
 
 (defn hash-keyword
-  [this & ids]
-  (keyword (str "__" (st/join "_" (cons (.hashCode this) (map name ids))) "__")))
+  [obj & ids]
+  (keyword (str "__" (st/join "_" (concat (map str ids) [(hash-code obj)])) "__")))
 
 (defn atom? [obj] (instance? clojure.lang.Atom obj))
 
@@ -532,82 +597,131 @@
 
 (defn set-value! [rf obj]
   (cond (atom? rf) (reset! rf obj)
-        (ref? rf) (dosync (ref-set rf obj))))
+        (ref? rf) (dosync (ref-set rf obj)))
+  rf)
 
 (defn alter! [rf f & args]
   (cond (atom? rf) (apply swap! rf f args)
         (ref? rf) (dosync (apply alter rf f args))))
 
-(defn follow
-  ([master slave id] (follow master slave id identity))
-  ([master slave id f]
-     (add-watch master (hash-keyword slave id)
-                (fn [_ _ _ v]
-                  (set-value! slave (f v))))))
-
-(defn unfollow [master slave id]
-  (remove-watch master (hash-keyword slave id)))
-
 (defn make-change-watch [sel f]
   (fn [k rf p n]
     (let [pv (get-sel p sel)
           nv (get-sel n sel)]
-      (if-not (and (nil? pv) (nil? nv)
-                   (= pv nv))
+      (if-not (or (= pv nv) (nil? pv) (nil? nv))
         (f k rf pv nv)))))
 
 (defn add-change-watch [rf k sel f]
   (add-watch rf k (make-change-watch sel f)))
 
-(defn return-val [p ms ret]
-  (cond (nil? ms) (deref p)
-        :else (deref p ms ret)))
+(defn pair-keyword [v1 v2]
+  (hash-keyword v2 (hash-code v1)))
 
-(defn wait
-  ([f rf] (wait f rf nil nil))
-  ([f rf ms] (wait f rf ms nil))
-  ([f rf ms ret]
-     (let [p (promise)
-           pk (hash-keyword p)
-           d-fn (fn [_ rf _ _]
-                  (remove-watch rf pk)
-                  (deliver p rf))]
-       (add-watch rf pk d-fn)
-       (f rf)
-       (return-val p ms ret))))
+(defn modifier [rf f]
+  (fn [_ _ _ v]
+    (set-value! rf (f v))))
 
-(defn wait-for-change
-  ([f rf] (wait-for-change f rf identity))
-  ([f rf sel] (wait-for-change f rf sel nil nil))
-  ([f rf sel ms] (wait-for-change f rf sel ms nil))
-  ([f rf sel ms ret]
-     (let [p (promise)
-           pk (hash-keyword pr)
+(defn latch
+  ([master slave] (latch master slave identity))
+  ([master slave f]
+     (add-watch master (pair-keyword master slave)
+                (modifier slave f))))
+
+(defn latch-changes
+  ([master slave] (latch-changes master slave identity identity))
+  ([master slave sel] (latch-changes master slave sel identity))
+  ([master slave sel f]
+     (add-change-watch master (pair-keyword master slave)
+                       sel (modifier slave f))))
+
+(defn unlatch
+  [master slave]
+  (remove-watch master (pair-keyword master slave)))
+
+(defn fulfill [p mtf rf]
+  (let [pk (hash-keyword p)
+        d-fn (fn [_ rf _ _]
+               (remove-watch rf pk)
+               (deliver p rf))]
+    (add-watch rf pk d-fn)
+    (mtf rf))
+  p)
+
+(defn expect [mtf rf] (fulfill (promise) mtf rf))
+
+(defn demanding
+  ([p] (demanding p nil nil))
+  ([p ms ret]
+     (cond (nil? ms) (deref p)
+           :else (deref p ms ret))))
+
+(defn demand
+  ([mtf rf] (demand mtf rf nil nil))
+  ([mtf rf ms] (demand mtf rf ms nil))
+  ([mtf rf ms ret]
+     (demanding (expect mtf rf) ms ret)))
+
+(defn fulfill-change
+  ([p rf f] (fulfill-change p rf f identity))
+  ([p rf f sel]
+     (let [pk (hash-keyword p)
            d-fn (fn [k rf old new]
-                  (when (eq-sel old new sel)
-                    (remove-watch rf pk)
-                    (deliver p rf)))]
-       (add-change-watch rf pk (or sel identity))
-       (f rf)
-       (return-val p ms ret))))
+                   (when-not (eq-sel old new sel)
+                     (remove-watch rf pk)
+                     (deliver p rf)))]
+       (add-change-watch rf pk (or sel identity) d-fn)
+       (f rf))
+     p))
+
+(defn expect-change
+  ([rf f] (expect-change rf f identity))
+  ([rf f sel] (fulfill-change (promise) rf f sel)))
+
+(defn demand-change
+  ([f rf] (demand-change f rf identity))
+  ([f rf sel] (demand-change f rf sel nil nil))
+  ([f rf sel ms] (demand-change f rf sel ms nil))
+  ([f rf sel ms ret]
+     (demanding (expect-change rf f sel) ms ret)))
+
+(defn dispatch! [rf f & args]
+  (future
+    (apply alter! rf f args)))
+
 
 (comment
-  (defn threaded-inc [rf]
-    (future
-      (Thread/sleep 10)
-      (alter! rf inc)))
+ (defn slow-inc [v]
+   (Thread/sleep 500)
+   (inc v))
 
-  (def arf (ref 0))
+ (defn slow-inc-mt [rf]
+   (dispatch! rf inc))
 
-  (threaded-inc arf)
+ (def ain (atom 1))
 
-  (deref (wait threaded-inc arf))
+ (alter! ain slow-inc)
+ (dispatch! ain slow-inc)
 
-  (def p (promise))
+ (inc-mt ain)
+ ()
+ (demand #(dispatch! % slow-inc) ain)
+ (demand-change #(dispatch! % inc) ain)
+ (demand-change #(dispatch! % identity) ain identity 500 :NA)
 
-  p
+ (expect #(dispatch! % slow-inc) ain)
 
-  )
+ ()
+
+ (defmacro wait )
+
+
+ (wait [a (expecting rf1 mtf1)
+        b (rf1 mtf2)])
+
+ (defn defer! rf f )
+
+ (defmacro wait)
+)
 
 (defn remould
  ([f x] (remould f x {}))

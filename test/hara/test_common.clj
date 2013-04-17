@@ -4,6 +4,14 @@
   (:require [hara.common :as h]
             [clj-time.core :as t]))
 
+(fact "error"
+  (h/error "something") => (throws Exception))
+
+(fact "suppress"
+  (h/suppress 2) => 2
+  (h/suppress (h/error "e")) => nil
+  (h/suppress (h/error "e") :error) => :error)
+
 (facts "call "
   (h/call inc nil) => (throws Exception)
   (h/call inc 1) => 2
@@ -11,6 +19,17 @@
   (h/call + 1 1 1 1 1 1) => 6
   (h/call nil) => nil
   (h/call nil 1 1 1) => nil)
+
+(fact "call->"
+  (h/call-> 4 '(? < 3)) => false
+  (h/call-> 4 (list #(< % 3))) => false
+  (h/call-> 4 `(< 3)) => false
+  (h/call-> 4 '(? < 5)) => true
+  (h/call-> 4 (list #(< % 5))) => true
+  (h/call-> 4 `(< 5)) => true
+  (h/call-> 4 `(+ 1 2 3)) => 10
+  (h/call-> 4 '(+ 1 2 3)) => 10
+  (h/call-> 4 '(? even?)) => true)
 
 (declare ops)
 (facts "msg"
@@ -26,13 +45,6 @@
   (h/msg (ops) :sub 3 1 1) => 1
   (h/msg (ops) :sub 3 1 1 1) => 0)
 
-(fact "error"
-  (h/error "something") => (throws Exception))
-
-(fact "suppress"
-  (h/suppress 2) => 2
-  (h/suppress (h/error "e")) => nil)
-
 (fact "make-??"
   (h/make-?? '+ '(1 2 3)) => '(list  (symbol "?") (quote +) 1 2 3))
 
@@ -45,17 +57,6 @@
 (fact "?%"
   ((?% < 4) 3) => true
   ((?% + 1 2 3) 4) => 10)
-
-(fact "call->"
-  (h/call-> 4 '(? < 3)) => false
-  (h/call-> 4 (list #(< % 3))) => false
-  (h/call-> 4 `(< 3)) => false
-  (h/call-> 4 '(? < 5)) => true
-  (h/call-> 4 (list #(< % 5))) => true
-  (h/call-> 4 `(< 5)) => true
-  (h/call-> 4 `(+ 1 2 3)) => 10
-  (h/call-> 4 '(+ 1 2 3)) => 10
-  (h/call-> 4 '(? even?)) => true)
 
 (fact "eq-chk"
   (h/eq-chk 2 2) => true
@@ -103,6 +104,11 @@
   (h/eq-prchk {:a 1 :val 1} [:val (?? not= 1)]) => false
   (h/eq-prchk {:a {:b 1}} [[:a :b] odd?]) => true
   (h/eq-prchk {:a {:b 1}} [[:a :b] (?? = 1) [:a] associative?]) => true)
+
+(fact "suppress-prchk"
+  (h/suppress-prchk "3" even?) => nil
+  (h/suppress-prchk 3 even?) => nil
+  (h/suppress-prchk 2 even?) => true)
 
 (fact "queue"
   (h/queue 1 2 3 4) => [1 2 3 4]
@@ -252,6 +258,54 @@
   (h/remove-nested {:a {:b {:c {}}}}) => {}
   (h/remove-nested {:a {:b {:c {} :d 1}}}) => {:a {:b {:d 1}}})
 
+(fact "hash-keyword"
+  (h/hash-keyword 1) => :__1__
+  (h/hash-keyword 1 "id") => :__id_1__
+  (h/hash-keyword 1 "1") => :__1_1__
+  (h/hash-keyword "hello") => :__99162322__)
+
+(fact "atom?"
+  (h/atom? (atom 0)) => true)
+
+(fact "ref?"
+  (h/ref? (ref 0)) => true)
+
+(fact "set-value!"
+  @(h/set-value! (atom 0) 1) => 1
+  @(h/set-value! (ref 0) 1) => 1)
+
+(fact "alter!"
+  @(h/alter! (atom 0) inc) => 1
+  @(h/alter! (ref 0) inc) => 1)
+
+(fact "propagate"
+  (let [in  (atom 0)
+        out (atom 0)]
+    (h/propagate in out)
+    (reset! in 10)
+    @out => 10
+
+    (h/depropagate in out)
+    (reset! in 0)
+    @out => 10))
+
+(fact "propagate-on-change"
+  (let [in  (atom {:a 0 :b 0})
+        out (atom nil)]
+    (h/propagate-on-change in out :b)
+    (swap! in assoc :a 1)
+    @out => nil
+    (swap! in assoc :b 1)
+    @out => 1
+
+    (h/propagate-on-change in out :b (?% * 2))
+    (swap! in assoc :b 2)
+    @out => 4))
+
+(fact "dispatch"
+  (let [in (atom 1)]
+    (h/dispatch! in inc)))
+
 
 
 (facts "remould is a higher order function that acts on
@@ -367,7 +421,7 @@
     (h/deref* (atom 1)) => 1
     (h/deref* (atom (atom (atom 1)))) => 1
     (h/deref* (atom {:a (atom {:b (atom :c)})})) => {:a {:b :c}}
-    (h/deref* {(atom 1) (atom 2)}) => {1 2}
+    (h/deref* {:a (atom 2)}) => {:a 2}
 
     ;; advanced
     (h/deref* #(* 2 %) (atom 1)) => 2

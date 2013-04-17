@@ -177,10 +177,10 @@
   [k z]
   (= z (keyword-val k)))
 
-(defn datmap-ns
+(defn hashmap-ns
   "Returns the set of keyword namespaces within `fm`.
 
-    (datmap-ns {:hello/a 1 :hello/b 2
+    (hashmap-ns {:hello/a 1 :hello/b 2
                 :there/a 3 :there/b 4})
     ;=> #{:hello :there}
   "
@@ -188,26 +188,26 @@
   (let [ks (keys fm)]
     (set (map keyword-ns ks))))
 
-(defn datmap-ns?
+(defn hashmap-ns?
   "Returns `true` if any key in `fm` has keyword namespace
   of `ns`.
 
-    (datmap-ns? {:hello/a 1 :hello/b 2
+    (hashmap-ns? {:hello/a 1 :hello/b 2
                  :there/a 3 :there/b 4} :hello)
     ;=> true
   "
   [fm ns]
   (some #(keyword-ns? % ns) (keys fm)))
 
-(defn datmap-keys
+(defn hashmap-keys
   "Returns the set of keys in `fm` that has keyword namespace
   of `ns`.
 
-    (datmap-keys {:hello/a 1 :hello/b 2
+    (hashmap-keys {:hello/a 1 :hello/b 2
                   :there/a 3 :there/b 4})
     ;=> {:there #{:there/a :there/b}, :hello #{:hello/b :hello/a}}
 
-    (datmap-keys {:hello/a 1 :hello/b 2
+    (hashmap-keys {:hello/a 1 :hello/b 2
               :there/a 3 :there/b 4} :hello)
     ;=> #{:hello/a :hello/b})
   "

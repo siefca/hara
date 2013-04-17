@@ -1,7 +1,7 @@
 (ns hara.test-common-extra
   (:use midje.sweet)
   (:require [hara.common :as h]))
-(facts "watch-for-change produces another function that can be used in watching
+#_(facts "watch-for-change produces another function that can be used in watching
         the nested values of maps contained in atoms and iotams.
 
           @usage
