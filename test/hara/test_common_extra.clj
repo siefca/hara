@@ -13,20 +13,17 @@
   (h/time-ms (inc 1)) => (approx 0 0.01)
   (h/time-ms (Thread/sleep 100)) => (approx 100 2))
 
-(fact "atom?"
-  (h/atom? (atom 0)) => true)
+(fact "hash-code"
+  (h/hash-code 1) => 1
+  (h/hash-code :1) => 1013907437
+  (h/hash-code "1") => 49)
 
-(fact "aref?"
-  (h/aref? (ref 0)) => true)
+(fact "hash-keyword"
+  (h/hash-keyword 1) => :__1__
+  (h/hash-keyword :1) => :__1013907437__)
 
-(fact "iref?"
-  (h/iref? (atom 0)) => true
-  (h/iref? (ref 0)) => true)
-
-(fact "ideref?"
-  (h/ideref? (atom 0)) => true
-  (h/ideref? (ref 0)) => true
-  (h/ideref? (promise)) => true)
+(fact "hash-pair"
+  (h/hash-pair 1 :1) => :__1_1013907437__)
 
 (fact "set-value!"
   @(h/set-value! (atom 0) 1) => 1
@@ -36,12 +33,39 @@
   @(h/alter! (atom 0) inc) => 1
   @(h/alter! (ref 0) inc) => 1)
 
+(defn slow-inc
+  ([v] (slow-inc v 50))
+  ([v ms]
+     (Thread/sleep ms)
+     (inc v)))
+
+(fact "dispatch!"
+  (h/dispatch! (atom 0) slow-inc) => h/promise?
+  (let [in (atom 0)]
+    (h/wait-on slow-inc in)
+    @in => 1
+    (h/wait-on slow-inc in)
+    @in => 2))
+
 (fact "make-change-watch"
   (let [wf (h/make-change-watch :a vector)]
     (wf :key :ref {:a 1} {:a 2}) => [:key :ref 1 2]
     (wf :key :ref {:a 1} {:a 1}) => nil
     (wf :key :ref {:a nil} {:a 1}) => [:key :ref nil 1]
     (wf :key :ref {:a 1} {:a nil}) => nil))
+
+(fact "add-change-watch"
+  (let [a (atom {:a 1 :b 2})
+        b (atom nil)
+        _ (h/add-change-watch a :clone :b (fn [& _] (reset! b @a)))]
+    (swap! a assoc :a 0)
+    @b => nil
+
+    (swap! a assoc :b 1)
+    @b => {:a 0 :b 1}
+
+    (swap! a assoc :a 1)
+    @b => {:a 0 :b 1}))
 
 (fact "latch"
   (let [in  (atom 0)
@@ -50,7 +74,7 @@
     (reset! in 10)
     @out => 10
 
-    (h/unlatch in out)
+    (h/delatch in out)
     (reset! in 0)
     @out => 10))
 
@@ -71,19 +95,10 @@
     (swap! in assoc :b 8)
     @out => 16
 
-    (h/unlatch in out)
+    (h/delatch in out)
     (swap! in assoc :b 10)
     @out => 16))
 
-(defn slow-inc
-  ([v] (slow-inc v 500))
-  ([v ms]
-     (Thread/sleep ms)
-     (inc v)))
-
-(fact "dispatch!"
-  (let [in (atom 1)]
-    (h/dispatch! in slow-inc)))
 
 
 

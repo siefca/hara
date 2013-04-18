@@ -123,6 +123,7 @@
 
 (defn connect
   ([sources sink] (connect nil sources sink straight-through))
+  ([sources sink tf] (connect nil sources sink tf =))
   ([label sources sink tf] (connect label sources sink tf =))
   ([label sources sink tf tdamp]
      (let [pg (propagator label sources sink tf tdamp)]
@@ -137,8 +138,11 @@
     (put! pg :in-cells [])
     (put! pg :out-cell nil)))
 
+(defn network [inputs output f]
+  )
+
 (defn- label-or-hash [obj]
-  ( str "[" (or (:label obj) (.hashCobe obj)) "]"))
+  [(or (:label obj) (.hashCode obj))])
 
 (defmethod print-method
   Propagator
@@ -147,8 +151,9 @@
    (let [hash (.hashCode pg)]
      (format "<P@%s %s => %s>"
              hash
-             (mapv label-or-hash (:in-cells pg))
-             (label-or-hash (:out-cell))))
+             (->> (map label-or-hash (:in-cells pg))
+                  (cons (or (:label pg) 'fn)) (apply list) str)
+             (label-or-hash (:out-cell pg))))
    w))
 
 (defmethod print-method
@@ -157,4 +162,5 @@
   (print-method
    (let [hash (.hashCode cell)]
      (format "<Cell@%s %s>"
-             hash @cell)) w))
+             hash @cell))
+   w))

@@ -1,5 +1,5 @@
 (ns hara.ova
-  (:use [hara.common :only [deref* sel-chk suppress hash-keyword
+  (:use [hara.common :only [deref-nested sel-chk suppress hash-keyword
                             get-sel eq-prchk suppress-prchk]])
   (:require [clojure.string :as s]
             [clojure.set :as set]))
@@ -98,7 +98,7 @@
     ova)
 
   (persistent [ova]
-    (deref* (:data state)))
+    (deref-nested (:data state)))
 
   clojure.lang.ITransientAssociative
   (assoc [ova k v]

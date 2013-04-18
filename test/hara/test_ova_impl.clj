@@ -1,8 +1,8 @@
 (ns hara.test-ova-impl
   (:use midje.sweet
+        hara.ova
         hara.checkers
-        hara.common
-        hara.ova))
+        hara.common))
 
 (def ^:dynamic *ova* (ova))
 
@@ -118,7 +118,7 @@
   (facts "add-watch"
     (let [out    (atom nil)]
 
-      (latch *ova* out (fn [v] (deref* v)))
+      (latch *ova* out (fn [v] (deref-nested v)))
 
       (dosync (conj! *ova* {:id 1 :val 1}))
       (persistent! *ova*) => @out => [{:id 1 :val 1}]
@@ -126,7 +126,7 @@
       (dosync (conj! *ova* {:id 2 :val 2}))
       (persistent! *ova*) => @out => [{:id 1 :val 1} {:id 2 :val 2}]
 
-      (unlatch *ova* out)
+      (delatch *ova* out)
 
       (dosync (conj! *ova* {:id 3 :val 3}))
       (persistent! *ova*) => [{:id 1 :val 1} {:id 2 :val 2} {:id 3 :val 3}]
@@ -139,7 +139,7 @@
   (facts "add-elem-watches"
     (let [*ova*      (ova)
           out    (atom nil)
-          out-fn (fn [_ _ _ _ v & _] (reset! out (deref* v)))
+          out-fn (fn [_ _ _ _ v & _] (reset! out (deref-nested v)))
           _      (add-elem-watch *ova* :elm out-fn)]
 
       (dosync (conj! *ova* {:id 1 :val 1}))

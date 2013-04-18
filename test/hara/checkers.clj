@@ -1,6 +1,6 @@
 (ns hara.checkers
-  (:use [hara.common :only [eq-chk]]
-        hara.ova))
+  (:use [hara.common :only [eq-chk starts-with
+                            iref? ideref? promise?]]))
 
 (defn is-type-fn [t chk]
   (fn [obj]
@@ -19,17 +19,10 @@
   (is-type-fn clojure.lang.Ref chk))
 
 (defn is-ova [& [chk]]
-  (fn [ov]
-    (and (instance? hara.ova.Ova ov)
-         (let [schk (or chk (sequence chk))]
-           (eq-chk (persistent! ov) schk)))))
-
-
-((fn [ov]
-    (and (instance? hara.ova.Ova ov)
-         (let [schk (or nil (sequence nil))]
-           (eq-chk (persistent! ov) schk))))
- (ova))
+  (fn [obj]
+    (and (= "class hara.ova.Ova" (str (type obj)))
+        (let [schk (or chk (sequence chk))]
+          (eq-chk (persistent! obj) schk)))))
 
 (defn has-keys [ks]
   (fn [m]

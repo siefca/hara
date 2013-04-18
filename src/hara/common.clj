@@ -27,7 +27,30 @@
   ([body catch-val]
      `(try ~body (catch Throwable ~'t ~catch-val))))
 
-;; ## Various calling styles
+;; ## String
+
+(defn replace-all
+  "Returns a string with all instances of `old` in `s` replaced with
+   the value of `new`.
+
+    (h/replace-all \"hello there, hello again\"
+                   \"hello\" \"bye\")
+    ;=> \"bye there, bye again\"
+  "
+  [s old new]
+  (.replaceAll s old new))
+
+(defn starts-with?
+  "Returns `true` if `s` begins with `pre`.
+
+    (h/starts-with \"prefix\" \"pre\") ;=> true
+
+    (h/starts-with \"prefix\" \"suf\") ;=> false
+  "
+  [s pre]
+  (.startsWith s pre))
+
+;; ## Calling Conventions
 
 (defn call
   "Executes `(f v1 ... vn)` if `f` is not nil
@@ -80,7 +103,7 @@
   ([obj kw v1 v2 v3 v4] (call (obj kw) obj v1 v2 v3 v4))
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
-;; ## Predicheck System
+;; ## Predicates
 
 (defn make-??
   "Helper function to `??` macro.
@@ -212,29 +235,6 @@
   ([obj prchk res]
      (suppress (if (eq-prchk obj prchk) res))))
 
-;; ## String Methods
-
-(defn replace-all
-  "Returns a string with all instances of `old` in `s` replaced with
-   the value of `new`.
-
-    (h/replace-all \"hello there, hello again\"
-                   \"hello\" \"bye\")
-    ;=> \"bye there, bye again\"
-  "
-  [s old new]
-  (.replaceAll s old new))
-
-(defn starts-with
-  "Returns `true` if `s` begins with `pre`.
-
-    (h/starts-with \"prefix\" \"pre\") ;=> true
-
-    (h/starts-with \"prefix\" \"suf\") ;=> false
-  "
-  [s pre]
-  (.startsWith s pre))
-
 ;; ## Type Predicates
 
 (defn boolean?
@@ -304,7 +304,7 @@
   [x] (instance? java.net.URI x))
 
 (defn bytes?
-  "Returns `true` if `x` is a prchkmitive `byte` array.
+  "Returns `true` if `x` is a primitive `byte` array.
 
     (bytes? (byte-array 8)) ;=> true
 
@@ -312,8 +312,53 @@
   [x] (= (Class/forName "[B")
          (.getClass x)))
 
+(defn atom?
+  "Returns `true` if `x` is of type `clojure.lang.Atom`.
+
+    (atom? (atom 0)) ;=> true
+  "
+  [obj] (instance? clojure.lang.Atom obj))
+
+(defn aref?
+  "Returns `true` if `x` is of type `clojure.lang.Ref`.
+
+    (aref? (ref 0)) ;=> true
+  "
+  [obj]  (instance? clojure.lang.Ref obj))
+
+(defn agent?
+  "Returns `true` if `x` is of type `clojure.lang.Agent`.
+
+    (agent? (agent 0)) ;=> true
+  "
+  [obj] (instance? clojure.lang.Agent obj))
+
+(defn iref?
+  "Returns `true` if `x` is of type `clojure.lang.IRef`.
+
+    (iref? (atom 0)) ;=> true
+  "
+  [obj]  (instance? clojure.lang.IRef obj))
+
+(defn ideref?
+  "Returns `true` if `x` is of type `java.util.UUID`.
+
+    (ideref? (promise)) ;=> true
+  "
+  [obj]  (instance? clojure.lang.IDeref obj))
+
+(defn promise?
+  "Returns `true` is `x` is a promise
+
+    (promise? (future (inc 1))) ;=> true
+  "
+  [obj]
+  (let [s (str (type obj))]
+    (or (starts-with s "class clojure.core$promise$")
+        (starts-with s "class clojure.core$future_call$"))))
+
 (defn type-checker
-  "Returns the checking function associated with keyword `k`
+  "Returns the checking function associated with `k`
 
     (type-checker :string)
     ;=> #'clojure.core/string?
@@ -323,7 +368,6 @@
    "
   [k]
   (resolve (symbol (str (name k) "?"))))
-
 
 ;; ## Constructors
 
@@ -373,7 +417,7 @@
   "
   [path] (java.net.URI/create path))
 
- ;; ## Misc Methods
+ ;; ## Useful Methods
 
 (defn func-map
   "Returns a hash-map `m`, with the the values of `m` being
@@ -458,8 +502,6 @@
        (dissoc m k)
        (assoc m k (dissoc-in (m k) ks keep)))))
 
-
-;; ## Exceptions
 (defn keys-nested
   "Return the set of all nested keys in `m`.
 
@@ -580,59 +622,166 @@
              (recur (dissoc m k) prchk (assoc output k v)))
        output)))
 
+(defn manipulate
+  "Higher order function for manipulating entire data
+   trees. Clones refs and atoms. It is useful for type
+   conversion and serialization/deserialization.
+  "
+ ([f x] (manipulate f x {}))
+ ([f x cs]
+    (let [m-fn    #(manipulate f % cs)
+          pred-fn (fn [pd]
+                    (cond (instance? Class pd) #(instance? pd %)
+                          (fn? pd) pd
+                          :else (constantly false)))
+          custom? #((pred-fn (:pred %)) x)
+          c (first (filter custom? cs))]
+      (cond (not (nil? c))
+            (let [ctor (or (:ctor c) identity)
+                  dtor (or (:dtor c) identity)]
+              (ctor (manipulate f (dtor x) cs)))
 
-;; ## Multithreading Methods
+            :else
+            (cond
+              (instance? clojure.lang.Atom x)   (atom (m-fn @x))
+              (instance? clojure.lang.Ref x)    (ref (m-fn @x))
+              (instance? clojure.lang.Agent x)  (agent (m-fn @x))
+              (list? x)                         (apply list (map m-fn x))
+              (vector? x)                       (vec (map m-fn x))
+              (instance? clojure.lang.IPersistentSet x)
+              (set (map m-fn x))
+
+              (instance? clojure.lang.IPersistentMap x)
+              (zipmap (keys x) (map m-fn (vals x)))
+
+              (instance? clojure.lang.ISeq x)
+              (map m-fn x)
+
+              :else (f x))))))
+
+(defn deref-nested
+  "Dereferences all nested refs within data-structures
+
+    (h/deref-nested
+         (atom {:a (atom {:b (atom :c)})}))
+    => {:a {:b :c}}
+ "
+ ([x] (deref-nested identity x))
+ ([f x] (deref-nested f x []))
+ ([f x cs]
+    (manipulate f
+             x
+             (conj cs {:pred clojure.lang.IDeref
+                       :ctor identity
+                       :dtor deref}))))
+
+;; ## IRef Functions
 
 (defmacro time-ms
-  "Evaluates expr and outputs the time it took.  Returns the time in ms"
+  "Evaluates expr and outputs the time it took.  Returns the time in ms
+
+    (time-ms (inc 1)) ;=> 0.008
+
+    (time-ms (Thread/sleep 100)) ;=> 100.619
+  "
   [expr]
   `(let [start# (. System (nanoTime))
          ret# ~expr]
      (/ (double (- (. System (nanoTime)) start#)) 1000000.0)))
 
 (defn hash-code
+  "Returns the hash-code of the object
+
+    (hash-code 1) => 1
+
+    (hash-code :1) => 1013907437
+
+    (hash-code \"1\") => 49
+  "
   [obj]
   (.hashCode obj))
 
 (defn hash-keyword
+  "Returns a keyword repesentation of the hash-code.
+   For use in generating internally unique keys
+
+    (h/hash-keyword 1) => :__1__
+  "
   [obj & ids]
   (keyword (str "__" (st/join "_" (concat (map str ids) [(hash-code obj)])) "__")))
 
-(defn hash-pair [v1 v2]
+(defn hash-pair
+  "Combines the hash of two objects together.
+
+    (hash-pair 1 :1) => :__1_1013907437__
+  "
+  [v1 v2]
   (hash-keyword v2 (hash-code v1)))
 
-(defn atom? [obj] (instance? clojure.lang.Atom obj))
+(defn set-value!
+  "Change the value contained within a ref or atom.
 
-(defn aref? [obj]  (instance? clojure.lang.Ref obj))
+    @(set-value! (atom 0) 1) => 1
 
-(defn iref? [obj]  (instance? clojure.lang.IRef obj))
-
-(defn ideref? [obj]  (instance? clojure.lang.IDeref obj))
-
-(defn set-value! [rf obj]
+    @(set-value! (ref 0) 1) => 1
+  "
+  [rf obj]
   (cond (atom? rf) (reset! rf obj)
         (aref? rf) (dosync (ref-set rf obj)))
   rf)
 
-(defn alter! [rf f & args]
+(defn alter!
+  "Updates the value contained within a ref or atom using `f`.
+
+    @(alter! (atom 0) inc) => 1
+
+    @(alter! (ref 0) inc) => 1
+  "
+  [rf f & args]
   (cond (atom? rf) (apply swap! rf f args)
         (aref? rf) (dosync (apply alter rf f args)))
   rf)
 
-(defn dispatch! [ref f & args]
+(defn dispatch!
+  "Updates the value contained within a ref or atom using another thread.
+
+    (dispatch! (atom 0) (fn [x] (Thread/sleep 1000) (inc x)))
+    ;=> <future_call>
+  "
+  [ref f & args]
   (future
     (apply alter! ref f args)))
 
-(defn make-change-watch [sel f]
+(declare add-change-watch
+         make-change-watch)
+
+(defn add-change-watch
+  "Adds a watch function that only triggers when there is change
+   in `(sel <value>)`.
+
+    (def subject (atom {:a 1 :b 2}))
+    (def observer (atom nil)
+    (h/add-change-watch subject :clone :b (fn [& _] (reset! observer @a)))
+
+    (swap! subject assoc :a 0)
+    @observer => nil
+
+    (swap! subject assoc :b 1)
+    @observer => {:a 0 :b 1}
+  "
+  ([rf k f] (add-change-watch rf k identity f))
+  ([rf k sel f]
+     (add-watch rf k (make-change-watch sel f))))
+
+(defn make-change-watch
+  [sel f]
   (fn [k rf p n]
     (let [pv (get-sel p sel)
           nv (get-sel n sel)]
       (if-not (or (= pv nv) (nil? nv))
         (f k rf pv nv)))))
 
-(defn add-change-watch [rf k sel f]
-  (add-watch rf k (make-change-watch sel f)))
-
+;; ## Latching
 (defn latch-transform-fn [rf f]
   (fn [_ _ _ v]
     (set-value! rf (f v))))
@@ -650,10 +799,11 @@
      (add-change-watch master (hash-pair master slave)
                        sel (latch-transform-fn slave f))))
 
-(defn unlatch
+(defn delatch
   [master slave]
   (remove-watch master (hash-pair master slave)))
 
+;; ## Concurrency Watch
 
 (defn done-callback [p pk]
   (fn [_ ref _ _]
@@ -691,46 +841,3 @@
 (defn wait-on
   [f ref & args]
   (wait-for #(apply dispatch! % f args) ref))
-
-(defn remould
- ([f x] (remould f x {}))
- ([f x cs]
-    (let [m-fn    #(remould f % cs)
-          pred-fn (fn [pd]
-                    (cond (instance? Class pd) #(instance? pd %)
-                          (fn? pd) pd
-                          :else (constantly false)))
-          custom? #((pred-fn (:pred %)) x)
-          c (first (filter custom? cs))]
-      (cond (not (nil? c))
-            (let [ctor (or (:ctor c) identity)
-                  dtor (or (:dtor c) identity)]
-              (ctor (remould f (dtor x) cs)))
-
-            :else
-            (cond
-              (instance? clojure.lang.Atom x)   (atom (m-fn @x))
-              (instance? clojure.lang.Ref x)    (ref (m-fn @x))
-              (instance? clojure.lang.Agent x)  (agent (m-fn @x))
-              (list? x)                         (apply list (map m-fn x))
-              (vector? x)                       (vec (map m-fn x))
-              (instance? clojure.lang.IPersistentSet x)
-              (set (map m-fn x))
-
-              (instance? clojure.lang.IPersistentMap x)
-              (zipmap (keys x) (map m-fn (vals x)))
-
-              (instance? clojure.lang.ISeq x)
-              (map m-fn x)
-
-              :else (f x))))))
-
-(defn deref*
- ([x] (deref* identity x))
- ([f x] (deref* f x []))
- ([f x cs]
-    (remould f
-             x
-             (conj cs {:pred clojure.lang.IDeref
-                       :ctor identity
-                       :dtor deref}))))
