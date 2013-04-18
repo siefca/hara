@@ -50,14 +50,14 @@
 
   clojure.lang.ILookup
   (valAt [pg k] (if-let [res (get state k)]
-                    (if (mutable? res)
+                    (if (iref? res)
                       @res res)))
   (valAt [pg k not-found] (or (get pg k) not-found))
 
   PutProtocol
   (put! [pg k val]
     (if-let [res (get state k)
-             _   (mutable? res)]
+             _   (iref? res)]
       (set-value! res val))
     pg))
 

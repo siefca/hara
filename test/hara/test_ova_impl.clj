@@ -1,126 +1,124 @@
 (ns hara.test-ova-impl
   (:use midje.sweet
         hara.checkers
-        hara.common)
-  (:refer-clojure :exclude [send])
-  (:require [hara.ova.impl :as i])
-  (:import hara.ova.Ova))
+        hara.common
+        hara.ova))
 
-(def ^:dynamic *ova*)
+(def ^:dynamic *ova* (ova))
 
+((is-ova) (ova))
 (against-background
-  [(before :facts (dosync (i/-empty *ova*)))]
+  [(before :facts (dosync (empty! *ova*)))]
 
   (fact "Testing the ova constructor"
     *ova* => (is-ova)
     (.seq *ova*) => nil
     (.count *ova*) => 0
-    (i/sel *ova*) => (is-ref [])
-    (i/-deref *ova*) => []
-    (i/-persistent *ova*) => []
-    (empty? *ova*) => true))
+    (.deref *ova*) => []
+    (.persistent *ova*) => []
+    (empty? *ova*) => true
+    (get-ref *ova*) => (is-ref [])))
 
 (against-background
-  [(before :facts (dosync (i/-empty *ova*)
-                          (i/-conj *ova* {:id :1 :val 1})
-                          (i/-conj *ova* {:id :0 :val 0})))]
+  [(before :facts (dosync (empty! *ova*)
+                          (.conj *ova* {:id :1 :val 1})
+                          (.conj *ova* {:id :0 :val 0})))]
   (fact "basics"
     *ova* => (is-ova [{:id :1 :val 1} {:id :0 :val 0}])
-    (i/sel *ova*) => (is-ref (just [(is-ref {:id :1 :val 1})
+    (get-ref *ova*) => (is-ref (just [(is-ref {:id :1 :val 1})
                                     (is-ref {:id :0 :val 0})]))
-    (i/-deref *ova*) => (just [(is-ref {:id :1 :val 1})
+    (.deref *ova*) => (just [(is-ref {:id :1 :val 1})
                                (is-ref {:id :0 :val 0})])
-    (i/-persistent *ova*) => [{:val 1, :id :1} {:val 0, :id :0}]
-    (i/-seq *ova*) => [{:id :1 :val 1} {:id :0 :val 0}]
-    (i/-count *ova*) => 2)
+    (.persistent *ova*) => [{:val 1, :id :1} {:val 0, :id :0}]
+    (.seq *ova*) => [{:id :1 :val 1} {:id :0 :val 0}]
+    (.count *ova*) => 2)
 
   (fact "nth"
-    (i/-nth *ova* 0) => {:id :1 :val 1}
-    (i/-nth *ova* -1) => (throws Exception)
-    (i/-nth *ova* 2) => (throws Exception)
-    (i/-nth *ova* :0) => (throws Exception))
+    (.nth *ova* 0) => {:id :1 :val 1}
+    (.nth *ova* -1) => (throws Exception)
+    (.nth *ova* 2) => (throws Exception)
+    (.nth *ova* :0) => (throws Exception))
 
   (fact "valAt"
-    (i/-valAt *ova* 0) => {:id :1 :val 1}
-    (i/-valAt *ova* :0) => {:id :0 :val 0}
-    (i/-valAt *ova* :NA) => nil
-    (i/-valAt *ova* :NA :NA) => :NA
-    (i/-valAt *ova* :0 :id) => {:id :0 :val 0}
-    (i/-valAt *ova* 0 :val nil) => {:id :0 :val 0})
+    (.valAt *ova* 0) => {:id :1 :val 1}
+    (.valAt *ova* :0) => {:id :0 :val 0}
+    (.valAt *ova* :NA) => nil
+    (.valAt *ova* :NA :NA) => :NA
+    (.valAt *ova* :0 :id) => {:id :0 :val 0}
+    (get-filtered *ova* 0 :val nil) => {:id :0 :val 0})
 
   (fact "invoke"
-    (i/-invoke *ova* 0 :val nil)  => {:id :0 :val 0})
+    (.invoke *ova* 0 :val nil)  => {:id :0 :val 0})
 
   (fact "toString"
-    (i/-toString *ova*) => "{:val 1, :id :1}\n{:val 0, :id :0}"))
+    (.toString *ova*)"[{:val 1, :id :1} {:val 0, :id :0}]"))
 
 (against-background
-  [(before :facts (dosync (i/-reset *ova*)
-                          (i/-addWatch *ova* :a (fn [& _]))))]
+  [(before :facts (dosync (reinit! *ova*)
+                          (.addWatch *ova* :a (fn [& _]))))]
   (fact "getWatches"
-    (i/-getWatches *ova*)
+    (.getWatches *ova*)
     => (just {:a fn?}))
 
   (fact "addWatch"
-    (i/-addWatch *ova* :b (fn [& _]))
-    (i/-getWatches *ova*)
+    (.addWatch *ova* :b (fn [& _]))
+    (.getWatches *ova*)
     => (just {:a fn? :b fn?}))
 
   (fact "removeWatch"
-    (i/-removeWatch *ova* :a)
-    (i/-getWatches *ova*)
+    (.removeWatch *ova* :a)
+    (.getWatches *ova*)
     => {}))
 
 (against-background
-  [(before :facts (do (i/-clearElemWatches *ova*)
-                      (i/-addElemWatch *ova* :a (fn [& _]))))]
+  [(before :facts (do (clear-elem-watches *ova*)
+                      (add-elem-watch *ova* :a (fn [& _]))))]
 
-  (fact "getElemWatches"
-    (i/-getElemWatches *ova*)
+  (fact "get-elem-watches"
+    (get-elem-watches *ova*)
     => (just {:a fn?}))
 
-  (fact "addElemWatch"
-    (i/-addElemWatch *ova* :b (fn [& _]))
-    (i/-getElemWatches *ova*)
+  (fact "add-elem-watch"
+    (add-elem-watch *ova* :b (fn [& _]))
+    (get-elem-watches *ova*)
     => (just {:a fn? :b fn?}))
 
-  (fact "removeElemWatch"
-    (i/-removeElemWatch *ova* :a)
-    (i/-getElemWatches *ova*)
+  (fact "remove-elem-watch"
+    (remove-elem-watch *ova* :a)
+    (get-elem-watches *ova*)
     => {}))
 
 (against-background
-  [(before :checks (dosync (i/-empty *ova*)
-                           (i/-conj *ova* {:id :1 :val 1})
-                           (i/-conj *ova* {:id :2 :val 2})))]
+  [(before :checks (dosync (empty! *ova*)
+                           (.conj *ova* {:id :1 :val 1})
+                           (.conj *ova* {:id :2 :val 2})))]
 
   (fact "empty"
-    (dosync (i/-empty *ova*))
+    (dosync (empty! *ova*))
     => (is-ova [])
 
-    (dosync (i/-pop *ova*))
+    (dosync (.pop *ova*))
     => (is-ova [{:id :1 :val 1}])
 
-    (dosync (i/-pop (i/-pop *ova*)))
+    (dosync (.pop (.pop *ova*)))
     => (is-ova [])
 
-    (dosync (i/-assoc *ova* 0 {:id :0 :val 0}))
+    (dosync (.assoc *ova* 0 {:id :0 :val 0}))
     => (is-ova [{:id :0 :val 0} {:id :2 :val 2}])
 
-    (dosync (i/-assocN *ova* 2 {:id :3 :val 3}))
+    (dosync (.assoc *ova* 2 {:id :3 :val 3}))
     => (is-ova [{:id :1 :val 1} {:id :2 :val 2} {:id :3 :val 3}])
 
-    (dosync (i/-assoc *ova* :NON-INT {:id :0 :val 0}))
+    (dosync (.assoc *ova* :NON-INT {:id :0 :val 0}))
     => (throws Exception)))
 
-
 (against-background
-  [(before :facts (dosync (i/-reset *ova*)))]
+  [(before :facts (dosync (reinit! *ova*)))]
 
   (facts "add-watch"
     (let [out    (atom nil)]
 
-      (follow *ova* out :a (fn [v] (deref* v)))
+      (latch *ova* out (fn [v] (deref* v)))
 
       (dosync (conj! *ova* {:id 1 :val 1}))
       (persistent! *ova*) => @out => [{:id 1 :val 1}]
@@ -128,7 +126,7 @@
       (dosync (conj! *ova* {:id 2 :val 2}))
       (persistent! *ova*) => @out => [{:id 1 :val 1} {:id 2 :val 2}]
 
-      (unfollow *ova* out :a)
+      (unlatch *ova* out)
 
       (dosync (conj! *ova* {:id 3 :val 3}))
       (persistent! *ova*) => [{:id 1 :val 1} {:id 2 :val 2} {:id 3 :val 3}]
@@ -136,13 +134,13 @@
 
 
 (against-background
-  [(before :facts (dosync (i/-reset *ova*)))]
+  [(before :facts (dosync (reinit! *ova*)))]
 
   (facts "add-elem-watches"
-    (let [*ova*      (Ova.)
+    (let [*ova*      (ova)
           out    (atom nil)
           out-fn (fn [_ _ _ _ v & _] (reset! out (deref* v)))
-          _      (.addElemWatch *ova* :elm out-fn)]
+          _      (add-elem-watch *ova* :elm out-fn)]
 
       (dosync (conj! *ova* {:id 1 :val 1}))
       (persistent! *ova*) => [{:id 1 :val 1}]
@@ -157,7 +155,7 @@
       @out => {:id 1 :val 2 :more 3}
 
       ;; remove element watch
-      (do (.removeElemWatch *ova* :elm)
+      (do (remove-elem-watch *ova* :elm)
           (dosync (alter (.valAt @*ova* 0) assoc :more 4)))
       (persistent! *ova*) => [{:id 1 :val 2 :more 4}]
       @out {:id 1 :val 2 :more 3})))
@@ -165,14 +163,14 @@
 
 (fact "element watches do not propagate when the ova is not
        contained anymore"
-  (let [a         (dosync (conj! (Ova.) 1))
+  (let [a         (dosync (conj! (ova) 1))
         elem-out  (atom nil)
         elem-fn   (fn [_ _ _ _ v & args]
                     (reset! elem-out v))
         norm-out  (atom nil)
         norm-fn   (fn [_ _ _ v & args]
                     (reset! norm-out v))
-        _         (.addElemWatch a :elem elem-fn)
+        _         (add-elem-watch a :elem elem-fn)
         _         (add-watch (@a 0) :norm norm-fn)
         evm       (@a 0)]
 

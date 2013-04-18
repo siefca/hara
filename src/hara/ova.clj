@@ -1,8 +1,164 @@
 (ns hara.ova
-  (:use [hara.ova.impl :only [state add-iwatch remove-iwatch]]
-        [hara.common :only [get-sel suppress eq-prchk suppress-prchk]])
-  (:require [clojure.set :as set])
-  (:import hara.ova.Ova))
+  (:use [hara.common :only [deref* sel-chk suppress hash-keyword
+                            get-sel eq-prchk suppress-prchk]])
+  (:require [clojure.string :as s]
+            [clojure.set :as set]))
+
+(defn ova-state []
+  {:data      (ref [])
+   :watches   (atom {})})
+
+(defprotocol OvaProtocol
+  (empty! [ova])
+  (get-ref [ova])
+  (clear-watches [ova])
+  (add-elem-watch [ova k f])
+  (remove-elem-watch [ova k])
+  (get-elem-watches [ova])
+  (clear-elem-watches [ova])
+  (get-filtered [ova k sel nv]))
+
+(defn make-iwatch [ova]
+  (fn [k & args]
+    (doseq [w (get-elem-watches ova)]
+      (let [wk (first w)
+            wf (second w)]
+        (apply wf wk ova args)))))
+
+(defn add-iwatch [ova irf]
+  (let [k  (hash-keyword ova)
+        f  (make-iwatch ova)]
+    (add-watch irf k f)))
+
+(defn remove-iwatch [ova irf]
+  (let [k (hash-keyword ova)]
+    (remove-watch irf k)))
+
+(deftype Ova [state]
+  OvaProtocol
+  (empty! [ova]
+    (for [rf @ova]
+      (remove-iwatch ova rf))
+    (ref-set (:data state) [])
+    ova)
+
+  (get-ref [ova]
+    (:data state))
+
+  (clear-watches [ova]
+    (doseq [[k _] (.getWatches ova)]
+      (remove-watch ova k)))
+
+  (add-elem-watch [ova k f]
+    (swap! (:watches state) assoc k f))
+
+  (remove-elem-watch [ova k]
+    (swap! (:watches state) dissoc k))
+
+  (get-elem-watches [ova]
+    (deref (:watches state)))
+
+  (clear-elem-watches [ova]
+    (reset! (:watches state) {}))
+
+  (get-filtered [ova k sel nv]
+    (cond (and (nil? sel) (integer? k))
+          (nth ova k nv)
+
+          :else
+          (let [res (->> (map deref @ova)
+                         (filter (fn [m] (sel-chk m (or sel :id) k)))
+                         first)]
+            (or res nv))))
+
+  clojure.lang.IDeref
+  (deref [ova] @(:data state))
+
+  clojure.lang.IRef
+  (setValidator [ova vf]
+    (.setValidator (:data state) vf))
+
+  (getValidator [ova]
+    (.getValidator (:data state)))
+
+  (getWatches [ova]
+    (.getWatches (:data state)))
+
+  (addWatch [ova key callback]
+    (add-watch (:data state) key callback))
+
+  (removeWatch [ova key]
+    (remove-watch (:data state) key))
+
+  clojure.lang.ITransientCollection
+  (conj [ova v]
+    (let [ev (ref v)]
+      (add-iwatch ova ev)
+      (alter (:data state) conj ev))
+    ova)
+
+  (persistent [ova]
+    (deref* (:data state)))
+
+  clojure.lang.ITransientAssociative
+  (assoc [ova k v]
+    (if-let [pv (get @ova k)]
+      (ref-set pv v)
+      (let [ev (ref v)]
+        (add-iwatch ova ev)
+        (alter (:data state) assoc k ev)))
+    ova)
+
+  clojure.lang.ITransientVector
+  (assocN [ova i v] (assoc ova i v))
+
+  (pop [ova]
+    (if-let [lv (last @ova)]
+      (remove-iwatch ova lv))
+    (alter (:data state) pop)
+    ova)
+
+  clojure.lang.ILookup
+  (valAt [ova k]
+    (get-filtered ova k nil nil))
+
+  (valAt [ova k not-found]
+    (get-filtered ova k nil not-found))
+
+  clojure.lang.Indexed
+  (nth [ova i]
+    (nth ova i nil))
+
+  (nth [ova i not-found]
+     (if-let [entry (nth @ova i)]
+       @entry not-found))
+
+  clojure.lang.Counted
+  (count [ova] (count @ova))
+
+  clojure.lang.Seqable
+  (seq [ova]
+    (let [res (map deref (seq @ova))]
+      (if-not (empty? res) res)))
+
+  clojure.lang.IFn
+  (invoke [ova k] (get ova k))
+  (invoke [ova k not-found] (get ova k not-found))
+  (invoke [ova k sel not-found] (get-filtered ova k sel not-found))
+
+  ;;java.lang.Object
+  (toString [ova]
+    (str (persistent! ova))))
+
+(defmethod print-method
+  hara.ova.Ova
+  [ova w]
+  (print-method
+   (let [hash (.hashCode ova)
+         contents (->>  @ova
+                        (mapv #(-> % deref)))]
+     (format "<Ova@%s %s>"
+             hash contents)) w))
 
 
 (defn concat! [ova es]
@@ -11,8 +167,6 @@
 
 (defn append! [ova & es] (concat! ova es))
 
-(defn empty! [ova] (.empty ova))
-
 (defn refresh!
   ([ova coll]
      (empty! ova)
@@ -20,33 +174,22 @@
 
 (defn reinit!
   ([ova]
-     (.reset ova))
+     (empty! ova)
+     (clear-watches ova)
+     (clear-elem-watches ova)
+     ova)
   ([ova coll]
-     (.reset ova)
+     (reinit! ova)
      (concat! ova coll)
      ova))
 
 (defn ova
-  ([] (Ova.))
+  ([] (Ova. (ova-state)))
   ([coll]
-     (let [ova (Ova.)]
+     (let [ova (Ova. (ova-state))]
        (dosync (concat! ova coll))
        ova)))
 
-(defn clear-watches [ova]
-  (.clearWatches ova))
-
-(defn add-elem-watch [ova k f]
-  (.addElemWatch ova k f))
-
-(defn remove-elem-watch [ova k]
-  (.removeElemWatch ova k))
-
-(defn get-elem-watches [ova]
-  (.getElemWatches ova))
-
-(defn clear-elem-watches [ova]
-  (.clearElemWatches ova))
 
 (defn make-elem-change-watch [sel f]
   (fn [k ov rf p n]
@@ -118,17 +261,17 @@
 (defn insert! [ova val & [i]]
   (let [evm (ref val)]
     (add-iwatch ova evm)
-    (alter (state ova) insert-fn evm i))
+    (alter (get-ref ova) insert-fn evm i))
   ova)
 
 (defn sort! [ova comp]
-  (alter (state ova)
+  (alter (get-ref ova)
          #(sort (fn [x y]
                   ((or comp compare) @x @y)) %))
   ova)
 
 (defn reverse! [ova]
-  (alter (state ova) reverse)
+  (alter (get-ref ova) reverse)
   ova)
 
 (defn- delete-iwatches [ova idx]
@@ -147,7 +290,7 @@
 
 (defn delete-indices [ova idx]
   (delete-iwatches ova idx)
-  (alter (state ova) delete-iobjs idx)
+  (alter (get-ref ova) delete-iobjs idx)
   ova)
 
 (defn remove! [ova prchk]
@@ -182,3 +325,6 @@
 
   (defn vupdate-in! [ova chk ks f]
     (smap! ova chk #(update-in % ks f))))
+
+
+;;(dosync (reinit! (ova [1 2 3 4]) [2 3 4 5 6]))

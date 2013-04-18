@@ -1,6 +1,6 @@
 (ns hara.checkers
   (:use [hara.common :only [eq-chk]]
-   ))
+        hara.ova))
 
 (defn is-type-fn [t chk]
   (fn [obj]
@@ -20,10 +20,16 @@
 
 (defn is-ova [& [chk]]
   (fn [ov]
-    (if (and (instance? hara.ova.Ova ov)
-             (let [schk (or chk (sequence chk))]
-               (eq-chk (persistent! ov) schk)))
-      true)))
+    (and (instance? hara.ova.Ova ov)
+         (let [schk (or chk (sequence chk))]
+           (eq-chk (persistent! ov) schk)))))
+
+
+((fn [ov]
+    (and (instance? hara.ova.Ova ov)
+         (let [schk (or nil (sequence nil))]
+           (eq-chk (persistent! ov) schk))))
+ (ova))
 
 (defn has-keys [ks]
   (fn [m]
