@@ -12,8 +12,8 @@
                 clojure.lang.Seqable
                 clojure.lang.ILookup
                 clojure.lang.ITransientVector]
-   :methods [[empty [] hara.ova.Ova]
-             [reset [] hara.ova.Ova]
+   :methods [[empty [] void]
+             [reset [] void]
              [clearWatches [] void]
              [addElemWatch [java.lang.Object clojure.lang.IFn] void]
              [removeElemWatch [java.lang.Object] void]

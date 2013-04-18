@@ -583,6 +583,13 @@
 
 ;; ## Multithreading Methods
 
+(defmacro time-ms
+  "Evaluates expr and outputs the time it took.  Returns the time in ms"
+  [expr]
+  `(let [start# (. System (nanoTime))
+         ret# ~expr]
+     (/ (double (- (. System (nanoTime)) start#)) 1000000.0)))
+
 (defn hash-code
   [obj]
   (.hashCode obj))
@@ -591,137 +598,99 @@
   [obj & ids]
   (keyword (str "__" (st/join "_" (concat (map str ids) [(hash-code obj)])) "__")))
 
+(defn hash-pair [v1 v2]
+  (hash-keyword v2 (hash-code v1)))
+
 (defn atom? [obj] (instance? clojure.lang.Atom obj))
 
-(defn ref? [obj]  (instance? clojure.lang.Ref obj))
+(defn aref? [obj]  (instance? clojure.lang.Ref obj))
+
+(defn iref? [obj]  (instance? clojure.lang.IRef obj))
+
+(defn ideref? [obj]  (instance? clojure.lang.IDeref obj))
 
 (defn set-value! [rf obj]
   (cond (atom? rf) (reset! rf obj)
-        (ref? rf) (dosync (ref-set rf obj)))
+        (aref? rf) (dosync (ref-set rf obj)))
   rf)
 
 (defn alter! [rf f & args]
   (cond (atom? rf) (apply swap! rf f args)
-        (ref? rf) (dosync (apply alter rf f args))))
+        (aref? rf) (dosync (apply alter rf f args)))
+  rf)
+
+(defn dispatch! [ref f & args]
+  (future
+    (apply alter! ref f args)))
 
 (defn make-change-watch [sel f]
   (fn [k rf p n]
     (let [pv (get-sel p sel)
           nv (get-sel n sel)]
-      (if-not (or (= pv nv) (nil? pv) (nil? nv))
+      (if-not (or (= pv nv) (nil? nv))
         (f k rf pv nv)))))
 
 (defn add-change-watch [rf k sel f]
   (add-watch rf k (make-change-watch sel f)))
 
-(defn pair-keyword [v1 v2]
-  (hash-keyword v2 (hash-code v1)))
-
-(defn modifier [rf f]
+(defn latch-transform-fn [rf f]
   (fn [_ _ _ v]
     (set-value! rf (f v))))
 
 (defn latch
   ([master slave] (latch master slave identity))
   ([master slave f]
-     (add-watch master (pair-keyword master slave)
-                (modifier slave f))))
+     (add-watch master (hash-pair master slave)
+                (latch-transform-fn slave f))))
 
 (defn latch-changes
   ([master slave] (latch-changes master slave identity identity))
   ([master slave sel] (latch-changes master slave sel identity))
   ([master slave sel f]
-     (add-change-watch master (pair-keyword master slave)
-                       sel (modifier slave f))))
+     (add-change-watch master (hash-pair master slave)
+                       sel (latch-transform-fn slave f))))
 
 (defn unlatch
   [master slave]
-  (remove-watch master (pair-keyword master slave)))
+  (remove-watch master (hash-pair master slave)))
 
-(defn fulfill [p mtf rf]
-  (let [pk (hash-keyword p)
-        d-fn (fn [_ rf _ _]
-               (remove-watch rf pk)
-               (deliver p rf))]
-    (add-watch rf pk d-fn)
-    (mtf rf))
-  p)
 
-(defn expect [mtf rf] (fulfill (promise) mtf rf))
+(defn done-callback [p pk]
+  (fn [_ ref _ _]
+    (remove-watch ref pk)
+    (deliver p ref)))
 
-(defn demanding
-  ([p] (demanding p nil nil))
+(defn done-on-change [sel]
+  (fn [p pk]
+    (fn [k ref old new]
+      (println k old new)
+      (when-not (eq-sel old new sel)
+        (remove-watch ref pk)
+        (deliver p ref)))))
+
+(defn add-notifier
+  [mtf ref notify-fn]
+  (let [p (promise)
+        pk (hash-keyword p)]
+    (add-watch ref pk (notify-fn p pk))
+    (mtf ref)
+    p))
+
+(defn wait-deref
+  ([p] (wait-deref p nil nil))
   ([p ms ret]
      (cond (nil? ms) (deref p)
            :else (deref p ms ret))))
 
-(defn demand
-  ([mtf rf] (demand mtf rf nil nil))
-  ([mtf rf ms] (demand mtf rf ms nil))
-  ([mtf rf ms ret]
-     (demanding (expect mtf rf) ms ret)))
+(defn wait-for
+  ([mtf ref] (wait-for mtf ref done-callback nil nil))
+  ([mtf ref notifier ms] (wait-for mtf ref notifier ms nil))
+  ([mtf ref notifier ms ret]
+     (wait-deref (add-notifier mtf ref notifier) ms ret)))
 
-(defn fulfill-change
-  ([p rf f] (fulfill-change p rf f identity))
-  ([p rf f sel]
-     (let [pk (hash-keyword p)
-           d-fn (fn [k rf old new]
-                   (when-not (eq-sel old new sel)
-                     (remove-watch rf pk)
-                     (deliver p rf)))]
-       (add-change-watch rf pk (or sel identity) d-fn)
-       (f rf))
-     p))
-
-(defn expect-change
-  ([rf f] (expect-change rf f identity))
-  ([rf f sel] (fulfill-change (promise) rf f sel)))
-
-(defn demand-change
-  ([f rf] (demand-change f rf identity))
-  ([f rf sel] (demand-change f rf sel nil nil))
-  ([f rf sel ms] (demand-change f rf sel ms nil))
-  ([f rf sel ms ret]
-     (demanding (expect-change rf f sel) ms ret)))
-
-(defn dispatch! [rf f & args]
-  (future
-    (apply alter! rf f args)))
-
-
-(comment
- (defn slow-inc [v]
-   (Thread/sleep 500)
-   (inc v))
-
- (defn slow-inc-mt [rf]
-   (dispatch! rf inc))
-
- (def ain (atom 1))
-
- (alter! ain slow-inc)
- (dispatch! ain slow-inc)
-
- (inc-mt ain)
- ()
- (demand #(dispatch! % slow-inc) ain)
- (demand-change #(dispatch! % inc) ain)
- (demand-change #(dispatch! % identity) ain identity 500 :NA)
-
- (expect #(dispatch! % slow-inc) ain)
-
- ()
-
- (defmacro wait )
-
-
- (wait [a (expecting rf1 mtf1)
-        b (rf1 mtf2)])
-
- (defn defer! rf f )
-
- (defmacro wait)
-)
+(defn wait-on
+  [f ref & args]
+  (wait-for #(apply dispatch! % f args) ref))
 
 (defn remould
  ([f x] (remould f x {}))

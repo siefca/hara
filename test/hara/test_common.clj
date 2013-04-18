@@ -264,49 +264,6 @@
   (h/hash-keyword 1 "1") => :__1_1__
   (h/hash-keyword "hello") => :__99162322__)
 
-(fact "atom?"
-  (h/atom? (atom 0)) => true)
-
-(fact "ref?"
-  (h/ref? (ref 0)) => true)
-
-(fact "set-value!"
-  @(h/set-value! (atom 0) 1) => 1
-  @(h/set-value! (ref 0) 1) => 1)
-
-(fact "alter!"
-  @(h/alter! (atom 0) inc) => 1
-  @(h/alter! (ref 0) inc) => 1)
-
-(fact "propagate"
-  (let [in  (atom 0)
-        out (atom 0)]
-    (h/propagate in out)
-    (reset! in 10)
-    @out => 10
-
-    (h/depropagate in out)
-    (reset! in 0)
-    @out => 10))
-
-(fact "propagate-on-change"
-  (let [in  (atom {:a 0 :b 0})
-        out (atom nil)]
-    (h/propagate-on-change in out :b)
-    (swap! in assoc :a 1)
-    @out => nil
-    (swap! in assoc :b 1)
-    @out => 1
-
-    (h/propagate-on-change in out :b (?% * 2))
-    (swap! in assoc :b 2)
-    @out => 4))
-
-(fact "dispatch"
-  (let [in (atom 1)]
-    (h/dispatch! in inc)))
-
-
 
 (facts "remould is a higher order function that acts on
           elements nested in clojure arrays and data-structures

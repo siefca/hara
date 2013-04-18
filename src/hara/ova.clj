@@ -48,13 +48,6 @@
 (defn clear-elem-watches [ova]
   (.clearElemWatches ova))
 
-(defn make-elem-change-watch [ks f]
-    (fn [k ov rf p n]
-      (let [pv (get-in p ks)
-            nv (get-in n ks)]
-        (if (not= pv nv)
-          (f k ov rf pv nv)))))
-
 (defn make-elem-change-watch [sel f]
   (fn [k ov rf p n]
     (let [pv (get-sel p sel)
@@ -65,7 +58,6 @@
 
 (defn add-elem-change-watch [ov k sel f]
   (add-elem-watch ov k (make-elem-change-watch sel f)))
-
 
 (defn indices
   [ova prchk]
