@@ -164,7 +164,8 @@
 
     (def obj {:a 10
               :b 20
-              :get-sum (fn [this] (+ (:b this) (:a this)))})
+              :get-sum (fn [this] 
+                        (+ (:b this) (:a this)))})
 
     (msg obj :get-sum) ;=> 30
   "
@@ -317,13 +318,14 @@
 ;;
 ;; A very important part of this pipeling style of programming can be seen
 ;; in how predicates are tested. They tend to be quite short, as in:
-;;  - (< x 3)
-;;  - (< (:a obj) 3)
-;;  - (-> obj t1 t2 (< 3))
+;;
+;;  - `(< x 3)`
+;;  - `(< (:a obj) 3)`
+;;  - `(-> obj t1 t2 (< 3))`
 ;;
 ;; In general, they are written as:
 ;;
-;;  - (-> x t1 t2 pred)
+;;  - `(-> x t1 t2 pred)`
 ;;
 ;; It is worth keeping the predicates as data structures because
 ;; as they act as more than just functions. They can be used
@@ -331,7 +333,7 @@
 ;; context.
 ;;
 ;; We can convey this as a list representation through the `??` macro
-;; and construct a normal function through the `?%` macro.
+;; and construct a function through the `?%` macro.
 ;;
 ;;  - `call->` allows a data-structure to be used as a function.
 ;;  - `fn->` turns a data-structure into a function.
@@ -348,7 +350,8 @@
 
     (?? < 1) ;=> '(< 1)
 
-    (?? (get-in [:a :b]) = 1) ;=> '((get-in [:a :b]) = 1)
+    (?? (get-in [:a :b]) = 1) 
+    ;=> '((get-in [:a :b]) = 1)
   "
   [& args]
   (apply list 'list (map #(list 'quote %) args)))
@@ -364,7 +367,8 @@
 
      (call-> 1 '(? < 2)) ;=> true
 
-     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1)) => true
+     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1)) 
+     ;=> true
    "
   [obj [ff & args]]
   (cond (nil? ff)     obj
@@ -400,7 +404,8 @@
 
     (make-exp 'y (?? str)) ;=> '(str y)
 
-    (make-exp 'x (?? (inc) (- 2) (+ 2))) ;=> '(+ (- (inc x) 2) 2))
+    (make-exp 'x (?? (inc) (- 2) (+ 2))) 
+    ;=> '(+ (- (inc x) 2) 2))
   "
   [sym [ff & more]]
   (cond (nil? ff)     sym
@@ -411,19 +416,22 @@
         (symbol? ff)  (apply list ff sym more)
         :else         (recur (list 'get sym ff) more)))
 
-(defn make-fn-exp [form]
+(defn make-fn-exp
   "Makes a function expression out of the form
 
-    (make-fn-exp '(+ 2)) ;=> '(fn [?%] (+ ?% 2))
+    (make-fn-exp '(+ 2)) 
+    ;=> '(fn [?%] (+ ?% 2))
   "
+  [form]
   (apply list 'fn ['?%]
          (list (make-exp '?% form))))
 
-(defn fn-> [form]
+(defn fn->
   "Constructs a function from a form representation.
 
     ((fn-> '(+ 10)) 10) ;=> 20
   "
+  [form]
   (eval (make-fn-exp form)))
 
 (defmacro ?%
@@ -466,7 +474,9 @@
 (defn check-all->
   "Returns `true` if `obj` satisfies all pairs of sel and chk
 
-    (check-all-> {:a {:b 1}} [:a {:b 1} :a hash-map?]) => true
+    (check-all-> {:a {:b 1}} 
+                 [:a {:b 1} :a hash-map?]) 
+    => true
   "
   [obj scv]
   (every? (fn [[sel chk]]
@@ -479,7 +489,8 @@
       (eq-> {:id 1 :a 1} {:id 1 :a 2} :id)
       ;=> true
 
-      (eq-> {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id])
+      (eq-> {:db {:id 1} :a 1} 
+            {:db {:id 1} :a 2} [:db :id])
       ;=> true
   "
   [obj1 obj2 sel]
@@ -853,7 +864,8 @@
   "Returns a keyword repesentation of the hash-code.
    For use in generating internally unique keys
 
-    (h/hash-keyword 1) => :__1__
+    (h/hash-keyword 1) 
+    ;=> :__1__
   "
   [obj & ids]
   (keyword (str "__" (st/join "_" (concat (map str ids) [(hash-code obj)])) "__")))
@@ -861,7 +873,8 @@
 (defn hash-pair
   "Combines the hash of two objects together.
 
-    (hash-pair 1 :1) => :__1_1013907437__
+    (hash-pair 1 :1) 
+    ;=> :__1_1013907437__
   "
   [v1 v2]
   (hash-keyword v2 (hash-code v1)))
@@ -869,9 +882,11 @@
 (defn set-value!
   "Change the value contained within a ref or atom.
 
-    @(set-value! (atom 0) 1) => 1
+    @(set-value! (atom 0) 1) 
+    ;=> 1
 
-    @(set-value! (ref 0) 1) => 1
+    @(set-value! (ref 0) 1) 
+    ;=> 1
   "
   [rf obj]
   (cond (atom? rf) (reset! rf obj)
@@ -881,9 +896,11 @@
 (defn alter!
   "Updates the value contained within a ref or atom using `f`.
 
-    @(alter! (atom 0) inc) => 1
+    @(alter! (atom 0) inc) 
+    ;=> 1
 
-    @(alter! (ref 0) inc) => 1
+    @(alter! (ref 0) inc) 
+    ;=> 1
   "
   [rf f & args]
   (cond (atom? rf) (apply swap! rf f args)
@@ -893,7 +910,9 @@
 (defn dispatch!
   "Updates the value contained within a ref or atom using another thread.
 
-    (dispatch! (atom 0) (fn [x] (Thread/sleep 1000) (inc x)))
+    (dispatch! (atom 0) 
+                (fn [x] (Thread/sleep 1000) 
+                        (inc x)))
     ;=> <future_call>
   "
   [ref f & args]
@@ -909,7 +928,8 @@
 
     (def subject (atom {:a 1 :b 2}))
     (def observer (atom nil)
-    (h/add-change-watch subject :clone :b (fn [& _] (reset! observer @a)))
+    (add-change-watch subject :clone
+        :b (fn [& _] (reset! observer @a)))
 
     (swap! subject assoc :a 0)
     @observer => nil
@@ -983,7 +1003,9 @@
 
     (let [res (run-notify
              #(do (sleep 200)
-                  (alter! % inc)) (atom 1) notify-on-all)]
+                  (alter! % inc)) 
+                  (atom 1) 
+                  notify-on-all)]
     res ;=> promise?
     @res ;=> atom?
     @@res ;=> 2)
@@ -1029,7 +1051,8 @@
    Used for testing purposes
 
     (def atm (atom 1))
-    (def f #(dispatch! % slow-inc)) ;; concurrent call
+    ;; concurrent call
+    (def f #(dispatch! % slow-inc)) 
     (def ret (wait-for f atm))
 
     @atm ;=> 2
