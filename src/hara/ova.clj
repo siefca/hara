@@ -1,8 +1,8 @@
 ;; ##
 
 (ns hara.ova
-  (:use [hara.common :only [deref-nested sel-chk suppress hash-keyword
-                            get-sel eq-prchk suppress-prchk]])
+  (:use [hara.common :only [deref-nested check-> suppress hash-keyword
+                            get-> pcheck-> suppress-pcheck]])
   (:require [clojure.string :as s]
             [clojure.set :as set]))
 
@@ -69,7 +69,7 @@
 
           :else
           (let [res (->> (map deref @ova)
-                         (filter (fn [m] (sel-chk m (or sel :id) k)))
+                         (filter (fn [m] (check-> m (or sel :id) k)))
                          first)]
             (or res nv))))
 
@@ -194,8 +194,8 @@
 
 (defn make-elem-change-watch [sel f]
   (fn [k ov rf p n]
-    (let [pv (get-sel p sel)
-          nv (get-sel n sel)]
+    (let [pv (get-> p sel)
+          nv (get-> n sel)]
       (if-not (and (nil? pv) (nil? nv)
                    (= pv nv))
         (f k ov rf pv nv)))))
@@ -215,7 +215,7 @@
    :else
    (set (filter (comp not nil?)
                 (map-indexed (fn [i obj]
-                               (suppress-prchk obj prchk i))
+                               (suppress-pcheck obj prchk i))
                              ova)))))
 
 (defn select
@@ -229,7 +229,7 @@
    (set (mapcat #(select ova %) prchk))
 
    :else
-   (set (filter (fn [obj] (suppress-prchk obj prchk obj)) ova))))
+   (set (filter (fn [obj] (suppress-pcheck obj prchk obj)) ova))))
 
 (defn map! [ova f & args]
   (doseq [evm @ova]
@@ -306,7 +306,7 @@
     (delete-indices ova idx))
   ova)
 
-(defn smap>> [ova prchk form]
+(defn smap> [ova prchk form]
   (cond (list? form)
         (apply list smap! ova prchk form)
         :else
@@ -315,7 +315,7 @@
 (defmacro >>> [ova prchk & forms]
   (cons 'do
         (for [form forms]
-          (smap>> ova prchk form))))
+          (smap> ova prchk form))))
 
 (comment
   (def ov (ova [{}]))

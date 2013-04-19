@@ -102,7 +102,6 @@
     (swap! in assoc :b 10)
     @out => 18))
 
-
 (fact "run-notify"
   (let [res (h/run-notify
              #(do (Thread/sleep 200)

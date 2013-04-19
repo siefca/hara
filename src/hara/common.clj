@@ -175,214 +175,6 @@
   ([obj kw v1 v2 v3 v4] (call (obj kw) obj v1 v2 v3 v4))
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
-;; ## Function Representation
-;;
-;; Usually in clojure programs, the most common control structure that
-;; is used is the `->` and `->>` macros. This is because a function can
-;; be view as a series of smaller functional transforms
-;;
-;; A very important part of this pipeling style of programming can be seen
-;; in how predicates are tested. They tend to be quite short, as in:
-;;  - (< x 3)
-;;  - (< (:a obj) 3)
-;;  - (-> obj t1 t2 (< 3))
-;;
-;; In general, they are written as:
-;;
-;;  - (-> x t1 t2 pred)
-;;
-;; It is worth keeping the predicates as data structures because
-;; as they act as more than just functions. They can be used
-;; for conditions, selections and filters when in the right
-;; context.
-;;
-;; We can convey this as a list representation through the `??` macro
-;; and construct a normal function through the `?%` macro.
-;;
-;;  - `call->` allows a data-structure to be used as a function.
-;;  - `fn->` turns a data-structure into a function.
-;;
-;; Although the form can only represent pipelines, it is enough to
-;; cover predicates and am especially useful, blurring the line
-;; between program and data even further.
-;;
-
-(defmacro ??
-  "Constructs a list out of a function. Used for predicates
-
-    (?? + 1 2 3) ;=> '(+ 1 2 3)
-
-    (?? < 1) ;=> '(< 1)
-
-    (?? (get-in [:a :b]) = 1) ;=> '((get-in [:a :b]) = 1)
-  "
-  [& args]
-  (apply list 'list (map #(list 'quote %) args)))
-
-(defn make-exp
-  "Makes an expression using `sym`
-
-    (make-exp 'y (?? str)) ;=> '(str y)
-
-    (make-exp 'x (?? (inc) (- 2) (+ 2))) ;=> '(+ (- (inc x) 2) 2))
-  "
-  [sym [ff & more]]
-  (cond (nil? ff) sym
-
-        (list? ff)
-        (recur (make-exp sym ff) more)
-
-        (vector? ff)
-        (recur (list 'get-in sym ff) more)
-
-        :else
-        (apply list ff sym more)))
-
-(defn make-fn-exp [form]
-  "Makes a function expression out of the form
-
-    (make-fn-exp '(+ 2)) ;=> '(fn [?%] (+ ?% 2))
-  "
-  (apply list 'fn ['?%]
-         (list (make-exp '?% form))))
-
-(defn fn-> [form]
-  "Constructs a function from a form representation.
-
-    ((make-fn '(+ 10)) 10) ;=> 20
-  "
-  (eval (make-fn-exp form)))
-
-(defmacro ?%
-  "Constructs a function of one argument, Used for predicate
-
-    ((?% < 4) 3) ;=> true
-
-    ((?% > 2) 3) ;=> true
-  "
-  [& args]
-  (make-fn-exp args))
-
-(defn call->
-  "Indirect call, takes `obj` and a list containing either a function,
-   a symbol representing the function or the symbol `?` and any additional
-   arguments. Used for calling functions that have been stored as symbols.
-
-     (call-> 1 '(+ 2 3 4)) ;=> 10
-
-     (call-> 1 '(< 2)) ;=> true
-
-     (call-> 1 '(? < 2)) ;=> true
-
-     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1)) => true
-   "
-  [obj [ff & args]]
-  (cond (nil? ff) obj
-
-        (list? ff)
-        (recur (call-> obj ff) args)
-
-        (vector? ff)
-        (recur (get-in obj ff) args)
-
-        (fn? ff)
-        (apply ff obj args)
-
-        (symbol? ff)
-        (apply call (suppress (resolve ff)) obj args)))
-
-;; Checking Repesentation
-
-(defn eq-chk
-  "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
-
-    (eq-chk 2 2) ;=> true
-
-    (eq-chk 2 even?) ;=> true
-
-    (eq-chk 2 '(< 1)) ;=> true
-
-    (eq-chk {:a {:b 1}} (?? ([:a :b]) = 1)) ;=> true
-  "
-  [obj chk]
-  (or (= obj chk)
-      (and (list? chk) (call-> obj chk))
-      (and (ifn? chk) (-> (chk obj) not not))))
-
-(defn get-sel
-  "Provides a shorthand way of getting a return value.
-   `sel` can be a function, a vector, or a value.
-
-    (get-sel {:a {:b {:c 1}}} :a) => {:b {:c 1}}
-
-    (get-sel {:a {:b {:c 1}}} [:a :b]) => {:c 1}
-  "
-  [obj sel]
-  (cond (vector? sel) (get-in obj sel)
-        (ifn? sel) (sel obj)
-        :else (get obj sel)))
-
-(defn sel-chk
-  "Returns `true` if `(sel obj)` satisfies `eq-chk`
-
-    (sel-chk {:a {:b 1}} :a hash-map?) ;=> true
-
-    (sel-chk {:a {:b 1}} [:a :b] 1) ;=> true
-  "
-  [obj sel chk]
-  (eq-chk (get-sel obj sel) chk))
-
-(defn sel-chk-all
-  "Returns `true` if `obj` satisfies all pairs of sel and chk
-
-    (sel-chk-all {:a {:b 1}} [:a {:b 1} :a hash-map?]) => true
-  "
-  [obj scv]
-  (every? (fn [[sel chk]]
-            (sel-chk obj sel chk))
-          (partition 2 scv)))
-
-(defn eq-sel
-  "A shortcut to compare if two vals are equal.
-
-      (eq-sel {:id 1 :a 1} {:id 1 :a 2} :id)
-      ;=> true
-
-      (eq-sel {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id])
-      ;=> true
-  "
-  [obj1 obj2 sel]
-  (= (get-sel obj1 sel) (get-sel obj2 sel)))
-
-(defn eq-prchk
-  "Shorthand ways of checking where `m` fits `prchk`
-
-    (eq-prchk {:a 1} :a) ;=> truthy
-
-    (eq-prchk {:a 1 :val 1} [:val 1]) ;=> true
-
-    (eq-prchk {:a {:b 1}} [[:a :b] odd?]) ;=> true
-  "
-  [obj prchk]
-  (cond (vector? prchk)
-        (sel-chk-all obj prchk)
-
-        :else
-        (eq-chk obj prchk)))
-
-(defn suppress-prchk
-  "Tests obj using prchk and returns `obj` or `res` if true
-
-    (h/suppress-prchk :3 even?) => nil
-
-    (h/suppress-prchk 3 even?) => nil
-
-    (h/suppress-prchk 2 even?) => 2
-  "
-  ([obj prchk] (suppress-prchk obj prchk true))
-  ([obj prchk res]
-     (suppress (if (eq-prchk obj prchk) res))))
-
 ;; ## Type Predicates
 
 (defn boolean?
@@ -516,6 +308,214 @@
    "
   [k]
   (resolve (symbol (str (name k) "?"))))
+
+;; ## Function Representation
+;;
+;; Usually in clojure programs, the most common control structure that
+;; is used is the `->` and `->>` macros. This is because a function can
+;; be view as a series of smaller functional transforms
+;;
+;; A very important part of this pipeling style of programming can be seen
+;; in how predicates are tested. They tend to be quite short, as in:
+;;  - (< x 3)
+;;  - (< (:a obj) 3)
+;;  - (-> obj t1 t2 (< 3))
+;;
+;; In general, they are written as:
+;;
+;;  - (-> x t1 t2 pred)
+;;
+;; It is worth keeping the predicates as data structures because
+;; as they act as more than just functions. They can be used
+;; for conditions, selections and filters when in the right
+;; context.
+;;
+;; We can convey this as a list representation through the `??` macro
+;; and construct a normal function through the `?%` macro.
+;;
+;;  - `call->` allows a data-structure to be used as a function.
+;;  - `fn->` turns a data-structure into a function.
+;;
+;; Although the form can only represent pipelines, it is enough to
+;; cover predicates and am especially useful, blurring the line
+;; between program and data even further.
+;;
+
+(defmacro ??
+  "Constructs a list out of a function. Used for predicates
+
+    (?? + 1 2 3) ;=> '(+ 1 2 3)
+
+    (?? < 1) ;=> '(< 1)
+
+    (?? (get-in [:a :b]) = 1) ;=> '((get-in [:a :b]) = 1)
+  "
+  [& args]
+  (apply list 'list (map #(list 'quote %) args)))
+
+(defn call->
+  "Indirect call, takes `obj` and a list containing either a function,
+   a symbol representing the function or the symbol `?` and any additional
+   arguments. Used for calling functions that have been stored as symbols.
+
+     (call-> 1 '(+ 2 3 4)) ;=> 10
+
+     (call-> 1 '(< 2)) ;=> true
+
+     (call-> 1 '(? < 2)) ;=> true
+
+     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1)) => true
+   "
+  [obj [ff & args]]
+  (cond (nil? ff)     obj
+        (list? ff)    (recur (call-> obj ff) args)
+        (vector? ff)  (recur (get-in obj ff) args)
+        (keyword? ff) (recur (get obj ff) args)
+        (fn? ff)      (apply ff obj args)
+        (symbol? ff)  (if-let [f (suppress (resolve ff))]
+                        (apply call f obj args)
+                        (recur (get obj ff) args))
+        :else         (recur (get obj ff) args)))
+
+(defn get->
+  "Provides a shorthand way of getting a return value.
+   `sel` can be a function, a vector, or a value.
+
+    (get-> {:a {:b {:c 1}}} :a) => {:b {:c 1}}
+
+    (get-> {:a {:b {:c 1}}} [:a :b]) => {:c 1}
+  "
+  [obj sel]
+  (cond (nil? sel)    obj
+        (list? sel)   (call-> obj sel)
+        (vector? sel) (get-in obj sel)
+        (symbol? sel) (if-let [f (suppress (resolve sel))]
+                        (call f obj)
+                        (get obj sel))
+        (ifn? sel)    (sel obj)
+        :else         (get obj sel)))
+
+(defn make-exp
+  "Makes an expression using `sym`
+
+    (make-exp 'y (?? str)) ;=> '(str y)
+
+    (make-exp 'x (?? (inc) (- 2) (+ 2))) ;=> '(+ (- (inc x) 2) 2))
+  "
+  [sym [ff & more]]
+  (cond (nil? ff)     sym
+        (list? ff)    (recur (make-exp sym ff) more)
+        (vector? ff)  (recur (list 'get-in sym ff) more)
+        (keyword? ff) (recur (list 'get sym ff) more)
+        (fn? ff)      (apply list ff sym more)
+        (symbol? ff)  (apply list ff sym more)
+        :else         (recur (list 'get sym ff) more)))
+
+(defn make-fn-exp [form]
+  "Makes a function expression out of the form
+
+    (make-fn-exp '(+ 2)) ;=> '(fn [?%] (+ ?% 2))
+  "
+  (apply list 'fn ['?%]
+         (list (make-exp '?% form))))
+
+(defn fn-> [form]
+  "Constructs a function from a form representation.
+
+    ((fn-> '(+ 10)) 10) ;=> 20
+  "
+  (eval (make-fn-exp form)))
+
+(defmacro ?%
+  "Constructs a function of one argument, Used for predicate
+
+    ((?% < 4) 3) ;=> true
+
+    ((?% > 2) 3) ;=> true
+  "
+  [& args]
+  (make-fn-exp args))
+
+;; Checking Repesentation
+
+(defn check
+  "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
+
+    (check 2 2) ;=> true
+
+    (check 2 even?) ;=> true
+
+    (check 2 '(< 1)) ;=> true
+
+    (check {:a {:b 1}} (?? ([:a :b]) = 1)) ;=> true
+  "
+  [obj chk]
+  (or (= obj chk)
+      (-> (get-> obj chk) not not)))
+
+(defn check->
+  "Returns `true` if `(sel obj)` satisfies `check`
+
+    (check-> {:a {:b 1}} :a hash-map?) ;=> true
+
+    (check-> {:a {:b 1}} [:a :b] 1) ;=> true
+  "
+  [obj sel chk]
+  (check (get-> obj sel) chk))
+
+(defn check-all->
+  "Returns `true` if `obj` satisfies all pairs of sel and chk
+
+    (check-all-> {:a {:b 1}} [:a {:b 1} :a hash-map?]) => true
+  "
+  [obj scv]
+  (every? (fn [[sel chk]]
+            (check-> obj sel chk))
+          (partition 2 scv)))
+
+(defn eq->
+  "A shortcut to compare if two vals are equal.
+
+      (eq-> {:id 1 :a 1} {:id 1 :a 2} :id)
+      ;=> true
+
+      (eq-> {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id])
+      ;=> true
+  "
+  [obj1 obj2 sel]
+  (= (get-> obj1 sel) (get-> obj2 sel)))
+
+(defn pcheck->
+  "Shorthand ways of checking where `m` fits `prchk`
+
+    (pcheck-> {:a 1} :a) ;=> truthy
+
+    (pcheck-> {:a 1 :val 1} [:val 1]) ;=> true
+
+    (pcheck-> {:a {:b 1}} [[:a :b] odd?]) ;=> true
+  "
+  [obj pchk]
+  (cond (vector? pchk)
+        (check-all-> obj pchk)
+
+        (hash-set? pchk)
+        (some (map #(pcheck-> obj %) pchk))
+
+        :else
+        (check obj pchk)))
+
+(defn suppress-pcheck
+  "Tests obj using prchk and returns `obj` or `res` if true
+
+    (h/suppress-pcheck :3 even?) => nil
+
+    (h/suppress-pcheck 3 even?) => nil
+
+    (h/suppress-pcheck 2 even?) => 2
+  "
+  ([obj prchk] (suppress-pcheck obj prchk true))
+  ([obj prchk res]
+     (suppress (if (pcheck-> obj prchk) res))))
 
 ;; ## Constructors
 
@@ -757,7 +757,7 @@
   ([m prchk] (remove-nested m prchk {}))
   ([m prchk output]
      (if-let [[k v] (first m)]
-       (cond (or (nil? v) (suppress (eq-prchk m prchk)))
+       (cond (or (nil? v) (suppress (pcheck-> m prchk)))
              (recur (dissoc m k) prchk output)
 
              (hash-map? v)
@@ -924,8 +924,8 @@
 (defn make-change-watch
   [sel f]
   (fn [k rf p n]
-    (let [pv (get-sel p sel)
-          nv (get-sel n sel)]
+    (let [pv (get-> p sel)
+          nv (get-> n sel)]
       (if-not (or (= pv nv) (nil? nv))
         (f k rf pv nv)))))
 
@@ -1012,7 +1012,7 @@
   ([sel]
      (fn [p pk]
        (fn [k ref old new]
-         (when-not (eq-sel old new sel)
+         (when-not (eq-> old new sel)
            (remove-watch ref pk)
            (deliver p ref))))))
 

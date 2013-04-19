@@ -392,7 +392,7 @@
   "
   [s v sel]
   (if-let [sv (first s)]
-    (if (eq-sel sv v sel)
+    (if (eq-> sv v sel)
       sv
       (recur (next s) v sel))))
 
@@ -472,7 +472,7 @@
                (cond (hash-set? v2)
                      (combine-to-set v2 v1 sel rd)
 
-                     (eq-sel v1 v2 sel)
+                     (eq-> v1 v2 sel)
                      (rd v1 v2)
 
                      (= v1 v2) v1
@@ -503,7 +503,7 @@
                         :else (disj v dv))]
           (if-not (empty? res) res))
         :else
-        (if-not (eq-chk v dv) v)))
+        (if-not (check v dv) v)))
 
 (defn merges
   "Like `merge` but works across sets and will also
@@ -649,7 +649,7 @@
           (let [[k prchk] k
                 val (get m k)]
             (if-not (hash-set? val) val
-                    (-> (filter #(eq-prchk % prchk) val) set)))))
+                    (-> (filter #(pcheck-> % prchk) val) set)))))
 
 (declare gets-in gets-in-loop)
 
@@ -717,14 +717,14 @@
        (cond (nil? subm) m
 
              (and (hash-set? subm) (every? hash-map? subm))
-             (let [ori-set (set (filter #(eq-prchk % prchk) subm))
+             (let [ori-set (set (filter #(pcheck-> % prchk) subm))
                    new-set (set (map #(assocs-in % ks v sel rd) ori-set))]
                (assoc m k (-> subm
                               (set/difference ori-set)
                               (set/union new-set))))
 
              (hash-map? subm)
-             (if (eq-prchk subm prchk)
+             (if (pcheck-> subm prchk)
                (assoc m k (assocs-in subm ks v sel rd))
                m)
 
@@ -760,14 +760,14 @@
      (let [subm (get m k)]
        (cond (nil? subm) m
              (and (hash-set? subm) (every? hash-map? subm))
-             (let [ori-set (set (filter #(eq-prchk % prchk) subm))
+             (let [ori-set (set (filter #(pcheck-> % prchk) subm))
                    new-set (set (map #(dissocs-in % ks) ori-set))]
                (assoc m k (-> subm
                               (set/difference ori-set)
                               (set/union new-set))))
 
              (hash-map? subm)
-             (if (eq-prchk subm prchk)
+             (if (pcheck-> subm prchk)
                (assoc m k (dissocs-in subm ks))
                m)
 

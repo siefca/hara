@@ -1,11 +1,11 @@
 (ns hara.checkers
-  (:use [hara.common :only [eq-chk]]))
+  (:use [hara.common :only [check]]))
 
 (defn is-type-fn [t chk]
   (fn [obj]
     (if (and (instance? t obj)
              (if chk
-               (eq-chk @obj (or chk (sequence chk)))))
+               (check @obj (or chk (sequence chk)))))
       true)))
 
 (defn is-iref [& [chk]]
@@ -21,7 +21,7 @@
   (fn [obj]
     (and (= "class hara.ova.Ova" (str (type obj)))
         (let [schk (or chk (sequence chk))]
-          (eq-chk (persistent! obj) schk)))))
+          (check (persistent! obj) schk)))))
 
 (defn has-keys [ks]
   (fn [m]

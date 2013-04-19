@@ -63,6 +63,7 @@
   ((?% + 1 2 3) 4) => 10)
 
 (fact "call->"
+  (h/call-> 4 [even?]) => true
   (h/call-> 4 '(< 3)) => false
   (h/call-> 4 (list #(< % 3))) => false
   (h/call-> 4 `(< 3)) => false
@@ -76,60 +77,61 @@
   (h/call-> {:a {:b 1}} (?? (get-in [:a :b]) (= 1))) => true
   (h/call-> {:a {:b 1}} (?? [:a :b] (= 1))) => true)
 
+(fact "check"
+  (h/check 2 2) => true
+  (h/check 2 even?) => true
+  (h/check 2 (?% even?)) => true
+  (h/check 2 (?? even?)) => true
+  (h/check {:a {:b 1}} (?? ([:a :b]) = 1)) => true
+  (h/check {:a {:b 1}} (?% ([:a :b]) = 1)) => true)
 
-(fact "eq-chk"
-  (h/eq-chk 2 2) => true
-  (h/eq-chk 2 even?) => true
-  (h/eq-chk 2 (?% even?)) => true
-  (h/eq-chk 2 (?? even?)) => true
-  (h/eq-chk {:a {:b 1}} (?? ([:a :b]) = 1)) => true
-  (h/eq-chk {:a {:b 1}} (?% ([:a :b]) = 1)) => true)
+(fact "get->"
+  (h/get-> 4 even?) => true
+  (h/get-> 4 'even?) => true
+  (h/get-> {:a 1} (?? :a (= 1))) => true
+  (h/get-> {"a" {:b {:c 1}}} "a") => {:b {:c 1}}
+  (h/get-> {:a {:b {:c 1}}} :a) => {:b {:c 1}}
+  (h/get-> {:a {:b {:c 1}}} [:a :b]) => {:c 1}
+  (h/get-> {:a {:b {:c 1}}} h/hash-map?) => true)
 
-(fact "get-sel"
-  (h/get-sel {"a" {:b {:c 1}}} "a") => {:b {:c 1}}
-  (h/get-sel {:a {:b {:c 1}}} :a) => {:b {:c 1}}
-  (h/get-sel {:a {:b {:c 1}}} [:a :b]) => {:c 1}
-  (h/get-sel {:a {:b {:c 1}}} h/hash-map?) => true)
+(fact "check->"
+  (h/check-> {:a {:b 1}} #(get % :a) {:b 1}) => true
+  (h/check-> {"a" {:b 1}} "a" {:b 1}) => true
+  (h/check-> {:a {:b 1}} :a h/hash-map?) => true
+  (h/check-> {:a {:b 1}} :a {:b 1}) => true
+  (h/check-> {:a {:b 1}} [:a :b] 1) => true)
 
-(fact "sel-chk"
-  (h/sel-chk {:a {:b 1}} #(get % :a) {:b 1}) => true
-  (h/sel-chk {"a" {:b 1}} "a" {:b 1}) => true
-  (h/sel-chk {:a {:b 1}} :a h/hash-map?) => true
-  (h/sel-chk {:a {:b 1}} :a {:b 1}) => true
-  (h/sel-chk {:a {:b 1}} [:a :b] 1) => true)
+(fact "check-all->"
+  (h/check-all-> {:a {:b 1}} [:a {:b 1} :a h/hash-map?]) => true)
 
-(fact "sel-chk-all"
-  (h/sel-chk-all {:a {:b 1}} [:a {:b 1} :a h/hash-map?]) => true)
+(fact "eq->"
+  (h/eq-> 2 4 even?) => true
+  (h/eq-> 2 5 even?) => false
+  (h/eq-> 2 5 (?% > 3)) => false
+  (h/eq-> 2 5 (?% < 6)) => true
+  (h/eq-> {:id 1 :a 1} {:id 1 :a 2} h/hash-set?) => true
+  (h/eq-> {:id 1 :a 1} {:id 1 :a 2} :id) => true
+  (h/eq-> {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
 
-(fact "eq-sel"
-  (h/eq-sel 2 4 even?) => true
-  (h/eq-sel 2 5 even?) => false
-  (h/eq-sel 2 5 (?% > 3)) => false
-  (h/eq-sel 2 5 (?% < 6)) => true
-  (h/eq-sel {:id 1 :a 1} {:id 1 :a 2} h/hash-set?) => true
-  (h/eq-sel {:id 1 :a 1} {:id 1 :a 2} :id) => true
-  (h/eq-sel {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
+(fact "pcheck->"
+  (h/pcheck-> {:a 1} :a) => true
+  (h/pcheck-> {:a 1} h/hash-map?) => true
+  (h/pcheck-> {:a 1} h/hash-set?) => false
+  (h/pcheck-> {:a 1 :val 1} #(= 1 (% :val))) => true
+  (h/pcheck-> {:a 1 :val 1} #(= 2 (% :val))) => false
+  (h/pcheck-> {:a 1 :val 1} [:val 1]) => true
+  (h/pcheck-> {:a 1 :val 1} [:val even?]) => false
+  (h/pcheck-> {:a 1 :val 1} [:val (?% = 1)]) => true
+  (h/pcheck-> {:a 1 :val 1} [:val (?% not= 1)]) => false
+  (h/pcheck-> {:a 1 :val 1} [:val (?? = 1)]) => true
+  (h/pcheck-> {:a 1 :val 1} [:val (?? not= 1)]) => false
+  (h/pcheck-> {:a {:b 1}} [[:a :b] odd?]) => true
+  (h/pcheck-> {:a {:b 1}} [[:a :b] (?? = 1) [:a] associative?]) => true)
 
-
-(fact "eq-prchk"
-  (h/eq-prchk {:a 1} :a) => true
-  (h/eq-prchk {:a 1} h/hash-map?) => true
-  (h/eq-prchk {:a 1} h/hash-set?) => false
-  (h/eq-prchk {:a 1 :val 1} #(= 1 (% :val))) => true
-  (h/eq-prchk {:a 1 :val 1} #(= 2 (% :val))) => false
-  (h/eq-prchk {:a 1 :val 1} [:val 1]) => true
-  (h/eq-prchk {:a 1 :val 1} [:val even?]) => false
-  (h/eq-prchk {:a 1 :val 1} [:val (?% = 1)]) => true
-  (h/eq-prchk {:a 1 :val 1} [:val (?% not= 1)]) => false
-  (h/eq-prchk {:a 1 :val 1} [:val (?? = 1)]) => true
-  (h/eq-prchk {:a 1 :val 1} [:val (?? not= 1)]) => false
-  (h/eq-prchk {:a {:b 1}} [[:a :b] odd?]) => true
-  (h/eq-prchk {:a {:b 1}} [[:a :b] (?? = 1) [:a] associative?]) => true)
-
-(fact "suppress-prchk"
-  (h/suppress-prchk "3" even?) => nil
-  (h/suppress-prchk 3 even?) => nil
-  (h/suppress-prchk 2 even?) => true)
+(fact "suppress-pcheck"
+  (h/suppress-pcheck "3" even?) => nil
+  (h/suppress-pcheck 3 even?) => nil
+  (h/suppress-pcheck 2 even?) => true)
 
 (fact "queue"
   (h/queue 1 2 3 4) => [1 2 3 4]
@@ -318,10 +320,12 @@
   (h/manipulate #(* % 2) #{1 2})   => #{2 4}
   (h/manipulate vector [1 {2 3}]) => [[1] {2 [3]}]
   (h/manipulate vector [1 {2 3}]
-             [{:pred h/hash-map?
-                :ctor #(into {} %)
-                :dtor seq}]) => [[1] {[2] [3]}]
-  (h/manipulate #(* % 2) {1 [2 3] #{4 5} 6 7 '(8 (9 (10)))}) => {1 [4 6], #{4 5} 12, 7 '(16 (18 (20)))})
+                [{:pred h/hash-map?
+                  :ctor #(into {} %)
+                  :dtor seq}])
+  => [[1] {[2] [3]}]
+  (h/manipulate #(* % 2) {1 [2 3] #{4 5} 6 7 '(8 (9 (10)))})
+  => {1 [4 6], #{4 5} 12, 7 '(16 (18 (20)))})
 
 (fact "A specialised function can be used for custom manipulation"
   (h/manipulate (fn [x] (* 2
@@ -330,92 +334,92 @@
                  {1 "2" 3 ["4" 5 #{6 "7"}]})
   => {1 4 3 [8 10 #{12 14}]})
 
-  (fact "Customized type functions can be used for deconstruction and construction"
-    (h/manipulate (fn [x] (* 2 x))
-                   {1 "2" 3 ["4" 5 #{6 "7"}]}
-                   [{:pred String
-                     :dtor (fn [x] (Integer/parseInt x))}])
-    => {1 4 3 [8 10 #{12 14}]}
+(fact "Customized type functions can be used for deconstruction and construction"
+  (h/manipulate (fn [x] (* 2 x))
+                {1 "2" 3 ["4" 5 #{6 "7"}]}
+                [{:pred String
+                  :dtor (fn [x] (Integer/parseInt x))}])
+  => {1 4 3 [8 10 #{12 14}]}
 
-    (h/manipulate (fn [x] (* 2 x))
-                   {1 "2" 3 ["4" 5 #{6 "7"}]}
-                   [{:pred String
-                     :dtor (fn [x] (Integer/parseInt x))
-                     :ctor (fn [x] (.toString x))}])
-    => {1 "4" 3 ["8" 10 #{12 "14"}]}
+  (h/manipulate (fn [x] (* 2 x))
+                {1 "2" 3 ["4" 5 #{6 "7"}]}
+                [{:pred String
+                  :dtor (fn [x] (Integer/parseInt x))
+                  :ctor (fn [x] (.toString x))}])
+  => {1 "4" 3 ["8" 10 #{12 "14"}]}
 
-    (h/manipulate (fn [x] (* 2 x))
-                   {1 "2" 3 ["4" 5 #{6 "7"}]}
-                   [{:pred String
-                     :dtor (fn [x] (Integer/parseInt x))
-                     :ctor (fn [x] [(.toString x)])}])
-    => {1 ["4"] 3 [["8"] 10 #{12 ["14"]}]}
+  (h/manipulate (fn [x] (* 2 x))
+                {1 "2" 3 ["4" 5 #{6 "7"}]}
+                [{:pred String
+                  :dtor (fn [x] (Integer/parseInt x))
+                  :ctor (fn [x] [(.toString x)])}])
+  => {1 ["4"] 3 [["8"] 10 #{12 ["14"]}]}
 
-    (h/manipulate (fn [x] (* 2 x))
-                   {1 "2" 3 ["4" 5 #{6 "7"}]}
-                   [{:pred String
-                     :dtor (fn [x] [(Integer/parseInt x)])
-                     :ctor (fn [x] (.toString x))}])
-    => {1 "[4]" 3 ["[8]" 10 #{12 "[14]"}]})
+  (h/manipulate (fn [x] (* 2 x))
+                {1 "2" 3 ["4" 5 #{6 "7"}]}
+                [{:pred String
+                  :dtor (fn [x] [(Integer/parseInt x)])
+                  :ctor (fn [x] (.toString x))}])
+  => {1 "[4]" 3 ["[8]" 10 #{12 "[14]"}]})
 
-  (fact "Different types of containers"
-    (h/manipulate #(* 2 %)
-                   (java.util.Vector. [1 2 3])
-                   [{:pred java.util.Vector
-                     :dtor seq}])
-    => '(2 4 6)
+(fact "Different types of containers"
+  (h/manipulate #(* 2 %)
+                (java.util.Vector. [1 2 3])
+                [{:pred java.util.Vector
+                  :dtor seq}])
+  => '(2 4 6)
 
-    (h/manipulate #(* 2 %)
-                   (java.util.Vector. [1 2 3])
-                   [{:pred java.util.Vector
-                     :dtor seq
-                     :ctor (fn [x] (apply hash-set x))}])
-    => #{2 4 6})
+  (h/manipulate #(* 2 %)
+                (java.util.Vector. [1 2 3])
+                [{:pred java.util.Vector
+                  :dtor seq
+                  :ctor (fn [x] (apply hash-set x))}])
+  => #{2 4 6})
 
-  (fact "Predictates on numbers"
-    (h/manipulate identity
-                   [1 2 3 4 5]
-                   [{:pred #(= 2 %)
-                     :dtor (fn [x] 10)}])
-    => [1 10 3 4 5])
+(fact "Predictates on numbers"
+  (h/manipulate identity
+                [1 2 3 4 5]
+                [{:pred #(= 2 %)
+                  :dtor (fn [x] 10)}])
+  => [1 10 3 4 5])
 
-  (fact "Predictates on vectors"
-    (h/manipulate identity
-                   [1 [:date 2 3 4 5] 6 7]
-                   [{:pred #(and (vector? %) (= (first %) :date))
-                     :dtor #(apply t/date-time (rest %))}])
-    => [1 (t/date-time 2 3 4 5) 6 7])
+(fact "Predictates on vectors"
+  (h/manipulate identity
+                [1 [:date 2 3 4 5] 6 7]
+                [{:pred #(and (vector? %) (= (first %) :date))
+                  :dtor #(apply t/date-time (rest %))}])
+  => [1 (t/date-time 2 3 4 5) 6 7])
 
-  (fact "Predictates on vectors"
-    (h/manipulate identity
-                   [1 (t/date-time 2 3 4 5) 6 7]
-                   [{:pred org.joda.time.DateTime
-                     :dtor (fn [dt] [:date (t/year dt) (t/month dt)])}])
-    => [1 [:date 2 3] 6 7])
+(fact "Predictates on vectors"
+  (h/manipulate identity
+                [1 (t/date-time 2 3 4 5) 6 7]
+                [{:pred org.joda.time.DateTime
+                  :dtor (fn [dt] [:date (t/year dt) (t/month dt)])}])
+  => [1 [:date 2 3] 6 7])
 
-  (fact "Predictates on numbers"
-    (h/manipulate identity
-                   [1 2 3 4 5]
-                   [{:pred #(= 2 %)
-                     :ctor (fn [x] 10)}])
-    => (throws StackOverflowError))
+(fact "Predictates on numbers"
+  (h/manipulate identity
+                [1 2 3 4 5]
+                [{:pred #(= 2 %)
+                  :ctor (fn [x] 10)}])
+  => (throws StackOverflowError))
 
 
-  (facts "deref-nested dereferences nested elements
+(facts "deref-nested dereferences nested elements
 
            @usage: (deref-nested fn data-structure)"
-    (h/deref-nested nil) => nil
-    (h/deref-nested 1) =>  1
-    (h/deref-nested (atom 1)) => 1
-    (h/deref-nested (atom (atom (atom 1)))) => 1
-    (h/deref-nested (atom {:a (atom {:b (atom :c)})})) => {:a {:b :c}}
-    (h/deref-nested {:a (atom 2)}) => {:a 2}
+  (h/deref-nested nil) => nil
+  (h/deref-nested 1) =>  1
+  (h/deref-nested (atom 1)) => 1
+  (h/deref-nested (atom (atom (atom 1)))) => 1
+  (h/deref-nested (atom {:a (atom {:b (atom :c)})})) => {:a {:b :c}}
+  (h/deref-nested {:a (atom 2)}) => {:a 2}
 
-    ;; advanced
-    (h/deref-nested #(* 2 %) (atom 1)) => 2
-    @(h/deref-nested #(atom (* 2 %)) (atom 1)) => 2 ;; stupid but plausible
-    (h/deref-nested #(* 2 %)
-              (atom (atom (atom "1")))
-              [{:pred String
-                :dtor (fn [x] (Integer/parseInt x))
-                :ctor (fn [x] (.toString x))}]) => "2")
+  ;; advanced
+  (h/deref-nested #(* 2 %) (atom 1)) => 2
+  @(h/deref-nested #(atom (* 2 %)) (atom 1)) => 2 ;; stupid but plausible
+  (h/deref-nested #(* 2 %)
+                  (atom (atom (atom "1")))
+                  [{:pred String
+                    :dtor (fn [x] (Integer/parseInt x))
+                    :ctor (fn [x] (.toString x))}]) => "2")
