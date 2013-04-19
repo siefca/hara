@@ -94,94 +94,52 @@
     @out => 4
     (swap! in assoc :b 8)
     @out => 16
+    (swap! in update-in [:b] inc)
+    @in => {:a 1 :b 9}
+    @out => 18
 
     (h/delatch in out)
     (swap! in assoc :b 10)
-    @out => 16))
+    @out => 18))
 
 
+(fact "run-notify"
+  (let [res (h/run-notify
+             #(do (Thread/sleep 200)
+                  (h/alter! % inc)) (atom 1) h/notify-on-all)]
+    res => h/promise?
+    @res => h/atom?
+    @@res => 2)
 
 
+  (let [res (h/run-notify
+             #(do (Thread/sleep 200)
+                  (h/alter! % update-in [:a] inc))
+             (atom {:a 1}) (h/notify-on-change :a))]
+    res => h/promise?
+    @res => h/atom?
+    @@res => {:a 2}))
+
+(fact "wait-deref"
+  (h/wait-deref (atom 1)) => 1
+  (h/wait-deref (promise) 10) => nil
+  (h/wait-deref (promise) 10 :NA) => :NA)
 
 
+(fact "wait-for"
+  (let [atm (atom 1)
+        f   #(h/dispatch! % slow-inc)
+        ret (f atm)]
+    @atm => 1
+    ret => (complement future-done?))
 
-(comment
+  (let [atm (atom 1)
+        f   #(h/dispatch! % slow-inc)
+        ret (h/wait-for f atm)]
+    @atm => 2
+    ret => h/atom?
+    @ret => 2))
 
-(h/wait-on slow-inc (atom 10) 1000)
-
- (defn slow-assoc [m k v]
-   (Thread/sleep 500)
-   (assoc m k v))
-
- (def mpin (atom {:a 1 :b 2 :c 3}))
-
- (wait-till-notified #(dispatch! % slow-assoc :b 4)
-                     mpin
-                     (done-on-sel :b) 1000 :NA)
-
- (wait-till-notified #(dispatch! % slow-assoc :a 10)
-                     mpin)
-
- (defn slow-inc-mt [rf]
-   (dispatch! rf inc))
-
- (def ain (atom 1))
-
- (etime (alter! ain slow-inc))
- (etime (dispatch! ain slow-inc))
-
- (inc-mt ain)
- ()
- (wait-for-notification #(dispatch! % slow-inc) ain)
- (demand-change #(dispatch! % inc) ain)
- (demand-change #(dispatch! % identity) ain identity 500 :NA)
-
- (expect #(dispatch! % slow-inc) ain)
-
- ()
-
- (defmacro wait )
-
-
- (wait [a (expecting rf1 mtf1)
-        b (rf1 mtf2)])
-
- (defn defer! rf f )
-
- (defmacro wait)
-)
-
-#_(facts "watch-for-change produces another function that can be used in watching
-        the nested values of maps contained in atoms and iotams.
-
-          @usage
-          I have an atom containing a large array of nested keys:
-
-             (def a (atom {:k0
-                           {:k1
-                            ....
-                            {:kn value}}})
-
-          And I only wish to run <fn> when the value changes, then this function can be used
-          to generate a function for watch.
-
-              (add-watch a (watch-for-change [:k0 :k1 ... :kn] <fn>))
-       "
-  (let [itm      (atom {:a {:b {:c {:d nil}}}})
-        out1     (atom nil)
-        to-out1-fn (fn [k r p v] (reset! out1 v))]
-    (add-watch itm  :test (f/watch-for-change [:a :b :c :d] to-out1-fn))
-    (fact "assert that adding watch does not change any of the
-           values of the atoms: the nested value within itm and out1 are nil"
-      @itm => {:a {:b {:c {:d nil}}}}
-      @out1 => nil)
-
-    (reset! itm {:a {:b {:c {:d 1}}}})
-    (fact "assert that itm is updated and out1 has also been manipulated through the watch"
-      @itm => {:a {:b {:c {:d 1}}}}
-      @out1 => 1)
-
-    (swap! itm update-in [:a :b :c :d] inc)
-    (fact "assert that itm is updated  and out has been manipulated"
-      @itm => {:a {:b {:c {:d 2}}}}
-      @out1 => 2)))
+(fact "wait-on"
+  (let [atm (h/wait-on slow-inc (atom 1))]
+    @atm => 2) )

@@ -1,9 +1,67 @@
+;; ## Common Paradigms
+;;
+;; `hara.common` provides methods, macros and utility
+;; functions that complements `clojure.core` and makes programming
+;; in clojure more "clojurish". Each function is not that useful
+;; on its own but together, they span a number of paradigms and
+;; adds flexibility to program structure and control. The main
+;; functionality are:
+;;
+;;  - Exceptions
+;;  - Calling Conventions
+;;  - Strings
+;;  - Predicate Checking
+;;  - Nested Structures
+;;  - Watch Callback
+;;
 (ns hara.common
   (:require [clojure.string :as st]
             [clojure.set :as set])
   (:refer-clojure :exclude [send]))
 
+;; ## Threads
+;;
+;; Simple functions for thread that increase readability.
+;;
+
+(defn current-thread
+  "Returns the currenly executing thread."
+  []
+  (Thread/currentThread))
+
+(defn sleep
+  "Shortcut for Thread/sleep.
+
+    (sleep 100) ;=> <sleeps for 100ms>.
+  "
+  [ms]
+  (Thread/sleep ms))
+
+(defn yield
+  "Yields control of the currently executing thread."
+  []
+  (Thread/yield))
+
+(defn interrupt
+  "Interrupts a `thd` or the current thread
+   if no arguments are given.
+  "
+  ([] (interrupt (current-thread)))
+  ([thd] (.interrupt thd)))
+
+
 ;; ## Exceptions
+;;
+;; If we place too much importance on exceptions, exception handling code
+;; starts littering through the control code. Most internal code
+;; do not require definition of exception types as exceptions are
+;; meant for the programmer to look at and handle.
+;;
+;; Therefore, the exception mechanism should get out of the way
+;; of the code. The noisy `try .... catch...` control structure
+;; can be replaced by a `suppress` statement so that errors can be
+;; handled seperately within another function or ignored completely.
+;;
 
 (defn error
   "Throws an exception when called.
@@ -15,6 +73,20 @@
   ([e & more]
      (throw (Exception. (apply str e more)))))
 
+(defn error-message
+  "Returns the the error message associated with `e`.
+
+    (error-message (Exception. \"error\")) => \"error\"
+  "
+  [e]
+  (.getMessage e))
+
+(defn error-stacktrace
+  "Returns the the error message associated with `e`.
+  "
+  [e]
+  (.getStackTrace e))
+
 (defmacro suppress
   "Suppresses any errors thrown.
 
@@ -25,15 +97,21 @@
   ([body]
      `(try ~body (catch Throwable ~'t)))
   ([body catch-val]
-     `(try ~body (catch Throwable ~'t ~catch-val))))
+     `(try ~body (catch Throwable ~'t
+                   (cond (fn? ~catch-val)
+                         (~catch-val ~'t)
+                         :else ~catch-val)))))
 
 ;; ## String
+;;
+;; Functions that should be in `clojure.string` but are not.
+;;
 
 (defn replace-all
   "Returns a string with all instances of `old` in `s` replaced with
    the value of `new`.
 
-    (h/replace-all \"hello there, hello again\"
+    (replace-all \"hello there, hello again\"
                    \"hello\" \"bye\")
     ;=> \"bye there, bye again\"
   "
@@ -43,14 +121,29 @@
 (defn starts-with?
   "Returns `true` if `s` begins with `pre`.
 
-    (h/starts-with \"prefix\" \"pre\") ;=> true
+    (starts-with? \"prefix\" \"pre\") ;=> true
 
-    (h/starts-with \"prefix\" \"suf\") ;=> false
+    (starts-with? \"prefix\" \"suf\") ;=> false
   "
   [s pre]
   (.startsWith s pre))
 
+(defn ends-with?
+  "Returns `true` if `s` begins with `pre`.
+
+    (ends-with? \"suffix\" \"fix\") ;=> true
+  "
+  [s suf]
+  (.endsWith s suf))
+
+
 ;; ## Calling Conventions
+;;
+;; Adds more flexibility to how functions can be called.
+;; `call` adds a level of indirection and allows the function
+;; to not be present, returning nil instead. `msg` mimicks the way
+;; that object-orientated languages access their functions.
+;;
 
 (defn call
   "Executes `(f v1 ... vn)` if `f` is not nil
@@ -65,27 +158,6 @@
   ([f v1 v2 v3] (if-not (nil? f) (f v1 v2 v3)))
   ([f v1 v2 v3 v4 ] (if-not (nil? f) (f v1 v2 v3 v4)))
   ([f v1 v2 v3 v4 & vs] (if-not (nil? f) (apply f v1 v2 v3 v4 vs))))
-
-(defn call->
-  "Indirect call, takes `obj` and a list containing either a function,
-   a symbol representing the function or the symbol `?` and any additional
-   arguments. Used for calling functions that have been stored as symbols.
-
-     (call-> 1 '(+ 2 3 4)) ;=> 10
-
-     (call-> 1 '(< 2)) ;=> true
-
-     (call-> 1 '(? < 2)) ;=> true
-   "
-  [obj [ff & args]]
-  (cond (= ff '?)
-        (recur obj args)
-
-        (fn? ff)
-        (apply ff obj args)
-
-        (symbol? ff)
-        (apply call (suppress (resolve ff)) obj args)))
 
 (defn msg
   "Message dispatch for object orientated type calling convention.
@@ -103,39 +175,83 @@
   ([obj kw v1 v2 v3 v4] (call (obj kw) obj v1 v2 v3 v4))
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
-;; ## Predicates
-
-(defn make-??
-  "Helper function to `??` macro.
-
-    (h/make-?? '+ '(1 2 3))
-    ;=> '(list  (symbol \"?\") (quote +) 1 2 3))
-  "
-  [f args]
-  (apply list 'list
-         (concat [(list 'symbol "?")
-                  (list 'quote f)]
-                  `[~@args])))
+;; ## Function Representation
+;;
+;; Usually in clojure programs, the most common control structure that
+;; is used is the `->` and `->>` macros. This is because a function can
+;; be view as a series of smaller functional transforms
+;;
+;; A very important part of this pipeling style of programming can be seen
+;; in how predicates are tested. They tend to be quite short, as in:
+;;  - (< x 3)
+;;  - (< (:a obj) 3)
+;;  - (-> obj t1 t2 (< 3))
+;;
+;; In general, they are written as:
+;;
+;;  - (-> x t1 t2 pred)
+;;
+;; It is worth keeping the predicates as data structures because
+;; as they act as more than just functions. They can be used
+;; for conditions, selections and filters when in the right
+;; context.
+;;
+;; We can convey this as a list representation through the `??` macro
+;; and construct a normal function through the `?%` macro.
+;;
+;;  - `call->` allows a data-structure to be used as a function.
+;;  - `fn->` turns a data-structure into a function.
+;;
+;; Although the form can only represent pipelines, it is enough to
+;; cover predicates and am especially useful, blurring the line
+;; between program and data even further.
+;;
 
 (defmacro ??
   "Constructs a list out of a function. Used for predicates
 
-    (?? + 1 2 3) ;=> '(? + 1 2 3)
+    (?? + 1 2 3) ;=> '(+ 1 2 3)
 
-    (?? < 1) ;=> '(? < 1)
-   "
-  [f & args]
-  (make-?? f args))
+    (?? < 1) ;=> '(< 1)
 
-(defn make-?%
-  "Helper function to `?%` macro
-
-    (h/make-?% '+ '(1 2 3))
-    ;=> '(fn [?%] (+ ?% 1 2 3))
+    (?? (get-in [:a :b]) = 1) ;=> '((get-in [:a :b]) = 1)
   "
-  [f args]
+  [& args]
+  (apply list 'list (map #(list 'quote %) args)))
+
+(defn make-exp
+  "Makes an expression using `sym`
+
+    (make-exp 'y (?? str)) ;=> '(str y)
+
+    (make-exp 'x (?? (inc) (- 2) (+ 2))) ;=> '(+ (- (inc x) 2) 2))
+  "
+  [sym [ff & more]]
+  (cond (nil? ff) sym
+
+        (list? ff)
+        (recur (make-exp sym ff) more)
+
+        (vector? ff)
+        (recur (list 'get-in sym ff) more)
+
+        :else
+        (apply list ff sym more)))
+
+(defn make-fn-exp [form]
+  "Makes a function expression out of the form
+
+    (make-fn-exp '(+ 2)) ;=> '(fn [?%] (+ ?% 2))
+  "
   (apply list 'fn ['?%]
-         (list (concat [f '?%] `[~@args]))))
+         (list (make-exp '?% form))))
+
+(defn fn-> [form]
+  "Constructs a function from a form representation.
+
+    ((make-fn '(+ 10)) 10) ;=> 20
+  "
+  (eval (make-fn-exp form)))
 
 (defmacro ?%
   "Constructs a function of one argument, Used for predicate
@@ -144,8 +260,38 @@
 
     ((?% > 2) 3) ;=> true
   "
-  [f & args]
-  (make-?% f args))
+  [& args]
+  (make-fn-exp args))
+
+(defn call->
+  "Indirect call, takes `obj` and a list containing either a function,
+   a symbol representing the function or the symbol `?` and any additional
+   arguments. Used for calling functions that have been stored as symbols.
+
+     (call-> 1 '(+ 2 3 4)) ;=> 10
+
+     (call-> 1 '(< 2)) ;=> true
+
+     (call-> 1 '(? < 2)) ;=> true
+
+     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1)) => true
+   "
+  [obj [ff & args]]
+  (cond (nil? ff) obj
+
+        (list? ff)
+        (recur (call-> obj ff) args)
+
+        (vector? ff)
+        (recur (get-in obj ff) args)
+
+        (fn? ff)
+        (apply ff obj args)
+
+        (symbol? ff)
+        (apply call (suppress (resolve ff)) obj args)))
+
+;; Checking Repesentation
 
 (defn eq-chk
   "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
@@ -155,6 +301,8 @@
     (eq-chk 2 even?) ;=> true
 
     (eq-chk 2 '(< 1)) ;=> true
+
+    (eq-chk {:a {:b 1}} (?? ([:a :b]) = 1)) ;=> true
   "
   [obj chk]
   (or (= obj chk)
@@ -187,7 +335,7 @@
 (defn sel-chk-all
   "Returns `true` if `obj` satisfies all pairs of sel and chk
 
-    (sel-chk-all {:a {:b 1}} [:a {:b 1}] [:a hash-map?]) => true
+    (sel-chk-all {:a {:b 1}} [:a {:b 1} :a hash-map?]) => true
   "
   [obj scv]
   (every? (fn [[sel chk]]
@@ -354,8 +502,8 @@
   "
   [obj]
   (let [s (str (type obj))]
-    (or (starts-with s "class clojure.core$promise$")
-        (starts-with s "class clojure.core$future_call$"))))
+    (or (starts-with? s "class clojure.core$promise$")
+        (starts-with? s "class clojure.core$future_call$"))))
 
 (defn type-checker
   "Returns the checking function associated with `k`
@@ -782,17 +930,40 @@
         (f k rf pv nv)))))
 
 ;; ## Latching
-(defn latch-transform-fn [rf f]
+
+(defn latch-transform-fn
+  [rf f]
   (fn [_ _ _ v]
     (set-value! rf (f v))))
 
 (defn latch
+  "Latches two irefs together so that when `master`
+   changes, the `slave` will also be updated
+
+    (def master (atom 1))
+    (def slave (atom nil))
+
+    (latch master slave #(* 10 %)
+    (swap! master inc)
+    @master ;=> 2
+    @slave ;=> 20
+  "
   ([master slave] (latch master slave identity))
   ([master slave f]
-     (add-watch master (hash-pair master slave)
+     (add-watch master
+                (hash-pair master slave)
                 (latch-transform-fn slave f))))
 
 (defn latch-changes
+  "Same as latch but only changes in `(sel <val>)` will be propagated
+    (def master (atom {:a 1))
+    (def slave (atom nil))
+
+    (latch-changes master slave :a #(* 10 %)
+    (swap! master update-in [:a] inc)
+    @master ;=> {:a 2}
+    @slave ;=> 20
+  "
   ([master slave] (latch-changes master slave identity identity))
   ([master slave sel] (latch-changes master slave sel identity))
   ([master slave sel f]
@@ -800,25 +971,23 @@
                        sel (latch-transform-fn slave f))))
 
 (defn delatch
+  "Removes the latch so that updates will not be propagated"
   [master slave]
   (remove-watch master (hash-pair master slave)))
 
 ;; ## Concurrency Watch
+(defn run-notify
+  "Adds a notifier to a long running function so that it returns
+   a promise that is accessible when the function has finished.
+   updating the iref.
 
-(defn done-callback [p pk]
-  (fn [_ ref _ _]
-    (remove-watch ref pk)
-    (deliver p ref)))
-
-(defn done-on-change [sel]
-  (fn [p pk]
-    (fn [k ref old new]
-      (println k old new)
-      (when-not (eq-sel old new sel)
-        (remove-watch ref pk)
-        (deliver p ref)))))
-
-(defn add-notifier
+    (let [res (run-notify
+             #(do (sleep 200)
+                  (alter! % inc)) (atom 1) notify-on-all)]
+    res ;=> promise?
+    @res ;=> atom?
+    @@res ;=> 2)
+  "
   [mtf ref notify-fn]
   (let [p (promise)
         pk (hash-keyword p)]
@@ -826,18 +995,58 @@
     (mtf ref)
     p))
 
+(defn notify-on-all
+  "Returns a watch-callback function that waits
+   for the ref to be updated then removes itself
+   and delivers the promise"
+  [p pk]
+  (fn [_ ref _ _]
+    (remove-watch ref pk)
+    (deliver p ref)))
+
+(defn notify-on-change
+  "Returns a watch-callback function that waits
+   for the ref to be updated, checks if the `(sel <value>)`
+   has been updated then removes itself and delivers the promise"
+  ([] (notify-on-change identity))
+  ([sel]
+     (fn [p pk]
+       (fn [k ref old new]
+         (when-not (eq-sel old new sel)
+           (remove-watch ref pk)
+           (deliver p ref))))))
+
 (defn wait-deref
+  "A nicer interface for `deref`"
   ([p] (wait-deref p nil nil))
+  ([p ms] (wait-deref p ms nil))
   ([p ms ret]
      (cond (nil? ms) (deref p)
            :else (deref p ms ret))))
 
 (defn wait-for
-  ([mtf ref] (wait-for mtf ref done-callback nil nil))
+  "Waits for a long running multithreaded function to update the ref.
+   Used for testing purposes
+
+    (def atm (atom 1))
+    (def f #(dispatch! % slow-inc)) ;; concurrent call
+    (def ret (wait-for f atm))
+
+    @atm ;=> 2
+    @ret ;=> 2
+  "
+  ([mtf ref] (wait-for mtf ref notify-on-all nil nil))
   ([mtf ref notifier ms] (wait-for mtf ref notifier ms nil))
   ([mtf ref notifier ms ret]
-     (wait-deref (add-notifier mtf ref notifier) ms ret)))
+     (wait-deref (run-notify mtf ref notifier) ms ret)))
 
 (defn wait-on
+  "A redundant function. Used for testing purposes. The same as
+   `(alter! ref f & args)` but the function is wired with the
+   notification scheme.
+
+    (def atm (wait-on slow-inc (atom 1)))
+    (@atm => 2)
+  "
   [f ref & args]
   (wait-for #(apply dispatch! % f args) ref))

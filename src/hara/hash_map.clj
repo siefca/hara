@@ -57,7 +57,7 @@
   "
   [k subk]
   (or (= k subk)
-      (starts-with (keyword-str k)
+      (starts-with? (keyword-str k)
                    (str (keyword-str subk) "/"))))
 
 (defn keyword-nsvec

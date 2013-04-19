@@ -1,6 +1,5 @@
 (ns hara.checkers
-  (:use [hara.common :only [eq-chk starts-with
-                            iref? ideref? promise?]]))
+  (:use [hara.common :only [eq-chk]]))
 
 (defn is-type-fn [t chk]
   (fn [obj]

@@ -1,3 +1,5 @@
+;; ##
+
 (ns hara.ova
   (:use [hara.common :only [deref-nested sel-chk suppress hash-keyword
                             get-sel eq-prchk suppress-prchk]])
@@ -146,12 +148,12 @@
   (invoke [ova k not-found] (get ova k not-found))
   (invoke [ova k sel not-found] (get-filtered ova k sel not-found))
 
-  ;;java.lang.Object
+  java.lang.Object
   (toString [ova]
     (str (persistent! ova))))
 
 (defmethod print-method
-  hara.ova.Ova
+  Ova
   [ova w]
   (print-method
    (let [hash (.hashCode ova)
@@ -159,7 +161,6 @@
                         (mapv #(-> % deref)))]
      (format "<Ova@%s %s>"
              hash contents)) w))
-
 
 (defn concat! [ova es]
   (doseq [e es] (conj! ova e))
@@ -305,8 +306,24 @@
     (delete-indices ova idx))
   ova)
 
+(defn smap>> [ova prchk form]
+  (cond (list? form)
+        (apply list smap! ova prchk form)
+        :else
+        (list smap! ova prchk form)))
+
+(defmacro >>> [ova prchk & forms]
+  (cons 'do
+        (for [form forms]
+          (smap>> ova prchk form))))
 
 (comment
+  (def ov (ova [{}]))
+
+  (dosync (>>> ov 0
+               (assoc-in [:a :b] 1)
+               (update-in [:a :b] inc)
+               (assoc :c 3)))
 
   (defn vset! [ova chk val]
     (smap! ova chk (constantly val)))

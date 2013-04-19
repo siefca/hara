@@ -10,15 +10,16 @@
 (fact "suppress"
   (h/suppress 2) => 2
   (h/suppress (h/error "e")) => nil
-  (h/suppress (h/error "e") :error) => :error)
+  (h/suppress (h/error "e") :error) => :error
+  (h/suppress (h/error "e") h/error-message) => "e")
 
 (fact "replace-all"
   (h/replace-all "hello there, hello again" "hello" "bye")
   => "bye there, bye again")
 
 (fact "starts-with"
-  (h/starts-with "prefix" "pre") => true
-  (h/starts-with "prefix" "suf") => false)
+  (h/starts-with? "prefix" "pre") => true
+  (h/starts-with? "prefix" "suf") => false)
 
 (facts "call "
   (h/call inc nil) => (throws Exception)
@@ -27,17 +28,6 @@
   (h/call + 1 1 1 1 1 1) => 6
   (h/call nil) => nil
   (h/call nil 1 1 1) => nil)
-
-(fact "call->"
-  (h/call-> 4 '(? < 3)) => false
-  (h/call-> 4 (list #(< % 3))) => false
-  (h/call-> 4 `(< 3)) => false
-  (h/call-> 4 '(? < 5)) => true
-  (h/call-> 4 (list #(< % 5))) => true
-  (h/call-> 4 `(< 5)) => true
-  (h/call-> 4 `(+ 1 2 3)) => 10
-  (h/call-> 4 '(+ 1 2 3)) => 10
-  (h/call-> 4 '(? even?)) => true)
 
 (declare ops)
 (facts "msg"
@@ -53,24 +43,47 @@
   (h/msg (ops) :sub 3 1 1) => 1
   (h/msg (ops) :sub 3 1 1 1) => 0)
 
-(fact "make-??"
-  (h/make-?? '+ '(1 2 3)) => '(list  (symbol "?") (quote +) 1 2 3))
-
 (fact "??"
-  (?? + 1 2 3) => '(? + 1 2 3))
+  (?? + 1 2 3) => '(+ 1 2 3))
 
-(fact "make-?%"
-  (h/make-?% '+ '(1 2 3)) => '(fn [?%] (+ ?% 1 2 3)))
+(fact "make-exp"
+  (h/make-exp 'x (?? str)) => '(str x)
+  (h/make-exp 'y (?? str)) => '(str y)
+  (h/make-exp 'x (?? (inc) (- 2) (+ 2)))
+  => '(+ (- (inc x) 2) 2))
+
+(fact "make-fn-exp"
+  (h/make-fn-exp '(+ 2)) => '(fn [?%] (+ ?% 2)))
+
+(fact "make-fn"
+  ((h/fn-> (?? + 10)) 10) => 20)
 
 (fact "?%"
   ((?% < 4) 3) => true
   ((?% + 1 2 3) 4) => 10)
 
+(fact "call->"
+  (h/call-> 4 '(< 3)) => false
+  (h/call-> 4 (list #(< % 3))) => false
+  (h/call-> 4 `(< 3)) => false
+  (h/call-> 4 '(< 5)) => true
+  (h/call-> 4 (list #(< % 5))) => true
+  (h/call-> 4 `(< 5)) => true
+  (h/call-> 4 `(+ 1 2 3)) => 10
+  (h/call-> 4 '(+ 1 2 3)) => 10
+  (h/call-> 4 '(even?)) => true
+  (h/call-> 4 (?? (dec) (- 2) (+ 10))) => 11
+  (h/call-> {:a {:b 1}} (?? (get-in [:a :b]) (= 1))) => true
+  (h/call-> {:a {:b 1}} (?? [:a :b] (= 1))) => true)
+
+
 (fact "eq-chk"
   (h/eq-chk 2 2) => true
   (h/eq-chk 2 even?) => true
   (h/eq-chk 2 (?% even?)) => true
-  (h/eq-chk 2 (?? even?)) => true)
+  (h/eq-chk 2 (?? even?)) => true
+  (h/eq-chk {:a {:b 1}} (?? ([:a :b]) = 1)) => true
+  (h/eq-chk {:a {:b 1}} (?% ([:a :b]) = 1)) => true)
 
 (fact "get-sel"
   (h/get-sel {"a" {:b {:c 1}}} "a") => {:b {:c 1}}
