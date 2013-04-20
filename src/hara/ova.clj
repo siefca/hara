@@ -100,7 +100,7 @@
     ova)
 
   (persistent [ova]
-    (deref-nested (:data state)))
+    (mapv deref @(:data state)))
 
   clojure.lang.ITransientAssociative
   (assoc [ova k v]
@@ -229,6 +229,9 @@
 
    :else
    (set (filter (fn [obj] (suppress-pcheck obj pchk obj)) ova))))
+
+(defn has? [ova pchk]
+  (-> (select ova pchk) empty? not))
 
 (defn map! [ova f & args]
   (doseq [evm @ova]

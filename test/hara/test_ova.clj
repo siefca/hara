@@ -212,7 +212,6 @@
   (dosync (v/!>merge ov [:id odd? :val even?] {:valb 4}))
   => (is-ova [{:id 1 :val 1} {:id 2 :val 1} {:id 3 :val 2 :valb 4} {:id 4 :val 2}]))
 
-
 (facts "!>update-in"
   (against-background
     (before :checks
