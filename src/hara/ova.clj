@@ -191,7 +191,6 @@
        (dosync (concat! ova coll))
        ova)))
 
-
 (defn make-elem-change-watch [sel f]
   (fn [k ov rf p n]
     (let [pv (get-> p sel)
@@ -204,32 +203,32 @@
   (add-elem-watch ov k (make-elem-change-watch sel f)))
 
 (defn indices
-  [ova prchk]
+  [ova pchk]
   (cond
-   (number? prchk)
-   (if (suppress (get ova prchk)) #{prchk} #{})
+   (number? pchk)
+   (if (suppress (get ova pchk)) #{pchk} #{})
 
-   (set? prchk)
-   (set (mapcat #(indices ova %) prchk))
+   (set? pchk)
+   (set (mapcat #(indices ova %) pchk))
 
    :else
    (set (filter (comp not nil?)
                 (map-indexed (fn [i obj]
-                               (suppress-pcheck obj prchk i))
+                               (suppress-pcheck obj pchk i))
                              ova)))))
 
 (defn select
-  [ova prchk]
+  [ova pchk]
   (cond
-   (number? prchk)
-   (if-let [val (suppress (get ova prchk))]
+   (number? pchk)
+   (if-let [val (suppress (get ova pchk))]
      #{val} #{})
 
-   (set? prchk)
-   (set (mapcat #(select ova %) prchk))
+   (set? pchk)
+   (set (mapcat #(select ova %) pchk))
 
    :else
-   (set (filter (fn [obj] (suppress-pcheck obj prchk obj)) ova))))
+   (set (filter (fn [obj] (suppress-pcheck obj pchk obj)) ova))))
 
 (defn map! [ova f & args]
   (doseq [evm @ova]
@@ -241,14 +240,14 @@
     (alter (@ova i) #(f i %) ))
   ova)
 
-(defn smap! [ova prchk f & args]
-  (let [idx (indices ova prchk)]
+(defn smap! [ova pchk f & args]
+  (let [idx (indices ova pchk)]
     (doseq [i idx]
       (apply alter (@ova i) f args)))
   ova)
 
-(defn smap-indexed! [ova prchk f]
-  (let [idx (indices ova prchk)]
+(defn smap-indexed! [ova pchk f]
+  (let [idx (indices ova pchk)]
     (doseq [i idx]
       (alter (@ova i) #(f i %))))
   ova)
@@ -265,11 +264,14 @@
     (alter (get-ref ova) insert-fn evm i))
   ova)
 
-(defn sort! [ova comp]
-  (alter (get-ref ova)
-         #(sort (fn [x y]
-                  ((or comp compare) @x @y)) %))
-  ova)
+(defn sort!
+  ([ova] (sort! ova compare))
+  ([ova comp]
+     (alter (get-ref ova)
+            #(sort (fn [x y]
+                     (comp @x @y)) %))
+     ova))
+
 
 (defn reverse! [ova]
   (alter (get-ref ova) reverse)
@@ -294,54 +296,66 @@
   (alter (get-ref ova) delete-iobjs idx)
   ova)
 
-(defn remove! [ova prchk]
-  (let [idx (indices ova prchk)]
+(defn remove! [ova pchk]
+  (let [idx (indices ova pchk)]
     (delete-indices ova idx))
   ova)
 
-(defn filter! [ova prchk]
+(defn filter! [ova pchk]
   (let [idx (set/difference
              (set (range (count ova)))
-             (indices ova prchk))]
+             (indices ova pchk))]
     (delete-indices ova idx))
   ova)
 
-(defn smap> [ova prchk form]
+(defn- -smap!> [ova pchk form]
   (cond (list? form)
-        (apply list smap! ova prchk form)
+        (apply list smap! ova pchk form)
         :else
-        (list smap! ova prchk form)))
+        (list smap! ova pchk form)))
 
-(defmacro >>> [ova prchk & forms]
+(defmacro !> [ova pchk & forms]
   (cons 'do
         (for [form forms]
-          (smap> ova prchk form))))
+          (-smap!> ova pchk form))))
+
+(defn <<
+  ([ova]
+     (deref ova))
+  ([ova pchk]
+     (select ova pchk)))
+
+(defn !>set [ova chk val]
+  (smap! ova chk (constantly val)))
+
+(defn !>into [ova chk val]
+  (smap! ova chk into val))
+
+(defn !>assoc [ova chk & kvs]
+  (apply smap! ova chk assoc kvs))
+
+(defn !>assoc-in [ova chk ks v]
+  (smap! ova chk assoc-in ks v))
+
+(defn !>dissoc [ova chk k & ks]
+  (apply smap! ova chk dissoc k ks))
+
+(defn !>update-in [ova chk ks f]
+  (smap! ova chk update-in ks f))
+
+(defn !>merge [ova chk m & ms]
+  (apply smap! ova chk merge m ms))
 
 (comment
   (def ov (ova [{}]))
 
-  (dosync (>>> ov 0
-               (assoc-in [:a :b] 1)
-               (update-in [:a :b] inc)
-               (assoc :c 3)))
+  (dosync (!> ov 0
+              (assoc-in [:a :b] 1)
+              (update-in [:a :b] inc)
+              (assoc :c 3))
+          )
 
-  (defn vset! [ova chk val]
-    (smap! ova chk (constantly val)))
-
-  (defn vinto! [ova chk val]
-    (smap! ova chk #(into % val)))
-
-  (defn vassoc! [ova chk & kvs]
-    (smap! ova chk #(apply assoc % kvs)))
-
-  (defn vassoc-in! [ova chk ks v]
-    (smap! ova chk #(assoc-in % ks v)))
-
-  (defn vdissoc! [ova chk & ks]
-    (smap! ova chk #(apply dissoc % ks)))
-
-  (defn vupdate-in! [ova chk ks f]
-    (smap! ova chk #(update-in % ks f))))
+)
 
 
 ;;(dosync (reinit! (ova [1 2 3 4]) [2 3 4 5 6]))

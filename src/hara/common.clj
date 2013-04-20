@@ -24,6 +24,18 @@
 ;; Simple functions for thread that increase readability.
 ;;
 
+(defmacro time-ms
+  "Evaluates expr and outputs the time it took.  Returns the time in ms
+
+    (time-ms (inc 1)) ;=> 0.008
+
+    (time-ms (Thread/sleep 100)) ;=> 100.619
+  "
+  [expr]
+  `(let [start# (. System (nanoTime))
+         ret# ~expr]
+     (/ (double (- (. System (nanoTime)) start#)) 1000000.0)))
+
 (defn current-thread
   "Returns the currenly executing thread."
   []
@@ -177,6 +189,8 @@
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
 ;; ## Type Predicates
+;;
+;; Adds additional type predicates that are not in clojure.core
 
 (defn boolean?
   "Returns `true` if `x` is of type `java.lang.Boolean`.
@@ -330,17 +344,8 @@
 ;; It is worth keeping the predicates as data structures because
 ;; as they act as more than just functions. They can be used
 ;; for conditions, selections and filters when in the right
-;; context.
-;;
-;; We can convey this as a list representation through the `??` macro
-;; and construct a function through the `?%` macro.
-;;
-;;  - `call->` allows a data-structure to be used as a function.
-;;  - `fn->` turns a data-structure into a function.
-;;
-;; Although the form can only represent pipelines, it is enough to
-;; cover predicates and am especially useful, blurring the line
-;; between program and data even further.
+;; context. Although the form can only represent pipelines, it is enough to
+;; cover most predicates and blurs the line between program and data.
 ;;
 
 (defmacro ??
@@ -444,7 +449,8 @@
   [& args]
   (make-fn-exp args))
 
-;; Checking Repesentation
+;; ## Predicate Checking
+
 
 (defn check
   "Returns `true` when `v` equals `chk`, or if `chk` is a function, `(chk v)`
@@ -518,11 +524,11 @@
 (defn suppress-pcheck
   "Tests obj using prchk and returns `obj` or `res` if true
 
-    (h/suppress-pcheck :3 even?) => nil
+    (suppress-pcheck :3 even?) => nil
 
-    (h/suppress-pcheck 3 even?) => nil
+    (suppress-pcheck 3 even?) => nil
 
-    (h/suppress-pcheck 2 even?) => 2
+    (suppress-pcheck 2 even?) => true
   "
   ([obj prchk] (suppress-pcheck obj prchk true))
   ([obj prchk res]
@@ -821,7 +827,7 @@
 (defn deref-nested
   "Dereferences all nested refs within data-structures
 
-    (h/deref-nested
+    (deref-nested
          (atom {:a (atom {:b (atom :c)})}))
     => {:a {:b :c}}
  "
@@ -835,18 +841,6 @@
                        :dtor deref}))))
 
 ;; ## IRef Functions
-
-(defmacro time-ms
-  "Evaluates expr and outputs the time it took.  Returns the time in ms
-
-    (time-ms (inc 1)) ;=> 0.008
-
-    (time-ms (Thread/sleep 100)) ;=> 100.619
-  "
-  [expr]
-  `(let [start# (. System (nanoTime))
-         ret# ~expr]
-     (/ (double (- (. System (nanoTime)) start#)) 1000000.0)))
 
 (defn hash-code
   "Returns the hash-code of the object
