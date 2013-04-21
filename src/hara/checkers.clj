@@ -4,8 +4,9 @@
 (defn is-type-fn [t chk]
   (fn [obj]
     (if (and (instance? t obj)
-             (if chk
-               (check @obj (or chk (sequence chk)))))
+             (or (= chk @obj)
+                 (if chk
+                   (check @obj (or chk (sequence chk))))))
       true)))
 
 (defn is-iref [& [chk]]
