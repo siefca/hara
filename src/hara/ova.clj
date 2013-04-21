@@ -145,8 +145,7 @@
 
   clojure.lang.IFn
   (invoke [ova k] (get ova k))
-  (invoke [ova k not-found] (get ova k not-found))
-  (invoke [ova k sel not-found] (get-filtered ova k sel not-found))
+  (invoke [ova sel k] (get-filtered ova k sel nil))
 
   java.lang.Object
   (toString [ova]
@@ -203,8 +202,9 @@
   (add-elem-watch ov k (make-elem-change-watch sel f)))
 
 (defn indices
-  [ova pchk]
-  (cond
+  ([ova] (-> (count ova) range set))
+  ([ova pchk]
+    (cond
    (number? pchk)
    (if (suppress (get ova pchk)) #{pchk} #{})
 
@@ -215,20 +215,26 @@
    (set (filter (comp not nil?)
                 (map-indexed (fn [i obj]
                                (suppress-pcheck obj pchk i))
-                             ova)))))
+                             ova))))))
+
+(defn <<
+  ([ova]
+      (persistent! ova))
+  ([ova pchk]
+    (cond (number? pchk)
+          (if-let [val (suppress (get ova pchk))]
+            (list val) ())
+
+          (set? pchk) (mapcat #(<< ova %) pchk)
+
+          :else (filter
+                 (fn [obj] (suppress-pcheck obj pchk obj))
+                 ova))))
 
 (defn select
-  [ova pchk]
-  (cond
-   (number? pchk)
-   (if-let [val (suppress (get ova pchk))]
-     #{val} #{})
-
-   (set? pchk)
-   (set (mapcat #(select ova %) pchk))
-
-   :else
-   (set (filter (fn [obj] (suppress-pcheck obj pchk obj)) ova))))
+  ([ova] (set (<< ova)))
+  ([ova pchk]
+     (set (<< ova pchk))))
 
 (defn has? [ova pchk]
   (-> (select ova pchk) empty? not))
@@ -321,12 +327,6 @@
   (cons 'do
         (for [form forms]
           (-smap!> ova pchk form))))
-
-(defn <<
-  ([ova]
-     (deref ova))
-  ([ova pchk]
-     (select ova pchk)))
 
 (defn !>set [ova chk val]
   (smap! ova chk (constantly val)))

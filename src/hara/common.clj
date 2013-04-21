@@ -188,6 +188,10 @@
   ([obj kw v1 v2 v3 v4] (call (obj kw) obj v1 v2 v3 v4))
   ([obj kw v1 v2 v3 v4 & vs] (apply call (obj kw) obj v1 v2 v3 v4 vs)))
 
+(defn T [& args] true)
+
+(defn F [& args] false)
+
 ;; ## Type Predicates
 ;;
 ;; Adds additional type predicates that are not in clojure.core

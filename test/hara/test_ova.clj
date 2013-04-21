@@ -6,45 +6,62 @@
 
 (def ^:dynamic *ova* (v/ova))
 
+(defn to-int [s]
+  (Long/parseLong s))
+
 (against-background
   [(before :facts
-           (dosync (v/reinit! *ova* [{:id 1 :val 1} {:id 2 :val 1}
-                                     {:id 3 :val 2} {:id 4 :val 2}])))]
+           (dosync (v/reinit! *ova* [{:id :1 :val 1} {:id :2 :val 1}
+                                     {:id :3 :val 2} {:id :4 :val 2}])))]
+
+  (facts "invoke"
+    (*ova* 0) => {:val 1, :id :1}
+    (*ova* :1) => {:val 1, :id :1}
+    (*ova* :id :1) => {:val 1, :id :1}
+    (*ova* :val 1) => {:val 1, :id :1}
+    (*ova* (?% :id) :1) => {:val 1, :id :1}
+    (*ova* (?% :id name) "1") => {:val 1, :id :1}
+    (*ova* (?% :val) even?){:val 1, :id :1}
+    (*ova* (?% :id name) "1") => {:val 1, :id :1})
 
   (facts "indices"
-    (v/indices *ova*) => (throws Exception)
+    (:1 *ova*) => {:val 1, :id :1}
+    (suppress-pcheck *ova* :1) => true
+    (v/indices *ova*) => #{0 1 2 3}
     (v/indices *ova* 0) => #{0}
     (v/indices *ova* 2) => #{2}
     (v/indices *ova* #{1 2}) => #{1 2}
     (v/indices *ova* #{0}) => #{0}
     (v/indices *ova* #{4}) => #{}
-    (v/indices *ova* #(odd? (:id %))) => #{0 2}
+    (v/indices *ova* :1) => #{}
+    (v/indices *ova* [:val odd?]) => #{0 1}
     (v/indices *ova* #(even? (:val %))) => #{2 3}
-    (v/indices *ova* [:id 1]) => #{0}
+    (v/indices *ova* [:id :1]) => #{0}
     (v/indices *ova* [:val 1]) => #{0 1}
-    (v/indices *ova* [:id odd?]) => #{0 2}
     (v/indices *ova* [:val even?]) => #{2 3}
-    (v/indices *ova* [:val even? :id odd?]) => #{2})
+    (v/indices *ova* [:val even? (?% :id (name) (to-int)) odd?]) => #{2}
+    )
 
   (fact "select will grab the necessary entries"
-    (v/select *ova*) => (throws Exception)
-    (v/select *ova* 0) => #{{:id 1 :val 1}}
-    (v/select *ova* 2) => #{{:id 3 :val 2}}
-    (v/select *ova* #{1 2}) => #{{:id 2 :val 1} {:id 3 :val 2}}
-    (v/select *ova* #{0}) => #{{:id 1 :val 1}}
+    (v/select *ova*) => #{{:id :1, :val 1} {:id :2, :val 1} {:id :3, :val 2} {:id :4, :val 2}}
+    (v/select *ova* 0) => #{{:id :1 :val 1}}
+    (v/select *ova* 2) => #{{:id :3 :val 2}}
+    (v/select *ova* #{1 2}) => #{{:id :2 :val 1} {:id :3 :val 2}}
+    (v/select *ova* #{0}) => #{{:id :1 :val 1}}
     (v/select *ova* #{4}) => #{}
-    (v/select *ova* 2) => #{{:id 3 :val 2}}
-    (v/select *ova* #(odd? (:id %))) => #{{:id 1 :val 1} {:id 3 :val 2}}
-    (v/select *ova* #(even? (:val %))) => #{{:id 3 :val 2} {:id 4 :val 2}}
-    (v/select *ova* [:id 1]) => #{{:id 1 :val 1}}
-    (v/select *ova* [:val 1]) => #{{:id 1 :val 1} {:id 2 :val 1}}
+    (v/select *ova* 2) => #{{:id :3 :val 2}}
+    (v/select *ova* [:id (?% (name) (to-int) (odd?))])
+    => #{{:id :1 :val 1} {:id :3 :val 2}}
+    (v/select *ova* #(even? (:val %))) => #{{:id :3 :val 2} {:id :4 :val 2}}
+    (v/select *ova* [:id :1]) => #{{:id :1 :val 1}}
+    (v/select *ova* [:val 1]) => #{{:id :1 :val 1} {:id :2 :val 1}}
     (v/select *ova* [:val nil?]) => #{}
-    (v/select *ova* [:id odd?]) => #{{:id 1 :val 1} {:id 3 :val 2}}
-    (v/select *ova* [:val even?]) => #{{:id 3 :val 2} {:id 4 :val 2}}
-    (v/select *ova* [:val even? :id odd?]) => #{{:id 3 :val 2}}
-    (v/select *ova* #{[:id 1] [:val 2]})
-    => #{{:id 1 :val 1} {:id 3 :val 2} {:id 4 :val 2}}))
-
+    (v/select *ova* (?% :id (name) (to-int) odd?))
+    => #{{:id :1 :val 1} {:id :3 :val 2}}
+    (v/select *ova* [:val even?]) => #{{:id :3 :val 2} {:id :4 :val 2}}
+    (v/select *ova* [:val even? :id :3]) => #{{:id :3 :val 2}}
+    (v/select *ova* #{[:id :1] [:val 2]})
+    => #{{:id :1 :val 1} {:id :3 :val 2} {:id :4 :val 2}}))
 
 (against-background
   [(before :checks

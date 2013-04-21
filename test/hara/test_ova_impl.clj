@@ -44,11 +44,14 @@
     (.valAt *ova* :0) => {:id :0 :val 0}
     (.valAt *ova* :NA) => nil
     (.valAt *ova* :NA :NA) => :NA
-    (.valAt *ova* :0 :id) => {:id :0 :val 0}
-    (get-filtered *ova* 0 :val nil) => {:id :0 :val 0})
+    (.valAt *ova* :0 :NA) => {:id :0 :val 0}
+    (get-filtered *ova* 0 :val nil) => {:id :0 :val 0}
+    (get *ova* :0) => {:id :0 :val 0}
+    (get *ova* :2) => nil)
 
   (fact "invoke"
-    (.invoke *ova* 0 :val nil)  => {:id :0 :val 0})
+    (.invoke *ova* :0) => {:id :0 :val 0}
+    (.invoke *ova* :val 0)  => {:id :0 :val 0})
 
   (fact "toString"
     (.toString *ova*)"[{:val 1, :id :1} {:val 0, :id :0}]"))
