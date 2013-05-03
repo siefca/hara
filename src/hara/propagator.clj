@@ -41,7 +41,6 @@
           out     (if-not (some nothing? ins)
                     (suppress (apply tf ins) nothing)
                     nothing)]
-      ;;(println ins out (suppress (tdamp @outcell out)))
       (if-not (or (nothing? out)
                   (suppress (tdamp @outcell out)))
         (if (:concurrent? pg)
@@ -138,8 +137,7 @@
     (put! pg :in-cells [])
     (put! pg :out-cell nil)))
 
-(defn network [inputs output f]
-  )
+(defn network [inputs output f])
 
 (defn- label-or-hash [obj]
   [(or (:label obj) (.hashCode obj))])

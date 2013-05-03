@@ -1,0 +1,208 @@
+(ns hara.nothing)
+
+(def <true> (fn [x] (fn [_] x)))
+(def <T> <true>)
+
+(def <false> (fn [_] (fn [y] y)))
+(def <F> <false>)
+
+(defn !true? [b]
+  ((b <true>) <false>))
+
+(defn !false? [b]
+  ((b <false>) <true>))
+
+(defn !if [b t-cond f-cond]
+  ((b t-cond) f-cond))
+
+(defn !not [b] (!if b <false> <true>))
+
+(defn !and [a b] ((a b) a))
+
+(defn !or [a b] ((a a) b))
+
+(defn |bool| [b]
+  (if b <true> <false>))
+
+(defn bool<- [f]
+  ((f true) false))
+
+(defmacro |int|<- [n]
+  (let [body (nth (iterate #(list 'f %) 'x) n)]
+    `(fn [~'f]
+       (fn [~'x]
+         ~body))))
+
+(defn int<- [f]
+  ((f inc) 0))
+
+(defmacro defnums [args]
+  (apply list 'do
+         (for [[i x] (map-indexed (fn [i x] [i x]) args)]
+           (list 'def (symbol (str "<" x ">"))
+                 (list '|int|<- i)))))
+
+(defmacro defnumrange [n]
+  (apply list 'do
+         (for [i (range (inc n))]
+           (list 'def (symbol (str "<" i ">"))
+                 (list '|int|<- i)))))
+
+(defnums [zero one two three four five six seven eight nine ten
+          eleven twelve thirteen fourteen fifteen sixteen seventeen
+          eighteen nineteen twenty])
+
+(defnumrange 100)
+
+(defn !inc [n]
+  (fn [f]
+    (fn [x]
+      (f ((n f) x)))))
+
+(defn |int|
+  ([n] (|int| n <zero>))
+  ([n acc]
+     (if (zero? n) acc
+         (recur (dec n)
+                (!inc acc)))))
+
+(defn !dec [n]
+  (fn [f]
+    (fn [x]
+      (((n (fn [g]
+             (fn [h]
+               (h (g f)))))
+        (fn [u] x))
+       (fn [u] u)))))
+
+(defn !add [m n]
+  (fn [f]
+    (fn [x]
+      ((m f) ((n f) x)))))
+
+(defn !sub [m n]
+  ((n !dec) m))
+
+(defn !mul [m n]
+  (fn [f]
+    (m (n f))))
+
+(defn !pow [m n]
+  (n m))
+
+(defn !zero? [n]
+  ((n (fn [x] <false>)) <true>))
+
+(defn !leq [m n]
+  (!zero? (!sub m n)))
+
+(defn !eq [m n]
+  (!and (!zero? (!sub m n))
+        (!zero? (!sub n m))))
+
+(def Z
+  (fn [f]
+    ((fn [x] (f (fn [y] (x x) y)))
+     (fn [x] (f (fn [y] (x x) y))))))
+
+(defn !mod [n m]
+  (!if (!leq m n)
+       (fn [x] ((!mod (!sub n m) m) x))
+       n))
+
+(int<- (!mod <10> <5>))
+
+(defn !pair [x y]
+  (fn [f]
+    ((f x) y)))
+
+(defn !left [p]
+  (p <true>))
+
+(defn !right [p]
+  (p <false>))
+
+(def <empty>
+  (!pair <false> <false>))
+
+(defn !empty? [coll]
+  (!false? (!right coll)))
+
+(defn !cons [x coll]
+  (!pair <true> (!pair x coll)))
+
+(defn !first [coll]
+  (!left (!right coll)))
+
+(defn !rest [coll]
+  (!right (!right coll)))
+
+(bool<- (!empty? (!rest (!cons <2> (!cons <1> <empty>)))))
+(bool<- (!empty? (!rest (!cons <1> <empty>))))
+
+(defn list<-
+  ([coll] (list<- coll []))
+  ([coll acc]
+     (if (bool<- (!empty? coll))
+       acc
+       (recur (!rest coll) (conj acc (!first coll))))))
+
+
+(defn ints<- [coll]
+  (map int<- (list<- coll)))
+
+(defn |ints| [ns]
+  (if (empty? ns)
+    <empty>
+    (!cons (|int| (first ns))
+           (|ints| (rest ns)))))
+
+
+(defn !mod [n m]
+  (!if (!leq m n)
+       (fn [x] ((!mod (!sub n m) m) x))
+       n))
+
+(defn !range [m n]
+  (!if (!leq m n)
+       (fn [x]
+         ((!cons m (!range (!inc m) n)) x))
+       <empty>))
+
+(bool<- (!empty? <empty>))
+(bool<- (!empty? (!cons <1> <empty>)))
+(int<- (!first (!rest (!range <0> <5>))))
+
+
+ (ints<- (!range <1> <10>))
+
+
+
+(ints<- (!range <0> <10>))
+
+
+(ints<- (!range <5> <10>))
+(ints<- (!rest (|ints| [1 2 3 4])))
+(ints<- (|ints| [1 2 3 4]))
+(ints<- (!cons <1> (!cons <2> <empty>)))
+(ints<- <empty>)
+
+
+
+(int<- (!left (!pair <1> <2>)))
+(int<- (!right (!pair <1> <2>)))
+(!empty? <empty>)
+(bool<- (!empty? (!cons <1> <empty>)))
+
+;;(bool<- (empty?| <empty>)) => true
+(bool<- (!not (!empty? (!cons <1> <2>))))
+
+(int<- (!sub <four> <three>))
+(int<- (!dec <three>))
+(int<- (!add <four> <ten>))
+(int<- (!inc <three>))
+(int<- (!mul <four> <ten>))
+(!eq (!pow <four> <4>) (|int| 256))
+(bool<- (!zero? <zero>))
+(bool<- (!zero? <100>))
+(bool<- (!eq <100> <10>))

@@ -1,5 +1,5 @@
 (defproject hara "0.7.0"
-  :description "Utilities library of Common Functions"
+  :description "Utilities library of Functions and Exploratory Programming"
   :url "http://github.com/zcaudate/hara"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

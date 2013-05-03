@@ -1,14 +1,14 @@
-;; ##
+;; ## Stateful Arrays
+;;
+;; The ova provides an array structure that allows for
+;; state manipulation and watches over the entire
+;; array as well as
 
 (ns hara.ova
   (:use [hara.common :only [deref-nested check-> suppress hash-keyword
                             get-> pcheck-> suppress-pcheck]])
   (:require [clojure.string :as s]
             [clojure.set :as set]))
-
-(defn ova-state []
-  {:data      (ref [])
-   :watches   (atom {})})
 
 (defprotocol OvaProtocol
   (empty! [ova])
@@ -20,19 +20,23 @@
   (clear-elem-watches [ova])
   (get-filtered [ova k sel nv]))
 
-(defn make-iwatch [ova]
+(defn- ova-state []
+  {:data      (ref [])
+   :watches   (atom {})})
+
+(defn- make-iwatch [ova]
   (fn [k & args]
     (doseq [w (get-elem-watches ova)]
       (let [wk (first w)
             wf (second w)]
         (apply wf wk ova args)))))
 
-(defn add-iwatch [ova irf]
+(defn- add-iwatch [ova irf]
   (let [k  (hash-keyword ova)
         f  (make-iwatch ova)]
     (add-watch irf k f)))
 
-(defn remove-iwatch [ova irf]
+(defn- remove-iwatch [ova irf]
   (let [k (hash-keyword ova)]
     (remove-watch irf k)))
 

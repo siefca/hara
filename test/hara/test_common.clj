@@ -4,6 +4,9 @@
   (:require [hara.common :as h]
             [clj-time.core :as t]))
 
+(fact "construct"
+  (h/construct java.util.Date) => h/instant?)
+
 (fact "error"
   (h/error "something") => (throws Exception))
 
@@ -236,6 +239,28 @@
 
   (h/dissoc-in {:a {:b {:c 3}}} [:a :b :c]) => {}
   (h/dissoc-in {:a {:b {:c 3}}} [:a :b :c] true) => {:a {:b {}}})
+
+(fact "assoc-nil"
+  (h/assoc-nil {} :a 1) => {:a 1}
+  (h/assoc-nil {:a 1} :a 2) => {:a 1}
+  (h/assoc-nil {:a 1} :a 2 :b 2) => {:a 1 :b 2})
+
+(fact "assoc-nil-in"
+  (h/assoc-nil-in {} [:a] 1) => {:a 1}
+  (h/assoc-nil-in {} [:a :b] 1) => {:a {:b 1}}
+  (h/assoc-nil-in {:a {:b 1}} [:a :b] 2) => {:a {:b 1}})
+
+(fact "merge-nil"
+  (h/merge-nil {} {:a 1}) => {:a 1}
+  (h/merge-nil {:a 1} {:a 3}) => {:a 1}
+  (h/merge-nil {:a 1 :b 2} {:a 3 :c 3}) => {:a 1 :b 2 :c 3})
+
+(fact "merge-nil-nested"
+  (h/merge-nil-nested {} {:a {:b 1}}) => {:a {:b 1}}
+  (h/merge-nil-nested {:a {}} {:a {:b 1}}) => {:a {:b 1}}
+  (h/merge-nil-nested {:a {:b 1}} {:a {:b 2}}) => {:a {:b 1}}
+  (h/merge-nil-nested {:a 1 :b {:c 2}} {:a 3 :e 4 :b {:c 3 :d 3}})
+  => {:a 1 :b {:c 2 :d 3} :e 4})
 
 (fact "keys-nested will output all keys in a map"
   (h/keys-nested {:a {:b 1 :c 2}})

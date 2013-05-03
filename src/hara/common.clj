@@ -19,6 +19,19 @@
             [clojure.set :as set])
   (:refer-clojure :exclude [send]))
 
+
+;; ## Classes
+
+(defn construct [class & args]
+  (let [class (cond (instance? java.lang.Class class) class
+                    (string? class) (-> class symbol resolve)
+                    (instance? java.lang.Object class)
+                    (clojure.core/class class))
+        types (map type args)
+        ctor  (.getConstructor class (into-array java.lang.Class types))]
+    (.newInstance ctor (object-array args))))
+
+
 ;; ## Threads
 ;;
 ;; Simple functions for thread that increase readability.
@@ -176,7 +189,7 @@
 
     (def obj {:a 10
               :b 20
-              :get-sum (fn [this] 
+              :get-sum (fn [this]
                         (+ (:b this) (:a this)))})
 
     (msg obj :get-sum) ;=> 30
@@ -359,7 +372,7 @@
 
     (?? < 1) ;=> '(< 1)
 
-    (?? (get-in [:a :b]) = 1) 
+    (?? (get-in [:a :b]) = 1)
     ;=> '((get-in [:a :b]) = 1)
   "
   [& args]
@@ -376,7 +389,7 @@
 
      (call-> 1 '(? < 2)) ;=> true
 
-     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1)) 
+     (call-> {:a {:b 1}} '((get-in [:a :b]) = 1))
      ;=> true
    "
   [obj [ff & args]]
@@ -413,7 +426,7 @@
 
     (make-exp 'y (?? str)) ;=> '(str y)
 
-    (make-exp 'x (?? (inc) (- 2) (+ 2))) 
+    (make-exp 'x (?? (inc) (- 2) (+ 2)))
     ;=> '(+ (- (inc x) 2) 2))
   "
   [sym [ff & more]]
@@ -428,7 +441,7 @@
 (defn make-fn-exp
   "Makes a function expression out of the form
 
-    (make-fn-exp '(+ 2)) 
+    (make-fn-exp '(+ 2))
     ;=> '(fn [?%] (+ ?% 2))
   "
   [form]
@@ -484,8 +497,8 @@
 (defn check-all->
   "Returns `true` if `obj` satisfies all pairs of sel and chk
 
-    (check-all-> {:a {:b 1}} 
-                 [:a {:b 1} :a hash-map?]) 
+    (check-all-> {:a {:b 1}}
+                 [:a {:b 1} :a hash-map?])
     => true
   "
   [obj scv]
@@ -499,7 +512,7 @@
       (eq-> {:id 1 :a 1} {:id 1 :a 2} :id)
       ;=> true
 
-      (eq-> {:db {:id 1} :a 1} 
+      (eq-> {:db {:id 1} :a 1}
             {:db {:id 1} :a 2} [:db :id])
       ;=> true
   "
@@ -671,6 +684,45 @@
        (dissoc m k)
        (assoc m k (dissoc-in (m k) ks keep)))))
 
+(defn assoc-nil
+  ([m k v]
+     (if (get m k) m (assoc m k v)))
+  ([m k v & kvs]
+     (apply assoc-nil (assoc-nil m k v) kvs)))
+
+(defn assoc-nil-in
+  [m ks v]
+  (if (get-in m ks) m (assoc-in m ks v)))
+
+(defn merge-nil
+  ([m] m)
+  ([m1 m2]
+     (loop [m1 m1 m2 m2]
+       (if-let [[k v] (first m2)]
+         (if (get m1 k)
+           (recur m1 (next m2))
+           (recur (assoc m1 k v) (next m2)))
+         m1)))
+  ([m1 m2 & more]
+     (apply merge-nil (merge-nil m1 m2) more)))
+
+(defn merge-nil-nested
+  ([m] m)
+  ([m1 m2]
+     (if-let [[k v] (first m2)]
+       (let [v1 (get m1 k)]
+         (cond (nil? v1)
+               (recur (assoc m1 k v) (next m2))
+
+               (and (hash-map? v) (hash-map? v1))
+               (recur (assoc m1 k (merge-nil-nested v1 v)) (next m2))
+
+               :else
+               (recur m1 (next m2))))
+       m1))
+  ([m1 m2 & more]
+     (apply merge-nil-nested (merge-nil-nested m1 m2) more)))
+
 (defn keys-nested
   "Return the set of all nested keys in `m`.
 
@@ -749,21 +801,22 @@
   "
   ([m] m)
   ([m1 m2]
-  (if-let [[k v] (first m2)]
-    (cond (nil? (k m1))
-          (recur (assoc m1 k v) (dissoc m2 k))
+     (if-let [[k v] (first m2)]
+       (cond (nil? (k m1))
+             (recur (assoc m1 k v) (dissoc m2 k))
 
-          (and (hash-map? v) (hash-map? (k m1)))
-          (recur (assoc m1 k (merge-nested (k m1) v)) (dissoc m2 k))
+             (and (hash-map? v) (hash-map? (k m1)))
+             (recur (assoc m1 k (merge-nested (k m1) v)) (dissoc m2 k))
 
-          (not= v (k m1))
-          (recur (assoc m1 k v) (dissoc m2 k))
+             (not= v (k m1))
+             (recur (assoc m1 k v) (dissoc m2 k))
 
-          :else
-          (recur m1 (dissoc m2 k)))
-    m1))
+             :else
+             (recur m1 (dissoc m2 k)))
+       m1))
   ([m1 m2 m3 & ms]
      (apply merge-nested (merge-nested m1 m2) m3 ms)))
+
 
 (defn remove-nested
   "Returns a associative with nils and empty hash-maps removed.
@@ -862,7 +915,7 @@
   "Returns a keyword repesentation of the hash-code.
    For use in generating internally unique keys
 
-    (h/hash-keyword 1) 
+    (h/hash-keyword 1)
     ;=> :__1__
   "
   [obj & ids]
@@ -871,7 +924,7 @@
 (defn hash-pair
   "Combines the hash of two objects together.
 
-    (hash-pair 1 :1) 
+    (hash-pair 1 :1)
     ;=> :__1_1013907437__
   "
   [v1 v2]
@@ -880,10 +933,10 @@
 (defn set-value!
   "Change the value contained within a ref or atom.
 
-    @(set-value! (atom 0) 1) 
+    @(set-value! (atom 0) 1)
     ;=> 1
 
-    @(set-value! (ref 0) 1) 
+    @(set-value! (ref 0) 1)
     ;=> 1
   "
   [rf obj]
@@ -894,10 +947,10 @@
 (defn alter!
   "Updates the value contained within a ref or atom using `f`.
 
-    @(alter! (atom 0) inc) 
+    @(alter! (atom 0) inc)
     ;=> 1
 
-    @(alter! (ref 0) inc) 
+    @(alter! (ref 0) inc)
     ;=> 1
   "
   [rf f & args]
@@ -908,8 +961,8 @@
 (defn dispatch!
   "Updates the value contained within a ref or atom using another thread.
 
-    (dispatch! (atom 0) 
-                (fn [x] (Thread/sleep 1000) 
+    (dispatch! (atom 0)
+                (fn [x] (Thread/sleep 1000)
                         (inc x)))
     ;=> <future_call>
   "
@@ -1001,8 +1054,8 @@
 
     (let [res (run-notify
              #(do (sleep 200)
-                  (alter! % inc)) 
-                  (atom 1) 
+                  (alter! % inc))
+                  (atom 1)
                   notify-on-all)]
     res ;=> promise?
     @res ;=> atom?
@@ -1050,7 +1103,7 @@
 
     (def atm (atom 1))
     ;; concurrent call
-    (def f #(dispatch! % slow-inc)) 
+    (def f #(dispatch! % slow-inc))
     (def ret (wait-for f atm))
 
     @atm ;=> 2
