@@ -1,4 +1,5 @@
 ;; Stolen from https://github.com/stuartsierra/cljque/blob/master/src/cljque/promises.clj
+;; Hopefully the functionality will be in the next version of clojure.
 
 (ns hara.concurrency
   (:refer-clojure :exclude (promise deliver future future-call))
@@ -354,6 +355,13 @@
                        (deliver return promises)))))
       promises))
     return))
+
+;; multi-threaded
+(defmacro exec-seq [threaded bindings & body]
+  `(cond (= ~threaded :single)
+         (doseq ~bindings ~@body)
+         (= ~threaded :multi)
+         (doseq ~bindings (future ~@body))))
 
 (comment
   ;; Extending to Google Guava ListenableFuture

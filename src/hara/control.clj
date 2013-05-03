@@ -94,11 +94,3 @@
  [else _]
  else)
  
- 
-
- ;; multi-threaded
- (defmacro exec-seq [threaded bindings & body]
-   `(cond (= ~threaded :single)
-          (doseq ~bindings ~@body)
-          (= ~threaded :multi)
-          (doseq ~bindings (future ~@body))))

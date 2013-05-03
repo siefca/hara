@@ -547,10 +547,10 @@
       (((IF (ZERO? ((MOD number) THREE))) Buzz)
        (TODIGITS number))))))
 
-(def RUN
-  ((MAP ((RANGE ONE) FIFTEEN)) FIZZBUZZ))
+;;(def RUN
+;;  ((MAP ((RANGE ONE) FIFTEEN)) FIZZBUZZ))
 
-(println (to-string-vector RUN))
+;;(println (to-string-vector RUN))
 
 ;;; The end
 
