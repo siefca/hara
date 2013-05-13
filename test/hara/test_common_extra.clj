@@ -10,7 +10,7 @@
   [val error] (within-interval (- val error) (+ val error)))
 
 (fact "time-ms"
-  (h/time-ms (inc 1)) => (approx 0 0.01)
+  (h/time-ms (inc 1)) => (approx 0 0.02)
   (h/time-ms (Thread/sleep 100)) => (approx 100 2))
 
 (fact "hash-code"
