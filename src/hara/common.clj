@@ -19,19 +19,6 @@
             [clojure.set :as set])
   (:refer-clojure :exclude [send]))
 
-
-;; ## Classes
-
-(defn construct [class & args]
-  (let [class (cond (instance? java.lang.Class class) class
-                    (string? class) (-> class symbol resolve)
-                    (instance? java.lang.Object class)
-                    (clojure.core/class class))
-        types (map type args)
-        ctor  (.getConstructor class (into-array java.lang.Class types))]
-    (.newInstance ctor (object-array args))))
-
-
 ;; ## Threads
 ;;
 ;; Simple functions for thread that increase readability.
@@ -88,15 +75,15 @@
 ;; handled seperately within another function or ignored completely.
 ;;
 
-(defn error
+(defmacro error
   "Throws an exception when called.
 
     (error \"This is an error\")
     ;=> (throws Exception)
   "
-  ([e] (throw (Exception. (str e))))
+  ([e] `(throw (Exception. (str ~e))))
   ([e & more]
-     (throw (Exception. (apply str e more)))))
+     `(throw (Exception. (str ~e ~@more)))))
 
 (defn error-message
   "Returns the the error message associated with `e`.
@@ -313,7 +300,7 @@
   [obj]  (instance? clojure.lang.IRef obj))
 
 (defn ideref?
-  "Returns `true` if `x` is of type `java.util.UUID`.
+  "Returns `true` if `x` is of type `java.lang.IDeref`.
 
     (ideref? (promise)) ;=> true
   "
@@ -364,19 +351,6 @@
 ;; context. Although the form can only represent pipelines, it is enough to
 ;; cover most predicates and blurs the line between program and data.
 ;;
-
-(defmacro ??
-  "Constructs a list out of a function. Used for predicates
-
-    (?? + 1 2 3) ;=> '(+ 1 2 3)
-
-    (?? < 1) ;=> '(< 1)
-
-    (?? (get-in [:a :b]) = 1)
-    ;=> '((get-in [:a :b]) = 1)
-  "
-  [& args]
-  (apply list 'list (map #(list 'quote %) args)))
 
 (defn call->
   "Indirect call, takes `obj` and a list containing either a function,

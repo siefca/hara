@@ -4,7 +4,7 @@
   (:require [hara.common :as h]
             [clj-time.core :as t]))
 
-(fact "construct"
+#_(fact "construct"
   (h/construct java.util.Date) => h/instant?)
 
 (fact "error"
@@ -46,20 +46,18 @@
   (h/msg (ops) :sub 3 1 1) => 1
   (h/msg (ops) :sub 3 1 1 1) => 0)
 
-(fact "??"
-  (?? + 1 2 3) => '(+ 1 2 3))
 
 (fact "make-exp"
-  (h/make-exp 'x (?? str)) => '(str x)
-  (h/make-exp 'y (?? str)) => '(str y)
-  (h/make-exp 'x (?? (inc) (- 2) (+ 2)))
+  (h/make-exp 'x '(str)) => '(str x)
+  (h/make-exp 'y '(str)) => '(str y)
+  (h/make-exp 'x '((inc) (- 2) (+ 2)))
   => '(+ (- (inc x) 2) 2))
 
 (fact "make-fn-exp"
   (h/make-fn-exp '(+ 2)) => '(fn [?%] (+ ?% 2)))
 
 (fact "make-fn"
-  ((h/fn-> (?? + 10)) 10) => 20)
+  ((h/fn-> '(+ 10)) 10) => 20)
 
 (fact "?%"
   ((?% < 4) 3) => true
@@ -76,22 +74,22 @@
   (h/call-> 4 `(+ 1 2 3)) => 10
   (h/call-> 4 '(+ 1 2 3)) => 10
   (h/call-> 4 '(even?)) => true
-  (h/call-> 4 (?? (dec) (- 2) (+ 10))) => 11
-  (h/call-> {:a {:b 1}} (?? (get-in [:a :b]) (= 1))) => true
-  (h/call-> {:a {:b 1}} (?? [:a :b] (= 1))) => true)
+  (h/call-> 4 '((dec) (- 2) (+ 10))) => 11
+  (h/call-> {:a {:b 1}} '((get-in [:a :b]) (= 1))) => true
+  (h/call-> {:a {:b 1}} '([:a :b] (= 1))) => true)
 
 (fact "check"
   (h/check 2 2) => true
   (h/check 2 even?) => true
   (h/check 2 (?% even?)) => true
   (h/check 2 (?? even?)) => true
-  (h/check {:a {:b 1}} (?? ([:a :b]) = 1)) => true
+  (h/check {:a {:b 1}} '(([:a :b]) = 1)) => true
   (h/check {:a {:b 1}} (?% ([:a :b]) = 1)) => true)
 
 (fact "get->"
   (h/get-> 4 even?) => true
   (h/get-> 4 'even?) => true
-  (h/get-> {:a 1} (?? :a (= 1))) => true
+  (h/get-> {:a 1} '(:a (= 1))) => true
   (h/get-> {"a" {:b {:c 1}}} "a") => {:b {:c 1}}
   (h/get-> {:a {:b {:c 1}}} :a) => {:b {:c 1}}
   (h/get-> {:a {:b {:c 1}}} [:a :b]) => {:c 1}
@@ -126,10 +124,10 @@
   (h/pcheck-> {:a 1 :val 1} [:val even?]) => false
   (h/pcheck-> {:a 1 :val 1} [:val (?% = 1)]) => true
   (h/pcheck-> {:a 1 :val 1} [:val (?% not= 1)]) => false
-  (h/pcheck-> {:a 1 :val 1} [:val (?? = 1)]) => true
-  (h/pcheck-> {:a 1 :val 1} [:val (?? not= 1)]) => false
+  (h/pcheck-> {:a 1 :val 1} [:val '(= 1)]) => true
+  (h/pcheck-> {:a 1 :val 1} [:val '(not= 1)]) => false
   (h/pcheck-> {:a {:b 1}} [[:a :b] odd?]) => true
-  (h/pcheck-> {:a {:b 1}} [[:a :b] (?? = 1) [:a] associative?]) => true)
+  (h/pcheck-> {:a {:b 1}} [[:a :b] '(= 1) [:a] associative?]) => true)
 
 (fact "suppress-pcheck"
   (h/suppress-pcheck "3" even?) => nil
