@@ -745,16 +745,16 @@
   ([m1 m2] (diff-nested m1 m2 {}))
   ([m1 m2 output]
      (if-let [[k v] (first m1)]
-       (cond (nil? (k m2))
+       (cond (nil? (get m2 k))
              (recur (dissoc m1 k) m2 (assoc output k v))
 
-             (and (hash-map? v) (hash-map? (k m2)))
-             (let [sub (diff-nested v (k m2))]
+             (and (hash-map? v) (hash-map? (get m2 k)))
+             (let [sub (diff-nested v (get m2 k))]
                (if (empty? sub)
                  (recur (dissoc m1 k) m2 output)
                  (recur (dissoc m1 k) m2 (assoc output k sub))))
 
-             (not= v (k m2))
+             (not= v (get m2 k))
              (recur (dissoc m1 k) m2 (assoc output k v))
 
              :else
@@ -776,13 +776,13 @@
   ([m] m)
   ([m1 m2]
      (if-let [[k v] (first m2)]
-       (cond (nil? (k m1))
+       (cond (nil? (get m1 k))
              (recur (assoc m1 k v) (dissoc m2 k))
 
-             (and (hash-map? v) (hash-map? (k m1)))
-             (recur (assoc m1 k (merge-nested (k m1) v)) (dissoc m2 k))
+             (and (hash-map? v) (hash-map? (get m1 k)))
+             (recur (assoc m1 k (merge-nested (get m1 k) v)) (dissoc m2 k))
 
-             (not= v (k m1))
+             (not= v (get m1 k))
              (recur (assoc m1 k v) (dissoc m2 k))
 
              :else

@@ -1,6 +1,6 @@
 (ns hara.test-common
   (:use midje.sweet
-        [hara.common :only [bytes? ?? ?%]])
+        [hara.common :only [bytes? ?%]])
   (:require [hara.common :as h]
             [clj-time.core :as t]))
 
@@ -82,7 +82,7 @@
   (h/check 2 2) => true
   (h/check 2 even?) => true
   (h/check 2 (?% even?)) => true
-  (h/check 2 (?? even?)) => true
+  (h/check 2 '(even?)) => true
   (h/check {:a {:b 1}} '(([:a :b]) = 1)) => true
   (h/check {:a {:b 1}} (?% ([:a :b]) = 1)) => true)
 
