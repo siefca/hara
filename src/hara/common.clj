@@ -658,6 +658,17 @@
        (dissoc m k)
        (assoc m k (dissoc-in (m k) ks keep)))))
 
+(defn assoc-if 
+  ([m k v]
+    (if (nil? v) m
+       (assoc m k v)))
+  ([m k v & more]
+    (apply assoc-if (assoc-if m k v) more)))
+
+(defn assoc-in-if [m ks v]
+  (if (nil? v) m
+    (assoc-in m ks v)))
+
 (defn assoc-nil
   ([m k v]
      (if (get m k) m (assoc m k v)))

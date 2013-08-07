@@ -1,0 +1,208 @@
+(ns hara.supervised
+  (:use [hara.common :only [hash-map? error]]))
+
+(defn wrap-tag [f]
+  (fn ([data]
+        ())))
+
+(defn ex-create
+  ([data]
+     (ex-create data nil))
+  ([data msg]
+     (let [m (cond (hash-map? data) data
+                   (keyword? data) {data true})
+           msg (str m msg)]
+       (ex-info msg (assoc m ::# true)))))
+
+(defn ex-extend
+  ([ex data]
+     (ex-extend ex data nil))
+  ([ex data msg]
+     (let [oldmsg (.getMessage ex)
+           olddata (dissoc (ex-data ex) ::#)
+           newdata (cond (keyword? data)
+                         (assoc olddata data true)
+
+                         (hash-map? data)
+                         (hara.common/merge-nested olddata data)
+
+                         :else (error "EXTEND-EX: Cannot extend " data))
+           newmsg (str (clojure.string/replace-first
+                        oldmsg
+                        (str olddata) (str newdata))
+                       msg)]
+       (ex-info newmsg (assoc newdata ::# true)))))
+
+(defn ex-check [issue chk]
+  (let [data (ex-data issue)]
+    (cond (hash-map? chk)
+          (every? (fn [[k vchk]]
+                    (let [vdata (get data k)]
+                      (cond (keyword? vchk) (= vchk vdata)
+                            (ifn? vchk) (vchk vdata)
+                            :else (= vchk vdata))))
+                  chk)
+          (ifn? chk) (chk data))))
+
+(def ^:dynamic *supervisors* [])
+
+(def supervisor
+  {:id
+   :options {}
+   :handlers [:issue (fn [])]})
+
+(def default-option
+  (fn [ex]
+    (throw ex)))
+
+(def choose-option
+  (fn [option]
+    (fn [issue]
+      (let [copts (:options issue)
+            eopts (:options supervisor)]
+        (if-let [handler (or (get eopts option)
+                             (get copts option))]
+          (handler issue)
+          (error "CHOOSE_OPTION: Unable to find option " option))))))
+
+(choose  )
+
+(def issue
+  (let [ex (ex-create :food-gone-off)]
+    {:ex ex
+     :options {:scream-and-shout
+               (fn [issue]
+                 (error "BAD FOOD!"))}
+     :default (fn [issue]
+                (let [copts (:options issue)
+                      eopts (:options supervisor)]
+                  (if-let [handler (or (:scream-and-shout eopts)
+                                       (:scream-and-shout copts))]
+                    (handler issue)
+                    (error "Unable to find handler " :scream-and-shout))))}))
+
+(comment "Testing handler"
+  ((:handler issue) issue)
+  ((-> issue :options :scream-and-shout) issue))
+
+
+(defn issue-new [data msg options default-fn]
+  (let [ex (ex-create data)]
+    {::ex ex
+     ::options (or options {})
+     ::default (or default-fn
+                   default-option)}))
+
+(defn raise- [issue]
+  (loop [svs *supervisors*]
+    (if (empty? *supervisors*)
+      (let [f (or (::default issue)
+                  default-option)]
+        (f (::ex issue))))))
+
+(def option)
+(def default)
+
+(defn raise-body [forms]
+  (let [options (into {}
+                      (for [[type key & body] forms
+                            :when (= (resolve type) #'option)]
+                        [key `(fn ~@body)]))
+        default (let [body (->> forms
+                                (filter
+                                 (fn [[type]]
+                                   (= (resolve type) #'default)))
+                                (first))]
+                  (if body
+                    `(fn ~@body)))]
+    [options default]))
+
+(defmacro raise [data msg & body]
+  (let [[options default] (raise-body body)]
+    `(raise- (issue-new ~data ~msg ~options ~default))))
+
+(raise :hello "Hello"
+       (option :default [i] i))
+
+(macroexpand-1 '(raise :hello "Hello"
+                       (option :default [i] i)))
+
+(comment
+  (ex-issue-chk (ex-issue :hello) {:hello1 nil?}))
+
+
+
+
+(comment
+
+
+  (defn food-check [f]
+    (condp = (look-at f)
+     :gone-bad
+     (raise {:food f :food-gone-off true}
+            "The food has gone bad."
+
+            (option :scream-and-shout []
+                    (throw Exception "Scream BAD FOOD!!"))
+
+            (option :swap-replacement [f] f)
+
+            (option :serve-anyway [] f)
+
+            (option :serve-nothing [])
+
+            (default (choose :serve-nothing)))
+
+     :past-use-by-date
+     (raise {:food f :food-past-use-by-date true}
+            "The food has past use-by date")
+
+     :else f))
+
+  (defn worker-program [fridge]
+    (supervise [issue]
+     (let [f (take-food fridge)
+           f (check-food-standard f)]
+       (serve-food f))
+
+     (on :food-gone-off
+         (choose :serve-anyway))
+
+     (on :food-past-use-by-date
+         (choose :serve-anyway))
+
+     (option :default []
+             (continue))
+
+     (option :retry []
+             (worker-program fridge))
+
+     (option :retry-backup-fridge [& [fridge]]
+             (worker-program (or fridge *backup-fridge*)))
+
+     (option :serve-replacement [replacement]
+             (continue replacement))
+
+     (option :serve-anyway []
+             (continue (:food issue)))))
+
+  (defn management-program [manager]
+  (supervise
+   (let [droids (clone-new-droids droid-template 10)]
+     ())
+
+   (on {:food-past-use-by-date true :food-gone-off false}
+       [e]
+       (raise (assoc e :incompetent-management true)
+              "The middle management is helpless"))
+
+   (on [:food-gone-off e]
+       (choose :throw-out-food))
+
+   (on [:food-gone-moldy e]
+       (choose :throw-out-food))
+
+   (option :throw-out-food [])))
+
+  (defn ceo-program [ceo]
+    [ (hir)]))

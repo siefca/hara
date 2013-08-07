@@ -1,0 +1,361 @@
+(ns hara.conditions
+  (:use [hara.common :only [hash-map? hash-set? error]]))
+
+(defn parse-issue-content [content]
+  (cond (hash-map? content) content
+        (keyword? content) {content true}
+        (vector? content)  (apply merge (map parse-issue-content content))
+        :else (error "CREATE_ISSUE: " content " should be a keyword, hash-map or vector")))
+
+(defn create-issue
+  ([content] (create-issue content ""))
+  ([content msg options default]
+     (let [content (parse-issue-content content)]
+       (ex-info msg {::type :issue
+                     ::content content
+                     ::options (or options {})
+                     ::default default}))))
+
+(defn create-type [issue type & args]
+  (let [msg  (.getMessage issue)
+        data (ex-data issue)
+        hm (apply assoc (select-keys data [::content]) ::type type args)]
+    (ex-info msg hm)))
+
+(defn create-unmanaged [issue]
+  (let [msg  (.getMessage issue)
+        content (-> issue ex-data ::content)
+        msg  (if (empty? msg) (str content) msg)
+        hm {::type ::unmanaged ::content content}]
+    (ex-info msg hm)))
+
+(defn create-choose [issue id label args]
+  (create-type issue :choose ::id id ::label label ::args args))
+
+(defn create-function [issue id func]
+  (create-type issue :function ::id id ::fn func))
+
+(defn extend-issue
+  ([issue content] (extend-issue issue content nil nil nil))
+  ([issue content msg options default]
+     (let [oldmsg  (.getMessage issue)
+           olddata (ex-data issue)
+           newmsg  (if msg (str  msg "\n" oldmsg) oldmsg)
+           newdata (update-in olddata [::content]
+                              merge (parse-issue-content content))
+           newdata (if options
+                     (update-in newdata [::options]
+                                merge options)
+                     newdata)
+           newdata (if default
+                     (assoc newdata ::default default)
+                     newdata)]
+       (ex-info newmsg newdata))))
+
+(defn is-issue [ex]
+  (= :issue (::type (ex-data ex))))
+
+(defn is-unmanaged [ex]
+  (= :unmanaged (::type (ex-data ex))))
+
+(defn is-choice [ex]
+  (= :choice (::type (ex-data ex))))
+
+(defn is-function [ex]
+  (= :function (::type (ex-data ex))))
+
+(defn check-issue-content [content chk]
+  (cond (hash-map? chk)
+        (every? (fn [[k vchk]]
+                  (let [vcnt (get content k)]
+                    (cond (keyword? vchk) (= vchk vcnt)
+                          (fn? vchk) (vchk vcnt)
+                          :else (= vchk vcnt))))
+                chk)
+
+        (vector? chk)
+        (every? #(check-issue-content content %) chk)
+
+        (or (fn? chk) (keyword? chk) (hash-set? chk))
+        (chk content)
+
+        :else (error "CHECK_ISSUE_CONTENT: " chk " cannot be founde")))
+
+(defn check-issue [issue chk]
+  (let [content (-> issue ex-data ::content)]
+    (check-issue-content content chk)))
+
+(defn default-issue-handler [issue]
+  (throw (create-unmanaged issue)))
+
+
+(defn manage-unhandled [issue optmap]
+  (let [data (ex-data issue)
+        ioptions (::options data)]
+    (println (::default data))
+    (if-let [[k & args] (::default data)]
+        (let [ifunc (get ioptions k)
+              id (get optmap k)]
+          (cond ifunc
+                (try
+                  (apply ifunc args)
+                  (catch clojure.lang.ArityException e
+                    (error "UNWRAP_ISSUE: Wrong number of arguments to option key: " k)))
+
+                id
+                (throw (create-choice issue id k args))
+
+                :else
+                (error "UNWRAP_ISSUE: Cannot find the default option key: " k)))
+        (default-issue-handler issue))))
+
+(defn manage-find-handler [handlers issue]
+  (if-let [h (first handlers)]
+    (if (check-issue issue (::checker h))
+      h
+      (recur (next handlers) issue))))
+
+(defn manage-unwrap [issue managers optmap]
+  (if-let [manager (first managers)]
+    (let [handlers manager
+          h (manage-find-handler handlers issue)]
+      (if (nil? h)
+        (recur issue (rest managers) optmap)
+        (condp = (::type h)
+          :continue ((::function h) (-> issue ex-data ::content))
+          :escalate (recur (extend-issue issue (::content h) (::msg h) (::options h) (::default h))
+                           (rest managers) optmap)
+          :function (throw (create-function issue (::id manager) (::function h)))
+          :choose   (throw (create-choice issue (::id manager) (::label h) (::args h))))))
+    (manage-unhandled issue optmap)))
+
+
+(def ^:dynamic *managers* [])
+(def ^:dynamic *optmap* {})
+
+(declare option default on continue escalate choose)
+
+(def sp-forms {}#{#'option #'default})
+(def manage-forms #{#'on #'option})
+(def on-forms #{#'continue #'escalate #'choose})
+
+(defn- is-special-form [formset form]
+  (and (list form)
+       (symbol? (first form))
+       (formset (resolve (first form)))))
+
+
+(defn parse-option-forms [forms]
+  (into {}
+        (for [[type key & body] forms
+              :when (= (resolve type) #'option)]
+          [key `(fn ~@body)])))
+
+(defn parse-default-form [forms]
+  (if-let [default (->> forms
+                        (filter
+                         (fn [[type]]
+                           (= (resolve type) #'default)))
+                        (last)
+                        (next))]
+    (vec default)))
+
+(defn parse-on-type [fbody]
+  (if (list? fbody)
+      (condp = (resolve (first fbody))
+        #'continue :continue
+        #'escalate :escalate
+        #'choose   :choose
+        :fucntion)
+      :function))
+
+(defn parse-escalate [[_ content & [msg & forms]]]
+  (let [[msg forms] (if (is-special-form raise-forms msg)
+                       ["" (cons msg forms)]
+                       [msg forms])
+         options (parse-option-forms forms)
+         default (parse-default-form forms)]
+    {::msg msg ::options options ::default default}))
+
+(defn parse-choose )
+
+(defn parse-on [chk params fbody rbody]
+  (let [t (parse-on-type fbody)
+        h {:type t :checker chk}]
+    (if (= t :fuction)
+      (assert (nil? rbody)))
+    (case t
+      :function (assoc h ::function `(fn [{:keys ~params}] ~fbody ~@rbody))
+      :escalate (merge h (parse-escalate fbody))
+      :choose  (merge h (parse-choose fbody))
+      :continue (merge h (parse-escalate fbody)))))
+
+(defn parse-on-forms [forms]
+  (vec (for [[type chk params & [fbody & rbody]] forms
+             :when (= (resolve type) #'on)]
+         (parse-on chk params fbody rbody))))
+
+(defmacro raise [content & [msg & forms]]
+  (let [[msg forms] (if (is-special-form raise-forms msg)
+                      ["" (cons msg forms)]
+                      [msg forms])
+        options (parse-option-forms forms)
+        default (parse-default-form forms)]
+    `(manage-unwrap (create-issue ~content ~msg ~options ~default) *managers* *optmap*)))
+
+(defmacro manage [& forms]
+  (let [[body manage-forms] (split-with (complement manage-form) forms)
+        options (parse-option-forms manage-forms)]
+    (assert (every? #(is-special-form manage-forms %) special-forms))
+    (let [id (gensym)
+          options {:<label> (fn [<x> <y> <z>])}
+          optmap (zipmap (keys options) (repeat id))
+          handlers [{::type :continue ::checker :checker ::function (fn [content] nil)}
+                    {::type :escalate ::msg ""}
+                    {::type :choose   ::checker :checker ::label :<label> ::args [1 2 3] }
+                    {::type :function ::checker :checker ::function (fn [content] nil)}]
+          manager {::id id ::options options ::handlers handlers}]
+      (binding [*managers* (cons manager *managers*)
+                *optmap* (merge optmap *optmap*)]
+        (try
+
+          (catch clojure.lang.ExceptionInfo ex
+            (let [data (ex-data ex)]
+              (cond (and (= :choose (::type data))
+                         (= id (::id data)))
+                    (let [f (get options (::label data))
+                          args (::args data)]
+                      (try
+                        (apply f args)
+                        (catch clojure.lang.ArityException e
+                          (error "MANAGE: Wrong number of arguments to option key: " (::label data)))))
+
+                    (and (= :function (::type data))
+                         (= id (::id data)))
+                    (let [f (::function data)]
+                      (f (::content data)))
+
+                    :else throw ex))))))))
+
+
+(raise :error
+       (option :one [] 1)
+       (option :two [] 2)
+       (option :custom [n] n)
+       (default :one))
+
+(raise :error
+       (option :one [] 1)
+       (option :two [] 2))
+
+(raise :error
+       (option :one [] 1)
+       (option :two [] 2)
+       (option :custom [n] n)
+       (default :custom 10))
+
+(raise :error
+       (option :one [] 1)
+       (option :two [] 2)
+       (default :two))
+
+(macroexpand-1
+ '(raise :error
+        (option :one [] 1)
+        (option :two [] 2)
+        (default :one)))
+(hara.conditions/manage-unwrap (hara.conditions/create-issue :error "" {:one (clojure.core/fn [] 1), :two (clojure.core/fn [] 2)} [:one]) hara.conditions/*managers* hara.conditions/*optmap*)
+
+
+
+(hara.conditions/manage-unwrap
+ (hara.conditions/create-issue :hello "" {:hello (clojure.core/fn [] nil)} nil) hara.conditions/*managers* hara.conditions/*optmap*)
+
+(let [id 100
+      options {:<label> (fn [<x> <y> <z>])}
+      optmap (zipmap (keys options) (repeat id))
+      handlers [{::type :continue ::checker :checker ::function (fn [content] nil)}
+                {::type :escalate ::msg ""}
+                {::type :choose   ::checker :checker ::label :<label> ::args [1 2 3] }
+                {::type :function ::checker :checker ::function (fn [content] nil)}]
+      manager {::id id ::options options ::handlers handlers}]
+  (binding [*managers* (cons manager *managers*)
+            *optmap* (merge optmap *optmap*)]
+    (try
+
+      (catch clojure.lang.ExceptionInfo ex
+        (let [data (ex-data ex)]
+          (cond (and (= :choose (::type data))
+                     (= id (::id data)))
+                (let [f (get options (::label data))
+                      args (::args data)]
+                  (try
+                    (apply f args)
+                    (catch clojure.lang.ArityException e
+                      (error "MANAGE: Wrong number of arguments to option key: " (::label data)))))
+
+                (and (= :function (::type data))
+                     (= id (::id data)))
+                (let [f (::function data)]
+                  (f (::content data)))
+
+                :else throw ex))))))
+
+
+
+(try
+  (apply #(+ 1 %) [1 2 3])
+  (catch Throwable t
+    (type t)))
+
+(comment
+  (defn half-int [i]
+    (manage
+     (cond (nil? i)
+           (raise :input-is-nil
+                  "HALF_INT: input is nil"
+                  (option :use-zero [] 0)
+                  (default :use-nil))
+
+           (string? i)
+           (raise {:input-is-string true :input i}
+                  "HALF_INT: input is string"
+                  (default :use-nan))
+
+           (float? i)
+           (raise {:input-is-float true :input i}
+                  "HALF_INT: input is float"
+                  (default :use-custom))
+
+           (not= 0 (mod i 2))
+           (raise {:input-is-odd true :input i}
+                  "HALF_INT: input is odd"
+                  (option :use-approx [] (quot 2 (dec i)))
+                  (default :use-approx))
+
+           :else
+           (quot i 2))
+     (option :use-nil [] nil)
+     (option :use-nan [] :nan)
+     (option :use-custom [n] n)))
+
+  (defn half-int-array [arr]
+    (manage
+     (map half-int arr)
+     (escalate [:input-is-float :input-is-string]
+               [input]
+               (attach :int-array "HALF_INT_ARRAY: input array")
+               (option :throw-exception
+                       (error "Cannot process input: " input)))
+     (on :input-is-nil []
+         (choose :use-zero 0))
+
+     (on :input-is-odd [input]
+         (choose :use-custom (/ input 2)))
+
+     (option :use-empty-array [] [])
+     (option :use-nil-array [] (vec (take (length arr) (repeat 0))))))
+
+
+
+  )
