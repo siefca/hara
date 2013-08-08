@@ -1,8 +1,8 @@
-(ns hara.test-signal
+(ns hara.test-conditional
   (:use midje.sweet
         hara.common
-        hara.signal)
-  (:require [hara.signal :as s]))
+        hara.conditional)
+  (:require [hara.conditional :as s]))
 
 (fact "parse-contents"
  (parse-contents {:error true}) => {:error true}
@@ -16,7 +16,7 @@
 
   (s/raise-loop {:id :issue :contents {:error true} :default [:one]}
                 [] {})
-  => (throws Exception "UNWRAP_ISSUE: the label :one has not been implemented")
+  => (throws Exception "RAISE_UNHANDLED: the label :one has not been implemented")
 
   (s/raise-loop {:id :issue :contents {:error true} :default [:one]}
                 [] {:one :other})
@@ -35,7 +35,7 @@
   (s/raise-loop {:id :issue :contents {:error true}
                  :options {:custom (fn [n] n)} :default [:custom]}
                 [] {:custom :issue})
-  => (throws Exception "UNWRAP_ISSUE: Wrong number of arguments to option key :custom"))
+  => (throws Exception "RAISE_UNHANDLED: Wrong number of arguments to option key :custom"))
 
 (fact "raise-loop - continue"
   (s/raise-loop {:id :issue
@@ -107,116 +107,3 @@
            (option :custom [n] (+ n data))
            (default :custom data)))
   => 2)
-
-
-(fact "manage")
-
-
-(defmacro hello
-  ([] (hello 1))
-  ([n]
-      (let [i `(list 1 2 3 ~n)]
-        i)))
-
-#_(hello)
-
-(try
-  (raise :error)
-  (catch Throwable t
-    nil))
-
-(defn value-func []
-  (raise [:error {:d 10000}]
-         (option :one [] 1)
-         (option :custom [n] n)))
-
-
-(defn med-func []
-  (manage
-   (value-func)
-   (on :error []
-       (escalate :big-error))))
-
-(manage
- (med-func)
- (on :big-error [d]
-     (choose :custom d)))
-
-(fact
-  (manage
-   (manage
-    (raise :error)
-
-    (on :error []
-        (escalate
-         {:data }
-         (default :one))))
-
-   (on :error [data]
-       (continue data))
-   (option :one [] 1)) => :data)
-
-
-(defn int-check [i]
-  (manage
-   (cond (integer? i)
-         (cond (zero? (mod i 2)) i
-
-               :else
-               (raise [:is-odd {:i i}]
-                      (option :approx [] (dec i))
-                      (default :approx)))
-
-         (string? i)
-         (raise [:is-string {:i i}]
-                (option :scream []
-                        (error "ARRGH!!"))
-                (default :scream)))
-   (option :zero [] 0)
-   (option :custom [n] n)))
-
-(manage
- (int-check 9)
- (on :is-odd []
-     (continue 1000)))
-
-
-(defn int-halve [i]
-  (manage
-   (let [i (int-check i)]
-     (quot i 2))
-   (option :nan [] :nan)))
-
-(int-halve 2)
-(int-halve 3)
-
-(defn array-halve [arr]
-  (manage
-   (mapv int-halve arr)
-   (option :empty-array [] [])))
-
-(manage
- (array-halve [0 1 2 3 4 5])
- (on :is-odd []
-     ;;(continue 1000)
-     (choose :nan)
-     ))
-
-(manage
- (array-halve [0 1 2 3 4 5])
- (on :is-odd []
-     ;;(continue 1000)
-     (choose :empty-array)
-     ))
-(defn array-halve-nan [arr]
-  (manage
-   (mapv int-halve arr)
-   (on :is-odd []
-       (choose :approx))
-   (on :is-string []
-       (choose :nan))))
-
-(array-halve [0 1 2 3 4 5])
-
-(fact
-  (array-halve-nan [0 1 2 3 4 "5"]))

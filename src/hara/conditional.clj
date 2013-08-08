@@ -1,4 +1,4 @@
-(ns hara.signal
+(ns hara.conditional
   (:use [hara.common :only [hash-map? hash-set? error assoc-if]]))
 
 (def ^:dynamic *managers* [])
@@ -8,7 +8,7 @@
   (cond (hash-map? contents) contents
         (keyword? contents) {contents true}
         (vector? contents)  (apply merge (map parse-contents contents))
-        :else (error "CREATE_ISSUE: " contents " should be a keyword, hash-map or vector")))
+        :else (error "PARSE_CONTENTS: " contents " should be a keyword, hash-map or vector")))
 
 (defn check-contents [contents chk]
   (cond (hash-map? chk)
@@ -25,7 +25,7 @@
         (or (fn? chk) (keyword? chk) (hash-set? chk))
         (chk contents)
 
-        :else (error "CHECK_ISSUE_CONTENTS: " chk " cannot be founde")))
+        :else (error "CHECK_CONTENTS: " chk " cannot be founde")))
 
 (defn create-issue
   [contents msg options default]
@@ -77,14 +77,14 @@
   (if-let [[label & args] (:default issue)]
     (let [target (get optmap label)]
       (cond (nil? target)
-            (error "UNWRAP_ISSUE: the label " label
+            (error "RAISE_UNHANDLED: the label " label
                    " has not been implemented")
 
             (= target (:id issue))
             (try
               (apply (-> issue :options label) args)
               (catch clojure.lang.ArityException e
-                (error "UNWRAP_ISSUE: Wrong number of arguments to option key " label)))
+                (error "RAISE_UNHANDLED: Wrong number of arguments to option key " label)))
 
             :else
             (throw (create-default-signal issue target label args))))
@@ -177,7 +177,7 @@
   (try
     (apply f args)
     (catch clojure.lang.ArityException e
-      (error "MANAGE-BODY: Wrong number of arguments to option key: " label))))
+      (error "MANAGE-APPLY: Wrong number of arguments to option key: " label))))
 
 (defn manage-signal [manager ex]
   (let [data (ex-data ex)]
