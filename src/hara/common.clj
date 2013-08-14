@@ -6,25 +6,19 @@
 ;; on its own but together, they span a number of paradigms and
 ;; adds flexibility to program structure and control. The main
 ;; functionality are:
-;;
-;;  - Exceptions
-;;  - Calling Conventions
-;;  - Strings
-;;  - Predicate Checking
-;;  - Nested Structures
 
 (ns hara.common
   (:require [hara.import :refer [import]])
   (:refer-clojure :exclude [import send if-let]))
 
-(import hara.common.collection :all
+(import hara.common.collection  :all
         hara.common.constructor :all
-        hara.common.control :all
-        hara.common.debug :all
-        hara.common.error :all
-        hara.common.fn :all
-        hara.common.keyword :all
-        hara.common.lettering :all
-        hara.common.string :all
-        hara.common.thread :all
-        hara.common.types :all)
+        hara.common.control     :all
+        hara.common.debug       :all
+        hara.common.error       :all
+        hara.common.fn          :all
+        hara.common.keyword     :all
+        hara.common.lettering   :all
+        hara.common.string      :all
+        hara.common.thread      :all
+        hara.common.types       :all)

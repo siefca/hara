@@ -1,8 +1,10 @@
 (ns hara.collection.hash-map
   (:require [clojure.string :as st]
             [clojure.set :as set]
-            [hara.common.keyword :refer :all]))
-            
+            [hara.common.types :refer [hash-map?]]
+            [hara.common.keyword :refer :all]
+            [hara.common.collection :refer [dissoc-in group-bys]]))
+
 (defn hashmap-ns
   "Returns the set of keyword namespaces within `fm`.
 

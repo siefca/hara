@@ -1,6 +1,6 @@
-(ns hara.test-keyword
-  (:require [hara.keyword :as h])
-  (:use midje.sweet))
+(ns hara.common.test-keyword
+  (:require [hara.common.keyword :as h]
+            [midje.sweet :refer :all]))
 
 (fact "keyword-str returns the string representation with the colon"
   (h/keyword-str nil) => ""

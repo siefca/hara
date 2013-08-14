@@ -5,13 +5,12 @@
  "An alternative to if-let where more bindings can be added"
   ([bindings then]
     `(if-let ~bindings ~then nil))
-  ([bindings then else]
-    (let [[op rhs & more] (seq bindings)]
-      `(clojure.core/if-let [~op ~rhs]
-         ~(if more
+  ([[bnd expr & more] then else]
+    `(clojure.core/if-let [~bnd ~expr]
+        ~(if more
             `(if-let [~@more] ~then ~else)
             then)
-         ~else))))
+         ~else)))
 
 (defmacro case-let
  "An alternative to if-let where more bindings can be added"

@@ -1,17 +1,14 @@
-(ns hara.test-common-extra
+(ns hara.test-state
   (:use midje.sweet)
-  (:require [hara.common :as h]))
+  (:require [hara.state :as h]
+            [hara.common.types :refer [promise? atom?]]))
 
-(defn within-interval [min max]
-  (fn [x]
-    (and (> x min) (< x max))))
+(fact "hash-keyword"
+  (h/hash-keyword 1) => :__1__
+  (h/hash-keyword 1 "id") => :__id_1__
+  (h/hash-keyword 1 "1") => :__1_1__
+  (h/hash-keyword "hello") => :__99162322__)
 
-(defn approx
-  [val error] (within-interval (- val error) (+ val error)))
-
-(fact "time-ms"
-  (h/time-ms (inc 1)) => (approx 0 0.02)
-  (h/time-ms (Thread/sleep 100)) => (approx 100 2))
 
 (fact "hash-code"
   (h/hash-code 1) => 1
@@ -40,7 +37,7 @@
      (inc v)))
 
 (fact "dispatch!"
-  (h/dispatch! (atom 0) slow-inc) => h/promise?
+  (h/dispatch! (atom 0) slow-inc) => promise?
   (let [in (atom 0)]
     (h/wait-on slow-inc in)
     @in => 1
@@ -106,8 +103,8 @@
   (let [res (h/run-notify
              #(do (Thread/sleep 200)
                   (h/alter! % inc)) (atom 1) h/notify-on-all)]
-    res => h/promise?
-    @res => h/atom?
+    res => promise?
+    @res => atom?
     @@res => 2)
 
 
@@ -115,8 +112,8 @@
              #(do (Thread/sleep 200)
                   (h/alter! % update-in [:a] inc))
              (atom {:a 1}) (h/notify-on-change :a))]
-    res => h/promise?
-    @res => h/atom?
+    res => promise?
+    @res => atom?
     @@res => {:a 2}))
 
 (fact "wait-deref"
@@ -136,7 +133,7 @@
         f   #(h/dispatch! % slow-inc)
         ret (h/wait-for f atm)]
     @atm => 2
-    ret => h/atom?
+    ret => atom?
     @ret => 2))
 
 (fact "wait-on"
