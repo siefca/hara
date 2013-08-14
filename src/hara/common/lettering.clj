@@ -1,7 +1,5 @@
-(ns ^{:doc "This namespace contains functions that are useful when dealing with strings."}
-hara.formatting
-  (:require
-    [clojure.string :as str]))
+(ns hara.common.lettering
+  (:require [clojure.string :as st]))
 
 (defn gsub
   "Matches patterns and replaces those matches with a specified value.
@@ -24,45 +22,45 @@ hara.formatting
 
 (defn separate-camel-humps [value]
   (gsub value hump-pattern
-    #(str/join " " (seq %))))
+    #(st/join " " (seq %))))
 
 (defn title-case
   "Converts the input string, which may be in any form, to a title-case string
   (title-case \"hello-world\") => \"Hello World\""
   [value]
-  (str/join " "
-    (map str/capitalize
-      (str/split (separate-camel-humps value) #"[ |\-|_]"))))
+  (st/join " "
+    (map st/capitalize
+      (st/split (separate-camel-humps value) #"[ |\-|_]"))))
 
 (defn lower-case
 "Converts the input string, which may be in any form, to a title-case string
 (title-case \"hello-world\") => \"Hello World\""
 [value]
-(str/join " "
-  (map str/capitalize
-    (str/split (separate-camel-humps value) #"[ |\-|_]"))))
+(st/join " "
+  (map st/capitalize
+    (st/split (separate-camel-humps value) #"[ |\-|_]"))))
 
 (defn camel-case
   "Converts the input string, which may be in any form, to a camel-case string
   (camel-case \"hello-world\") => \"helloWorld\""
   [value]
   (gsub value non-camel-separator-pattern
-    #(str/upper-case (apply str (rest %)))))
+    #(st/upper-case (apply str (rest %)))))
 
 (defn capital-camel-case
   "Converts the input string, which may be in any form, to a capitalized camel-case string
   (capital-camel-case \"hello-world\") => \"HelloWorld\""
   [value]
   (let [camel (camel-case value)]
-   (str (str/upper-case (.substring camel 0 1))
+   (str (st/upper-case (.substring camel 0 1))
      (.substring camel 1 (.length camel)))))
 
 (defn snake-case
   "Converts the input string, which may be in any form, to a snake-case string
   (snake-case \"hello-world\") => \"hello_world\""
   [value]
-  (str/replace
-    (str/lower-case (separate-camel-humps value))
+  (st/replace
+    (st/lower-case (separate-camel-humps value))
     non-snake-separator-pattern
     "_"))
 
@@ -70,7 +68,7 @@ hara.formatting
   "Converts the input string, which may be in any form, to a spear-case string.
   (spear-case \"Hello World\") => \"hello-world\""
   [value]
-  (str/replace
-    (str/lower-case (separate-camel-humps value))
+  (st/replace
+    (st/lower-case (separate-camel-humps value))
     non-spear-separator-pattern
     "-"))

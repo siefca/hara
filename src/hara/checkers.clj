@@ -1,5 +1,5 @@
 (ns hara.checkers
-  (:use [hara.common :only [check]]))
+  (:require [hara.common.fn :refer [check]]))
 
 (defn is-type-fn [t chk]
   (fn [obj]

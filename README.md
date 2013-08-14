@@ -206,9 +206,7 @@ tried to be as clojurish as possible:
 - Fix up the readme to include more examples:
 
 
-
 ## License
+Copyright © 2013 Chris Zheng
 
-Copyright © 2012 Chris Zheng
-
-Distributed under the Eclipse Public License, the same as Clojure.
+Distributed under the MIT License

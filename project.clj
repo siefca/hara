@@ -1,4 +1,4 @@
-(defproject im.chit/hara "0.9.1"
+(defproject im.chit/hara "1.0.1"
   :description "Utilities library of Functions"
   :url "http://github.com/zcaudate/hara"
   :license {:name "The MIT License"
