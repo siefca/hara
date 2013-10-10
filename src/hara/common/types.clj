@@ -16,7 +16,7 @@
 
     (hash-map? {}) ;=> true
   "
-  [x] (instance? clojure.lang.IPersistentMap x))
+  [x] (instance? clojure.lang.APersistentMap x))
 
 (defn hash-set?
   "Returns `true` if `x` implements `clojure.lang.IPersistentHashSet`.
