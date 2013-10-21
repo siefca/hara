@@ -242,3 +242,37 @@
   ([obj prchk] (suppress-pcheck obj prchk true))
   ([obj prchk res]
      (suppress (if (pcheck-> obj prchk) res))))
+     
+
+(defn arg-counts [f]
+ (let [ms (filter #(= "invoke" (.getName %))
+                  (.getDeclaredMethods (class f)))
+       ps (map (fn [m] (.getParameterTypes m)) ms)]
+   (map alength ps)))
+
+(defn varg-count [f]
+ (if (some #(= "getRequiredArity" (.getName %))
+           (.getDeclaredMethods (class f)))
+   (.getRequiredArity f)))
+
+
+(defn- op-max-args
+ ([counts cargs] (op-max-args counts cargs nil))
+ ([counts cargs res]
+    (if-let [c (first counts)]
+      (if (= c cargs) c
+          (recur (next counts) cargs
+                 (if (and res (> res c))
+                   res c)))
+      res)))
+
+(defn op [f & args]
+ (let [vc    (varg-count f)
+       cargs (count args)]
+   (if (and vc (> cargs vc))
+     (apply f args)
+     (let [cs (arg-counts f)
+           amax (op-max-args cs cargs)]
+       (if amax
+         (apply f (take amax args)))))))
+

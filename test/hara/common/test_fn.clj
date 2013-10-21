@@ -104,3 +104,15 @@
   (h/suppress-pcheck "3" even?) => nil
   (h/suppress-pcheck 3 even?) => nil
   (h/suppress-pcheck 2 even?) => true)
+  
+(fact "arg-count"
+  (h/arg-counts (fn [])) => '(0)
+  (h/arg-counts (fn ([]) ([x]) ([x y]))) => (just 0 1 2 :in-any-order)
+  (h/arg-counts (fn [& more])) => '())
+  
+(fact "varg-count"
+ (h/varg-count (fn [& more])) => 0
+ (h/varg-count (fn [a b c & more])) => 3)
+ 
+(fact "op"
+  (h/op (fn [a b] (+ a b)) 1 2 3 4) => 3)
