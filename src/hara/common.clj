@@ -17,6 +17,7 @@
         hara.common.debug       :all
         hara.common.error       :all
         hara.common.fn          :all
+        hara.common.interop     :all
         hara.common.keyword     :all
         hara.common.lettering   :all
         hara.common.string      :all
