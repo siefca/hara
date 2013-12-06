@@ -5,5 +5,6 @@
             :url "http://http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :codox {:include [hara.common]}
-  :profiles {:dev {:dependencies [[midje "1.5.1"]
+  :profiles {:dev {:dependencies [[midje "1.6.0"]
+                                  [lein-midje "3.1.3"]
                                   [clj-time "0.5.1"]]}})
