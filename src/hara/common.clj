@@ -1,25 +1,51 @@
-;; ## Common Paradigms
-;;
-;; `hara.common` provides methods, macros and utility
-;; functions that complements `clojure.core` and makes programming
-;; in clojure more "clojurish". Each function is not that useful
-;; on its own but together, they span a number of paradigms and
-;; adds flexibility to program structure and control. The main
-;; functionality are:
-
 (ns hara.common
-  (:require [hara.import :refer [import]])
-  (:refer-clojure :exclude [import send if-let]))
+  (:require [hara.type-check :refer [bytes?]]
+            [hara.error :refer [error]]))
 
-(import hara.common.collection  :all
-        hara.common.constructor :all
-        hara.common.control     :all
-        hara.common.debug       :all
-        hara.common.error       :all
-        hara.common.fn          :all
-        hara.common.interop     :all
-        hara.common.keyword     :all
-        hara.common.lettering   :all
-        hara.common.string      :all
-        hara.common.thread      :all
-        hara.common.types       :all)
+;; ## Constructors
+
+(defn queue
+  "Returns a `clojure.lang.PersistentQueue` object.
+
+    (def a (queue 1 2 3 4))
+    (seq (pop a) ;=> [2 3 4]
+  "
+  ([] (clojure.lang.PersistentQueue/EMPTY))
+  ([x] (conj (queue) x))
+  ([x & xs] (apply conj (queue) x xs)))
+
+(defn uuid
+  "Returns a `java.util.UUID` object
+
+    (uuid) ;=> <random uuid>
+
+    (uuid \"00000000-0000-0000-0000-000000000000\")
+    ;=> #uuid \"00000000-0000-0000-0000-000000000000\"
+  "
+  ([] (java.util.UUID/randomUUID))
+  ([id]
+     (cond (string? id)
+           (java.util.UUID/fromString id)
+           (bytes? id)
+           (java.util.UUID/nameUUIDFromBytes id)
+           :else (error id " can only be a string or byte array")))
+  ([^java.lang.Long msb ^java.lang.Long lsb]
+     (java.util.UUID. msb lsb)))
+
+(defn instant
+  "Returns a `java.util.Date` object
+
+    (instant) ;=> <current time>
+
+    (instant 0) ;=> 1970-01-01T00:00:00.000-00:00
+  "
+  ([] (java.util.Date.))
+  ([val] (java.util.Date. val)))
+
+(defn uri
+  "Returns a `java.net.URI` object
+
+    (uri \"http://www.google.com\")
+    ;=> #<URI http://www.google.com>
+  "
+  [path] (java.net.URI/create path))

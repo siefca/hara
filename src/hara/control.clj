@@ -1,4 +1,4 @@
-(ns hara.common.control
+(ns hara.control
   (:refer-clojure :exclude [if-let]))
 
 (defmacro if-let

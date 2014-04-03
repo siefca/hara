@@ -1,6 +1,6 @@
-(ns hara.common.test-constructor
-  (:require [hara.common.types :as h :refer [bytes?]]
-            [hara.common.constructor :as s]
+(ns hara.test-common
+  (:require [hara.type-check :as h :refer [bytes?]]
+            [hara.common :as s]
             [midje.sweet :refer :all]))
 
 (fact "queue"

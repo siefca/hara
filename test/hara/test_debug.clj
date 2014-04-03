@@ -1,5 +1,5 @@
-(ns hara.common.test-debug
-  (:require [hara.common.debug :as h]
+(ns hara.test-debug
+  (:require [hara.debug :as h]
             [midje.sweet :refer :all]))
 
 (defn within-interval [min max]

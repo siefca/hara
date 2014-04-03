@@ -1,5 +1,5 @@
-(ns hara.common.test-interop
-  (:require [hara.common.interop :as h]
+(ns hara.test-interop
+  (:require [hara.interop :as h]
             [midje.sweet :refer :all]))
             
 (fact

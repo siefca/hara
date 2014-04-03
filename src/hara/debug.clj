@@ -1,9 +1,4 @@
-(ns hara.common.debug)
-
-;; ## Threads
-;;
-;; Simple functions for thread that increase readability.
-;;
+(ns hara.debug)
 
 (defmacro time-ms
   "Evaluates expr and outputs the time it took.  Returns the time in ms

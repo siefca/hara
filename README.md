@@ -1,9 +1,9 @@
-# hara
+# hara 
+[![Build Status](https://travis-ci.org/zcaudate/hara.png?branch=master)](https://travis-ci.org/zcaudate/hara)
 
 General purpose utilities library
 
 
-[![Build Status](https://travis-ci.org/zcaudate/hara.png?branch=master)](https://travis-ci.org/zcaudate/hara)
 
 ## TODOS:
 

@@ -1,8 +1,8 @@
-(ns hara.common.test-collection
-  (:require [hara.common :as h]
+(ns hara.test-collection
+  (:require [hara :as h]
             [clj-time.core :as t]
             [midje.sweet :refer :all]
-            [hara.common.types :refer [bytes?]]))
+            [hara.type-check :refer [bytes?]]))
 
 (fact "func-map creates a hashmap using as key the function applied to each
        element of the collection."

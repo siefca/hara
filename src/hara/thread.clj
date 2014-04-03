@@ -1,6 +1,6 @@
-(ns hara.common.thread)
+(ns hara.thread)
 
-(defn current-thread
+(defn current
   "Returns the currenly executing thread."
   []
   (Thread/currentThread))
@@ -22,5 +22,5 @@
   "Interrupts a `thd` or the current thread
    if no arguments are given.
   "
-  ([] (interrupt (current-thread)))
+  ([] (interrupt (current)))
   ([thd] (.interrupt thd)))

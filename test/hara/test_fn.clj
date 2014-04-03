@@ -1,6 +1,6 @@
-(ns hara.common.test-fn
-  (:require [hara.common.fn :as h]
-            [hara.common.types :refer [hash-map? hash-set?]]
+(ns hara.test-fn
+  (:require [hara.fn :as h]
+            [hara.type-check :refer [hash-map? hash-set?]]
             [midje.sweet :refer :all]))
 
 (facts "call "
@@ -87,23 +87,23 @@
   (h/eq-> {:id 1 :a 1} {:id 1 :a 2} :id) => true
   (h/eq-> {:db {:id 1} :a 1} {:db {:id 1} :a 2} [:db :id]) => true)
 
-(fact "pcheck->"
-  (h/pcheck-> {:a 1} :a) => true
-  (h/pcheck-> {:a 1} hash-map?) => true
-  (h/pcheck-> {:a 1} hash-set?) => false
-  (h/pcheck-> {:a 1 :val 1} #(= 1 (% :val))) => true
-  (h/pcheck-> {:a 1 :val 1} #(= 2 (% :val))) => false
-  (h/pcheck-> {:a 1 :val 1} [:val 1]) => true
-  (h/pcheck-> {:a 1 :val 1} [:val even?]) => false
-  (h/pcheck-> {:a 1 :val 1} [:val '(= 1)]) => true
-  (h/pcheck-> {:a 1 :val 1} [:val '(not= 1)]) => false
-  (h/pcheck-> {:a {:b 1}} [[:a :b] odd?]) => true
-  (h/pcheck-> {:a {:b 1}} [[:a :b] '(= 1) [:a] associative?]) => true)
+(fact "pred->"
+  (h/pred-> {:a 1} :a) => true
+  (h/pred-> {:a 1} hash-map?) => true
+  (h/pred-> {:a 1} hash-set?) => false
+  (h/pred-> {:a 1 :val 1} #(= 1 (% :val))) => true
+  (h/pred-> {:a 1 :val 1} #(= 2 (% :val))) => false
+  (h/pred-> {:a 1 :val 1} [:val 1]) => true
+  (h/pred-> {:a 1 :val 1} [:val even?]) => false
+  (h/pred-> {:a 1 :val 1} [:val '(= 1)]) => true
+  (h/pred-> {:a 1 :val 1} [:val '(not= 1)]) => false
+  (h/pred-> {:a {:b 1}} [[:a :b] odd?]) => true
+  (h/pred-> {:a {:b 1}} [[:a :b] '(= 1) [:a] associative?]) => true)
 
-(fact "suppress-pcheck"
-  (h/suppress-pcheck "3" even?) => nil
-  (h/suppress-pcheck 3 even?) => nil
-  (h/suppress-pcheck 2 even?) => true)
+(fact "suppress-pred"
+  (h/suppress-pred "3" even?) => nil
+  (h/suppress-pred 3 even?) => nil
+  (h/suppress-pred 2 even?) => true)
   
 (fact "arg-count"
   (h/arg-counts (fn [])) => '(0)

@@ -1,5 +1,5 @@
-(ns hara.common.test-error
-  (:require [hara.common.error :as h]
+(ns hara.test-error
+  (:require [hara.error :as h]
             [midje.sweet :refer :all]))
             
 (fact "error"

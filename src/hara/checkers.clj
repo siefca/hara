@@ -1,5 +1,5 @@
 (ns hara.checkers
-  (:require [hara.common.fn :refer [check]]))
+  (:require [hara.fn :refer [check]]))
 
 (defn is-type-fn [t chk]
   (fn [obj]
@@ -17,12 +17,6 @@
 
 (defn is-ref [& [chk]]
   (is-type-fn clojure.lang.Ref chk))
-
-(defn is-ova [& [chk]]
-  (fn [obj]
-    (and (= "class hara.ova.Ova" (str (type obj)))
-        (let [schk (or chk (sequence chk))]
-          (check (persistent! obj) schk)))))
 
 (defn has-keys [ks]
   (fn [m]

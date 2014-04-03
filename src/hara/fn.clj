@@ -1,6 +1,6 @@
-(ns hara.common.fn
-  (:require [hara.common.error :refer [suppress]]
-            [hara.common.types :refer [hash-map? hash-set?]]))
+(ns hara.fn
+  (:require [hara.error :refer [suppress]]
+            [hara.type-check :refer [hash-map? hash-set?]]))
 
 ;; ## Calling Conventions
 ;;
@@ -211,37 +211,37 @@
   [obj1 obj2 sel]
   (= (get-> obj1 sel) (get-> obj2 sel)))
 
-(defn pcheck->
+(defn pred->
   "Shorthand ways of checking where `m` fits `prchk`
 
-    (pcheck-> {:a 1} :a) ;=> truthy
+    (pred-> {:a 1} :a) ;=> truthy
 
-    (pcheck-> {:a 1 :val 1} [:val 1]) ;=> true
+    (pred-> {:a 1 :val 1} [:val 1]) ;=> true
 
-    (pcheck-> {:a {:b 1}} [[:a :b] odd?]) ;=> true
+    (pred-> {:a {:b 1}} [[:a :b] odd?]) ;=> true
   "
   [obj pchk]
   (cond (vector? pchk)
         (check-all-> obj pchk)
 
         (hash-set? pchk)
-        (some (map #(pcheck-> obj %) pchk))
+        (some (map #(pred-> obj %) pchk))
 
         :else
         (check obj pchk)))
 
-(defn suppress-pcheck
+(defn suppress-pred
   "Tests obj using prchk and returns `obj` or `res` if true
 
-    (suppress-pcheck :3 even?) => nil
+    (suppress-pred :3 even?) => nil
 
-    (suppress-pcheck 3 even?) => nil
+    (suppress-pred 3 even?) => nil
 
-    (suppress-pcheck 2 even?) => true
+    (suppress-pred 2 even?) => true
   "
-  ([obj prchk] (suppress-pcheck obj prchk true))
+  ([obj prchk] (suppress-pred obj prchk true))
   ([obj prchk res]
-     (suppress (if (pcheck-> obj prchk) res))))
+     (suppress (if (pred-> obj prchk) res))))
      
 
 (defn arg-counts [f]
