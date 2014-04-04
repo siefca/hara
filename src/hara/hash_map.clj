@@ -1,5 +1,7 @@
 (ns hara.hash-map
   (:require [clojure.set :as set]
+            [hara.type-check :refer [hash-map?]]
+            [hara.error :refer [suppress]]
             [hara.fn :refer [pred->]]))
 
 (defn dissoc-in
