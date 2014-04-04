@@ -1,5 +1,5 @@
 (ns hara.test-common
-  (:require [hara.common.type-check :as h :refer [bytes?]]
+  (:require [hara.common.checks :as h :refer [bytes?]]
             [hara.common :as s]
             [midje.sweet :refer :all]))
 

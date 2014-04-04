@@ -14,7 +14,7 @@
     ;=> \"bye there, bye again\"
   "
   [s old new]
-  (.replaceAll s old new))
+  (.. s toString (replaceAll old new)))
 
 (defn starts-with?
   "Returns `true` if `s` begins with `pre`.
@@ -24,12 +24,12 @@
     (starts-with? \"prefix\" \"suf\") ;=> false
   "
   [s pre]
-  (.startsWith s pre))
+  (.. s toString (startsWith pre)))
 
 (defn ends-with?
-  "Returns `true` if `s` begins with `pre`.
+  "Returns `true` if `s` ends with `suf`.
 
     (ends-with? \"suffix\" \"fix\") ;=> true
   "
   [s suf]
-  (.endsWith s suf))
+  (.. s toString (endsWith suf)))

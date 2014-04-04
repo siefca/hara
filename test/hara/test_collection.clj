@@ -2,7 +2,7 @@
   (:require [hara.collection :as h]
             [clj-time.core :as t]
             [midje.sweet :refer :all]
-            [hara.common.type-check :refer [hash-map? bytes?]]
+            [hara.common.checks :refer [hash-map? bytes?]]
             [hara.common.error :refer [suppress]]))
 
 (fact "func-map creates a hashmap using as key the function applied to each

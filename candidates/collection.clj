@@ -1,6 +1,6 @@
 (ns hara.collection
   (:require [clojure.set :as set]
-            [hara.common.type-check :refer [hash-map? hash-set?]]))
+            [hara.common.checks :refer [hash-map? hash-set?]]))
 
  ;; ## Useful Methods
 

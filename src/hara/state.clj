@@ -1,21 +1,9 @@
 (ns hara.state
   (:require [clojure.string :as st]
             [hara.fn :refer [get-> eq->]]
-            [hara.common.type-check :refer [atom? aref?]]))
+            [hara.common.checks :refer [atom? aref?]]))
 
 ;; ## IRef Functions
-
-(defn hash-code
-  "Returns the hash-code of the object
-
-    (hash-code 1) => 1
-
-    (hash-code :1) => 1013907437
-
-    (hash-code \"1\") => 49
-  "
-  [obj]
-  (.hashCode obj))
 
 (defn hash-keyword
   "Returns a keyword repesentation of the hash-code.
@@ -25,7 +13,7 @@
     ;=> :__1__
   "
   [obj & ids]
-  (keyword (str "__" (st/join "_" (concat (map str ids) [(hash-code obj)])) "__")))
+  (keyword (str "__" (st/join "_" (concat (map str ids) [(.hashCode obj)])) "__")))
 
 (defn hash-pair
   "Combines the hash of two objects together.
@@ -34,7 +22,7 @@
     ;=> :__1_1013907437__
   "
   [v1 v2]
-  (hash-keyword v2 (hash-code v1)))
+  (hash-keyword v2 (.hashCode v1)))
 
 (defn set-value!
   "Change the value contained within a ref or atom.

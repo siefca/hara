@@ -1,7 +1,7 @@
 (ns hara.test-state
   (:use midje.sweet)
   (:require [hara.state :as h]
-            [hara.common.type-check :refer [promise? atom?]]))
+            [hara.common.checks :refer [promise? atom?]]))
 
 (fact "hash-keyword"
   (h/hash-keyword 1) => :__1__

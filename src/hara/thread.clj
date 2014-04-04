@@ -1,9 +1,22 @@
-(ns hara.common.thread)
+(ns hara.thread)
 
 (defn current
   "Returns the currenly executing thread."
   []
   (Thread/currentThread))
+
+(defn daemon
+  "Creates a new daemon thread and sets runnable to f"
+  [f]
+  (doto (Thread. f) 
+    (.setDaemon true)
+    (.start)))
+
+(defn thread
+  "Creates a new thread and sets runnable to f"
+  [f]
+  (doto (Thread. f) 
+    (.start)))
 
 (defn sleep
   "Shortcut for Thread/sleep.
@@ -24,3 +37,9 @@
   "
   ([] (interrupt (current)))
   ([thd] (.interrupt thd)))
+
+(defn periodic
+  [f ms]
+  (fn []
+    (loop [] (f) (sleep ms) (recur))))
+  

@@ -1,6 +1,6 @@
 (ns hara.hash-map
   (:require [clojure.set :as set]
-            [hara.common.type-check :refer [hash-map?]]
+            [hara.common.checks :refer [hash-map?]]
             [hara.common.error :refer [suppress]]
             [hara.fn :refer [pred->]]))
 

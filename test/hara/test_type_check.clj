@@ -1,5 +1,5 @@
 (ns hara.test-type-check
-  (:require [hara.common.type-check :as h :refer [bytes?]]
+  (:require [hara.common.checks :as h :refer [bytes?]]
             [hara.common :as s]
             [midje.sweet :refer :all]))
             
@@ -37,5 +37,5 @@
 
 (fact "type-checker"
   (h/type-checker :string) => (exactly #'clojure.core/string?)
-  (h/type-checker :bytes) =>  (exactly #'hara.common.type-check/bytes?)
+  (h/type-checker :bytes) =>  (exactly #'hara.common.checks/bytes?)
   (h/type-checker :other) =>  nil)
