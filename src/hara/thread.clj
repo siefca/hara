@@ -38,8 +38,10 @@
   ([] (interrupt (current)))
   ([thd] (.interrupt thd)))
 
-(defn periodic
-  [f ms]
-  (fn []
-    (loop [] (f) (sleep ms) (recur))))
-  
+
+(comment
+  (defn periodic
+    [f ms]
+    (fn []
+      (loop [] (f) (sleep ms) (recur))))
+)

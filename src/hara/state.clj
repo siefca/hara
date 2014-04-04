@@ -1,6 +1,6 @@
 (ns hara.state
   (:require [clojure.string :as st]
-            [hara.fn :refer [get-> eq->]]
+            [hara.expression :refer [get-> eq->]]
             [hara.common.checks :refer [atom? aref?]]))
 
 ;; ## IRef Functions
