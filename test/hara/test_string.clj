@@ -1,5 +1,5 @@
 (ns hara.test-string
-  (:require [hara.string :as h]
+  (:require [hara.common.string :as h]
             [midje.sweet :refer :all]))
 
 (fact "replace-all"

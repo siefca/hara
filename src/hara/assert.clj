@@ -1,4 +1,4 @@
-(ns hara.checkers
+(ns hara.assert
   (:require [hara.fn :refer [check]]))
 
 (defn is-type-fn [t chk]

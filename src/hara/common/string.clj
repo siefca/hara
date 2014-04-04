@@ -1,4 +1,4 @@
-(ns hara.string)
+(ns hara.common.string)
 
 ;; ## String
 ;;

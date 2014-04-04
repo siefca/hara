@@ -1,6 +1,6 @@
 (ns hara.test-fn
   (:require [hara.fn :as h]
-            [hara.type-check :refer [hash-map? hash-set?]]
+            [hara.common.type-check :refer [hash-map? hash-set?]]
             [midje.sweet :refer :all]))
 
 (facts "call "

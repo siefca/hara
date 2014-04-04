@@ -1,4 +1,4 @@
-(ns hara.thread)
+(ns hara.common.thread)
 
 (defn current
   "Returns the currenly executing thread."

@@ -1,4 +1,4 @@
-(ns hara.type-check)
+(ns hara.common.type-check)
 
 ;; ## Type Predicates
 ;;
