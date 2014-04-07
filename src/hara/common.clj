@@ -1,6 +1,7 @@
 (ns hara.common
   (:require [hara.import :as im]
             [hara.common.checks]
+            [hara.common.hash]
             [hara.common.error]
             [hara.common.primitives]))
             
