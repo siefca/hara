@@ -2,6 +2,12 @@
   (:require [hara.common.checks :refer [bytes?]]
             [hara.common.error :refer [error]]))
 
+;; Constants
+
+(defn T [& args] true)
+
+(defn F [& args] false)
+
 ;; ## Constructors
 
 (defn queue

@@ -1,4 +1,4 @@
-(ns hara.lettering
+(ns hara.text.lettering
   (:require [clojure.string :as st]))
 
 (defn gsub

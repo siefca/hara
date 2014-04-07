@@ -43,7 +43,7 @@
   ([m k v & kvs]
      (apply assoc-nil (assoc-nil m k v) kvs)))
 
-(defn assoc-nil-in
+(defn assoc-in-nil
   [m ks v]
   (if (get-in m ks) m (assoc-in m ks v)))
 

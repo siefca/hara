@@ -1,8 +1,8 @@
-(ns hara.test-type-check
+(ns hara.common.test_checks
   (:require [hara.common.checks :as h :refer [bytes?]]
             [hara.common :as s]
             [midje.sweet :refer :all]))
-            
+
 
 (fact "type-predicates"
   (h/boolean? true) => true
@@ -33,7 +33,7 @@
   (h/ideref? (promise)) => true)
 
 (fact "promise?"
-  (h/promise? (future (inc 1))) => true)
+  (h/promise? (promise)) => true)
 
 (fact "type-checker"
   (h/type-checker :string) => (exactly #'clojure.core/string?)

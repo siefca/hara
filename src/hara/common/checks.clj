@@ -117,12 +117,12 @@
 (defn promise?
   "Returns `true` is `x` is a promise
 
-    (promise? (future (inc 1))) ;=> true
+    (promise? (promise)) ;=> true
   "
   [obj]
-  (let [s (str (type obj))]
-    (or (.startsWith s "class clojure.core$promise$")
-        (.startsWith s "class clojure.core$future_call$"))))
+  (let [s (.getName (type obj))]
+    (.startsWith s "clojure.core$promise$")))
+
 
 (defn type-checker
   "Returns the checking function associated with `k`
@@ -131,8 +131,7 @@
     ;=> #'clojure.core/string?
 
     (type-checker :bytes)
-    ;=> #'adi.utils/bytes?
+    ;=> #'hara.common.checks/bytes?
    "
   [k]
   (resolve (symbol (str (name k) "?"))))
-

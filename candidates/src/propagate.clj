@@ -1,20 +1,8 @@
-(ns hara.propagate
+(ns hara.concurrent.propagate
   (:require [hara.common.error :refer [suppress]]
-            [hara.common.checks :refer [atom? aref? iref?]]))
-
-(defn set-value!
-  "Change the value contained within a ref or atom.
-
-    @(set-value! (atom 0) 1)
-    ;=> 1
-
-    @(set-value! (ref 0) 1)
-    ;=> 1
-  "
-  [rf obj]
-  (cond (atom? rf) (reset! rf obj)
-        (aref? rf) (dosync (ref-set rf obj)))
-  rf)
+            [hara.common.checks :refer [atom? aref? iref?]]
+            [hara.protocol.stateful :refer [IStateful]]
+            [hara.concurrent.state :refer [set-state]]))
 
 (def nothing ::nothing)
 
@@ -24,19 +12,19 @@
 (defn straight-through [& [x]] x)
 
 (defn cell-state
-  ([label content]
+  ([{:keys [label content ref-fn]}]
      {:label       (atom label)
-      :content     (ref content)
+      :content     (ref-fn content)
       :propagators (atom #{})}))
 
 (defn propagator-state
-  ([label in-cells out-cell tf tdamp concurrent]
-     {:label (atom label)
-      :in-cells (atom in-cells)
-      :out-cell (atom out-cell)
-      :tf (atom tf)
-      :tdamp (atom tdamp)
-      :concurrent? (atom concurrent)}))
+  ([{:keys [label in-cells out-cell tf tdamp concurrent]}]
+     {:label      (atom label)
+      :in-cells   (atom in-cells)
+      :out-cell   (atom out-cell)
+      :tf         (atom tf)
+      :tdamp      (atom (or tdamp =))
+      :concurrent (atom concurrent)}))
 
 (defprotocol PutProtocol
   (put! [mut k val]))
@@ -56,22 +44,23 @@
                     nothing)]
       (if-not (or (nothing? out)
                   (suppress (tdamp @outcell out)))
-        (if (:concurrent? pg)
-          (future (outcell out))
-          (outcell out)))))
+          (outcell out))))
 
   clojure.lang.ILookup
   (valAt [pg k] (if-let [res (get state k)]
                     (if (iref? res)
                       @res res)))
-  (valAt [pg k not-found] (or (get pg k) not-found))
+  (valAt [pg k not-found] (or (get pg k) not-found)))
 
-  PutProtocol
+
+(extend-type
+    PutProtocol
   (put! [pg k val]
     (if-let [res (get state k)]
       (if (iref? res)
-       (set-value! res val)))
+        (set-state res val)))
     pg))
+
 
 (defprotocol CellProtocol
   (register-propagator [cell pg])
@@ -94,7 +83,7 @@
   (put! [cell k val]
     (if-let [res (get state k)]
       (if (iref? res)
-        (set-value! res val)))
+        (set-state res val)))
     cell)
 
   clojure.lang.ILookup
@@ -121,24 +110,25 @@
 
 (defn cell
   ([] (cell nothing))
-  ([content] (Cell. (cell-state nil content)))
-  ([label content] (Cell. (cell-state label content))))
+  ([content] (cell nil content {}) )
+  ([label content {:keys [label content ref-fn] :as options}]
+     (Cell. (cell-state
+             (assoc options
+               :label label
+               :content content)))))
 
 (defn propagator
   ([label] (propagator label straight-through))
-  ([label tf] (propagator label tf =))
-  ([label tf tdamp] (propagator label [] nil tf tdamp))
-  ([in-cells out-cell tf tdamp]
-     (propagator nil [] nil tf tdamp))
-  ([label in-cells out-cell tf tdamp]
-     (Propagator. (propagator-state label in-cells out-cell tf tdamp true))))
+  ([label & {:keys [in-cells out-cell tf tdamp concurrent] :as options}]
+     (Propagator. (propagator-state
+                   (assoc options
+                     :lobel label)))))
 
 (defn connect
   ([sources sink] (connect nil sources sink straight-through))
-  ([sources sink tf] (connect nil sources sink tf =))
-  ([label sources sink tf] (connect label sources sink tf =))
-  ([label sources sink tf tdamp]
-     (let [pg (propagator label sources sink tf tdamp)]
+  ([sources sink tf] (connect nil sources sink tf {}))
+  ([sources sink tf & {:keys [label in-cells out-cell tdamp concurrent] :as options}]
+     (let [pg (propagator (assoc options :tf tf))]
        (doseq [s sources]
          (register-propagator s pg))
        pg)))
@@ -149,6 +139,9 @@
       (deregister-propagator s pg))
     (put! pg :in-cells [])
     (put! pg :out-cell nil)))
+
+(defn- label-or-hash [obj]
+    [(or (:label obj) (.hashCode obj))])
 
 (defmethod print-method
   Propagator
@@ -170,10 +163,17 @@
      (format "<Cell@%s %s>"
              hash @cell))
    w))
-   
+
 (comment
   (defn network [inputs output f])
 
-  (defn- label-or-hash [obj]
-    [(or (:label obj) (.hashCode obj))]))
+  (def a (cell 1))
+  (def b (cell 1))
+  (def c (cell 1))
 
+  (def pg0 (connect [a b] c +) )
+
+  (a 5)
+  @c
+
+  )

@@ -19,9 +19,10 @@
     (error \"This is an error\")
     ;=> (throws Exception)
   "
-  ([e] `(throw (Exception. (str ~e))))
-  ([e & more]
-     `(throw (Exception. (str ~e ~@more)))))
+  [e opt? & more]
+  `(if (instance? Throwable ~e)
+     (throw (Exception. (str ~opt? ~@more) ~e))
+     (throw (Exception. (str ~e ~opt? ~@more)))))
 
 (defn error-message
   "Returns the the error message associated with `e`.
