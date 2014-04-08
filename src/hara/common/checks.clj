@@ -18,13 +18,6 @@
   "
   [x] (instance? clojure.lang.APersistentMap x))
 
-(defn hash-set?
-  "Returns `true` if `x` implements `clojure.lang.IPersistentHashSet`.
-
-    (hash-set? #{}) ;=> true
-  "
-  [x] (instance? clojure.lang.PersistentHashSet x))
-
 (defn long?
   "Returns `true` if `x` is of type `java.lang.Long`.
 

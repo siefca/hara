@@ -26,6 +26,3 @@
          `(quote ~vars)))
      ~(if more
         `(import ~@more))))
-
-(defn ns-vars [ns]
-  (vec (sort (keys (ns-publics ns)))))

@@ -8,7 +8,6 @@
   (h/boolean? true) => true
   (h/boolean? false) => true
   (h/hash-map? {}) => true
-  (h/hash-set? #{}) => true
   (h/long? 1) => true
   (h/long? 1N) => false
   (h/bigint? 1N) => true
