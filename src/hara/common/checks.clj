@@ -63,6 +63,13 @@
   "
   [x] (instance? java.net.URI x))
 
+(defn regex?
+  "Returns `true` if `x` implements `clojure.lang.IPersistentMap`.
+
+    (regex? #\"\\d+\") ;=> true
+  "
+  [x] (instance? java.util.regex.Pattern x))
+  
 (defn bytes?
   "Returns `true` if `x` is a primitive `byte` array.
 
