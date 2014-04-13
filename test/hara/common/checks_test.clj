@@ -1,8 +1,33 @@
-(ns hara.common.test_checks
-  (:require [hara.common.checks :as h :refer [bytes?]]
-            [hara.common :as s]
+(ns hara.common.checks-test
+  (:require [hara.common.checks :refer :all]
             [midje.sweet :refer :all]))
 
+^{:refer hara.common.checks/boolean?
+  :added "2.0.1"}
+(fact "Returns `true` if `x` is of type `java.lang.Boolean`."
+
+  (boolean? false) => true
+
+  (boolean? nil) => false)
+
+^{:refer hara.common.checks/hash-map?
+  :added "2.0.1"}
+(fact "Returns `true` if `x` implements `clojure.lang.IPersistentMap`."
+
+  (hash-map? {}) => true
+
+  (hash-map? []) => false
+
+  ^:hidden
+  (hash-map? {:a 1 :b 2}) => true)
+
+^{:refer hara.common.checks/long?
+  :added "2.0.1"}
+(fact "Returns `true` if `x` is of type `java.lang.Long`."
+
+  (long? 1) => true
+
+  (long? 1N) => false)
 
 (fact "type-predicates"
   (h/boolean? true) => true

@@ -1,15 +1,8 @@
 (ns hara.expression.shorthand
   (:require [hara.common.checks :refer [hash-set? hash-map?]]
             [hara.common.error :refer [error suppress]]
-            [hara.expression.resolve :refer [resolve-ns]]
+            [hara.namespace.resolve :refer [resolve-ns]]
             [hara.function.dispatch :refer [call]]))
-
-(defprotocol IHello
-  (hello [self]))
-
-(extend-protocol IHello
-  Object
-  (hello [self] "hello"))
 
 (defn shorthand-form
   "Makes an expression using `sym`

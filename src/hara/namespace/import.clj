@@ -1,4 +1,4 @@
-(ns hara.import
+(ns hara.namespace.import
   (:refer-clojure :exclude [import]))
 
 (defn import-var [name ^clojure.lang.Var var]

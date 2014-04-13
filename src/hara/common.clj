@@ -1,5 +1,5 @@
 (ns hara.common
-  (:require [hara.import :as im]
+  (:require [hara.namespace.import :as im]
             [hara.common.checks]
             [hara.common.hash]
             [hara.common.error]
