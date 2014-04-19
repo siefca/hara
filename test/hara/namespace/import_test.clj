@@ -3,10 +3,6 @@
   (:require [hara.namespace.import :refer :all])
   (:refer-clojure :exclude [import]))
 
-(require 'hara.common.error)
-(ns-get 'hara.common.error)
-(ns-temp-eval)
-
 ^{:refer hara.namespace.import/import-var}
 (fact "Imports a single var from one namespace to the current one."
 

@@ -7,5 +7,4 @@
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
                    :plugins [[lein-midje "3.1.3"]
                              [lein-repack "0.1.2"]]}}
-                           
   :repack {:levels 2})

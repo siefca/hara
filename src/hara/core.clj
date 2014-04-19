@@ -1,5 +1,5 @@
 (ns hara.core
-  (refer-clojure :exclude [comp if-let when-let]))
+  (:refer-clojure :exclude [comp if-let when-let]))
 
 (defn comp
   "Same as `clojure.core/comp` except that the functions will shortcircuit on nil.
