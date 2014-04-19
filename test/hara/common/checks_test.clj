@@ -1,65 +1,111 @@
 (ns hara.common.checks-test
-  (:require [hara.common.checks :refer :all]
-            [midje.sweet :refer :all]))
+  (:use midje.sweet)
+  (:require [hara.common.checks :refer :all]))
 
-^{:refer hara.common.checks/boolean?
-  :added "2.0.1"}
+^{:refer hara.common.checks/boolean? :added "2.0"}
 (fact "Returns `true` if `x` is of type `java.lang.Boolean`."
 
-  (boolean? false) => true
+   (boolean? true)   => true
+   (boolean? false)  => true
 
-  (boolean? nil) => false)
+   ^:hidden
+   (boolean? nil)    => false
+   (boolean? 1)      => false)
 
-^{:refer hara.common.checks/hash-map?
-  :added "2.0.1"}
-(fact "Returns `true` if `x` implements `clojure.lang.IPersistentMap`."
+^{:refer hara.common.checks/hash-map? :added "2.0"}
+(fact "Returns `true` if `x` implements `clojure.lang.APersistentMap`."
 
-  (hash-map? {}) => true
+   (hash-map? {})    => true
+   (hash-map? [])    => false)
 
-  (hash-map? []) => false
-
-  ^:hidden
-  (hash-map? {:a 1 :b 2}) => true)
-
-^{:refer hara.common.checks/long?
-  :added "2.0.1"}
+^{:refer hara.common.checks/long? :added "2.0"}
 (fact "Returns `true` if `x` is of type `java.lang.Long`."
 
-  (long? 1) => true
+  (long? 1)          => true
+  (long? 1N)         => false)
 
-  (long? 1N) => false)
+^{:refer hara.common.checks/bigint? :added "2.0"}
+(fact "Returns `true` if `x` is of type `clojure.lang.BigInt`."
 
-(fact "type-predicates"
-  (h/boolean? true) => true
-  (h/boolean? false) => true
-  (h/hash-map? {}) => true
-  (h/long? 1) => true
-  (h/long? 1N) => false
-  (h/bigint? 1N) => true
-  (h/bigdec? 1M) => true
-  (h/instant? (s/instant 0)) => true
-  (h/uuid? (s/uuid)) => true
-  (h/bytes? (byte-array 8)) => true)
+  (bigint? 1N)       => true
+  (bigint? 1)        =>  false
+)
 
-(fact "atom?"
-  (h/atom? (atom 0)) => true)
+^{:refer hara.common.checks/bigdec? :added "2.0"}
+(fact "Returns `true` if `x` is of type `java.math.BigDecimal`."
 
-(fact "aref?"
-  (h/aref? (ref 0)) => true)
+  (bigdec? 1M)       => true
+  (bigdec? 1.0)      => false)
 
-(fact "iref?"
-  (h/iref? (atom 0)) => true
-  (h/iref? (ref 0)) => true)
+^{:refer hara.common.checks/instant? :added "2.0"}
+(fact "Returns `true` if `x` is of type `java.util.Date`."
 
-(fact "ideref?"
-  (h/ideref? (atom 0)) => true
-  (h/ideref? (ref 0)) => true
-  (h/ideref? (promise)) => true)
+  (instant? (java.util.Date.)) => true)
 
-(fact "promise?"
-  (h/promise? (promise)) => true)
+^{:refer hara.common.checks/uuid? :added "2.0"}
+(fact "Returns `true` if `x` is of type `java.util.UUID`."
 
-(fact "type-checker"
-  (h/type-checker :string) => (exactly #'clojure.core/string?)
-  (h/type-checker :bytes) =>  (exactly #'hara.common.checks/bytes?)
-  (h/type-checker :other) =>  nil)
+  (uuid? (java.util.UUID/randomUUID)) => true)
+
+^{:refer hara.common.checks/uri? :added "2.0"}
+(fact "Returns `true` if `x` is of type `java.net.URI`."
+
+  (uri? (java.net.URI. "http://www.google.com")) => true)
+
+^{:refer hara.common.checks/regex? :added "2.0"}
+(fact "Returns `true` if `x` implements `clojure.lang.IPersistentMap`."
+
+  (regex? #"\d+") => true
+ )
+
+^{:refer hara.common.checks/bytes? :added "2.0"}
+(fact "Returns `true` if `x` is a primitive `byte` array."
+
+  (bytes? (byte-array 8)) => true)
+
+^{:refer hara.common.checks/atom? :added "2.0"}
+(fact "Returns `true` if `x` is of type `clojure.lang.Atom`."
+
+  (atom? (atom nil)) => true
+)
+
+^{:refer hara.common.checks/ref? :added "2.0"}
+(fact "Returns `true` if `x` is of type `clojure.lang.Ref`."
+
+  (ref? (ref nil)) => true
+)
+
+^{:refer hara.common.checks/agent? :added "2.0"}
+(fact "Returns `true` if `x` is of type `clojure.lang.Agent`."
+
+  (agent? (agent nil)) => true)
+
+^{:refer hara.common.checks/iref? :added "2.0"}
+(fact "Returns `true` if `x` is of type `clojure.lang.IRef`."
+
+  (iref? (atom 0))  => true
+  (iref? (ref 0))   => true
+  (iref? (agent 0)) => true
+  (iref? (promise)) => false
+  (iref? (future))  => false)
+
+^{:refer hara.common.checks/ideref? :added "2.0"}
+(fact "Returns `true` if `x` is of type `java.lang.IDeref`."
+
+  (ideref? (atom 0))  => true
+  (ideref? (promise)) => true
+  (ideref? (future))  => true)
+
+^{:refer hara.common.checks/promise? :added "2.0"}
+(fact "Returns `true` is `x` is a promise"
+
+  (promise? (promise)) => true
+  (promise? (future))  => false)
+
+^{:refer hara.common.checks/type-checker :added "2.0"}
+(fact "Returns the checking function associated with `k`"
+
+  (type-checker :string) => #'clojure.core/string?
+
+  (require '[hara.common.checks :refer [bytes?]])
+  (type-checker :bytes)  => #'hara.common.checks/bytes?)

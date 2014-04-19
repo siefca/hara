@@ -4,18 +4,40 @@
 
 ;; Constants
 
-(defn T [& args] true)
+(defn T
+  "Returns `true` for any combination of input `args`
 
-(defn F [& args] false)
+  (T) => true
+  (T :hello) => true
+  (T 1 2 3) => true"
+  {:added "2.0"}
+  [& args] true)
 
+(defn F
+  "Returns `false` for any combination of input `args`
+
+  (F) => false
+  (F :hello) => false
+  (F 1 2 3) => false"
+  {:added "2.0"}
+  [& args] false)
+
+(defn NIL
+  "Returns `nil` for any combination of input `args`
+
+  (NIL) => nil
+  (NIL :hello) => nil
+  (NIL 1 2 3) => nil"
+  {:added "2.0"}
+  [& args] nil)
 ;; ## Constructors
 
 (defn queue
   "Returns a `clojure.lang.PersistentQueue` object.
 
-    (def a (queue 1 2 3 4))
-    (seq (pop a) ;=> [2 3 4]
-  "
+  (def a (queue 1 2 3 4))
+  (pop a) => [2 3 4]"
+  {:added "2.0"}
   ([] (clojure.lang.PersistentQueue/EMPTY))
   ([x] (conj (queue) x))
   ([x & xs] (apply conj (queue) x xs)))
@@ -23,11 +45,11 @@
 (defn uuid
   "Returns a `java.util.UUID` object
 
-    (uuid) ;=> <random uuid>
+  (uuid) =>  <random uuid>
 
-    (uuid \"00000000-0000-0000-0000-000000000000\")
-    ;=> #uuid \"00000000-0000-0000-0000-000000000000\"
-  "
+  (uuid \"00000000-0000-0000-0000-000000000000\")
+  => #uuid \"00000000-0000-0000-0000-000000000000\""
+  {:added "2.0"}
   ([] (java.util.UUID/randomUUID))
   ([id]
      (cond (string? id)
@@ -41,17 +63,17 @@
 (defn instant
   "Returns a `java.util.Date` object
 
-    (instant) ;=> <current time>
+  (instant) =>  <current time>
 
-    (instant 0) ;=> 1970-01-01T00:00:00.000-00:00
-  "
+  (instant 0) => #inst \"1970-01-01T00:00:00.000-00:00\""
+  {:added "2.0"}
   ([] (java.util.Date.))
   ([val] (java.util.Date. val)))
 
 (defn uri
   "Returns a `java.net.URI` object
 
-    (uri \"http://www.google.com\")
-    ;=> #<URI http://www.google.com>
-  "
+  (uri \"http://www.google.com\")
+  => #(instance? java.net.URI %)"
+  {:added "2.0"}
   [path] (java.net.URI/create path))

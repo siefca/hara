@@ -16,35 +16,28 @@
 (defmacro error
   "Throws an exception when called.
 
-    (error \"This is an error\")
-    ;=> (throws Exception)
-  "
-  [e opt? & more]
+  (error \"This is an error\")
+  => (throws Exception \"This is an error\")
+
+  (error (Exception. \"This is an error\")
+         \"This is a chained error\")
+  => (throws Exception \"This is a chained error\")"
+  {:added "2.0"}
+  [e & [opt? & more]]
   `(if (instance? Throwable ~e)
      (throw (Exception. (str ~opt? ~@more) ~e))
      (throw (Exception. (str ~e ~opt? ~@more)))))
 
-(defn error-message
-  "Returns the the error message associated with `e`.
-
-    (error-message (Exception. \"error\")) => \"error\"
-  "
-  [e]
-  (.getMessage e))
-
-(defn error-stacktrace
-  "Returns the the error message associated with `e`.
-  "
-  [e]
-  (.getStackTrace e))
-
 (defmacro suppress
-  "Suppresses any errors thrown.
+  "Suppresses any errors thrown in the body.
+  (suppress (error \"Error\")) => nil
 
-    (suppress (error \"Error\")) ;=> nil
+  (suppress (error \"Error\") :error) => :error
 
-    (suppress (error \"Error\") :error) ;=> :error
-  "
+  (suppress (error \"Error\")
+            (fn [e]
+              (.getMessage e))) => \"Error\""
+  {:added "2.0"}
   ([body]
      `(try ~body (catch Throwable ~'t)))
   ([body catch-val]
