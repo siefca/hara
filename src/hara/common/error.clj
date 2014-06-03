@@ -30,6 +30,7 @@
 
 (defmacro suppress
   "Suppresses any errors thrown in the body.
+
   (suppress (error \"Error\")) => nil
 
   (suppress (error \"Error\") :error) => :error

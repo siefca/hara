@@ -14,6 +14,7 @@
 
 ^{:refer hara.common.error/suppress :added "2.0"}
 (fact "Suppresses any errors thrown in the body."
+
   (suppress (error "Error")) => nil
 
   (suppress (error "Error") :error) => :error

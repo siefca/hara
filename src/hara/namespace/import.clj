@@ -7,7 +7,9 @@
   (import-var 'ifl #'clojure.core/if-let)
   =>  #'hara.namespace.import-test/ifl
   (eval '(ifl [a 1] (inc a))) => 2
+  
   "
+  {:added "2.0"}
   [name ^clojure.lang.Var var]
   (if (.hasRoot var)
     (intern *ns* (with-meta name (merge (meta var)
@@ -20,7 +22,9 @@
   (import-namespace 'hara.common.checks '[bytes? long?])
   (eval '(long? 1))  => true
   (eval '(bytes? 1)) => false
+  
   "
+  {:added "2.0"}
   ([ns] (import-namespace ns nil))
   ([ns vars]
      (let [all-vars (ns-publics ns)
@@ -39,7 +43,9 @@
 
   (import hara.common.checks :all) => nil
   (eval '(bigint? 1)) => false
+
   "
+  {:added "2.0"}
   [nsp vars & more]
   `(do
      (require (quote ~nsp))
