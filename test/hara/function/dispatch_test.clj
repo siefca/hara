@@ -2,14 +2,14 @@
   (:use midje.sweet)
   (:require [hara.function.dispatch :refer :all]))
 
-^{:refer hara.function.dispatch/call :added "2.0"}
+^{:refer hara.function.dispatch/call :added "2.1"}
 (fact "Executes `(f v1 ... vn)` if `f` is not nil"
 
   (call nil 1 2 3) => nil
 
   (call + 1 2 3) => 6)
 
-^{:refer hara.function.dispatch/msg :added "2.0"}
+^{:refer hara.function.dispatch/msg :added "2.1"}
 (fact "Message dispatch for object orientated type calling convention."
 
   (def obj {:a 10

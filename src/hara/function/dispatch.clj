@@ -13,9 +13,8 @@
 
   (call nil 1 2 3) => nil
 
-  (call + 1 2 3) => 6
-  "
-  {:added "2.0"}
+  (call + 1 2 3) => 6"
+  {:added "2.1"}
   ([f] (if-not (nil? f) (f)) )
   ([f v] (if-not (nil? f) (f v)))
   ([f v1 v2] (if-not (nil? f) (f v1 v2)))
@@ -31,9 +30,8 @@
             :get-sum (fn [this]
                       (+ (:b this) (:a this)))})
 
-  (msg obj :get-sum) => 30
-  "
-  {:added "2.0"}
+  (msg obj :get-sum) => 30"
+  {:added "2.1"}
   ([obj kw] (call (obj kw) obj))
   ([obj kw v] (call (obj kw) obj v))
   ([obj kw v1 v2] (call (obj kw) obj v1 v2))

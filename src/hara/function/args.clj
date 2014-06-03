@@ -5,9 +5,8 @@
 
   (vargs? (fn [x])) => false
 
-  (vargs? (fn [x & xs])) => true
-  "
-  {:added "2.0"}
+  (vargs? (fn [x & xs])) => true"
+  {:added "2.1"}
   [f]
   (if (some #(= "getRequiredArity" (.getName %))
            (.getDeclaredMethods (class f)))
@@ -19,9 +18,8 @@
 
   (varg-count (fn [x y & xs])) => 2
   
-  (varg-count (fn [x])) => nil
-  "
-  {:added "2.0"}
+  (varg-count (fn [x])) => nil"
+  {:added "2.1"}
   [f]
   (if (some #(= "getRequiredArity" (.getName %))
            (.getDeclaredMethods (class f)))
@@ -34,9 +32,8 @@
   
   (arg-count (fn [x & xs])) => []
   
-  (arg-count (fn ([x]) ([x y]))) => [1 2]
-  "
-  {:added "2.0"}
+  (arg-count (fn ([x]) ([x y]))) => [1 2]"
+  {:added "2.1"}
   [f]
   (let [ms (filter #(= "invoke" (.getName %))
                    (.getDeclaredMethods (class f)))
