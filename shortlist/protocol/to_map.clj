@@ -1,16 +1,16 @@
 (ns hara.protocol.data)
 
-(defprotocol ToMap
+(defprotocol IMap
   (to-map [x]))
 
-(defprotocol ToString
+(defprotocol IString
   (to-string [x]))
 
 (defmulti from-string
   (fn [s & [meta]]
     (:tag meta)))
 
-(extend-protocol ToString
+(extend-protocol IString
   clojure.lang.Symbol
   (to-string [x]
     [(str x) {:tag :symbol}])
@@ -18,12 +18,12 @@
   clojure.lang.Keyword
   (to-string [x]
     [(subs (str x) 1) {:tag :keyword}])
-
+    
   Class
   (to-string [x]
     [(subs (str x) 1) {:tag :class}]))
 
-(extend-protocol ToMap
+(extend-protocol IMap
   java.util.Map
   (to-map [x]
     [(into {} x)
@@ -36,7 +36,7 @@
 
   Class
   (to-string [x]
-    [(subs (str x) 1) {:tag :class}]))
+    [(subs (. x) 1) {:tag :class}]))
 
 
 (into {}
