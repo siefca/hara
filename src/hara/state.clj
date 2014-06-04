@@ -1,7 +1,7 @@
 (ns hara.state
   (:require [hara.common.error :refer [error]]
             [hara.common.checks :refer [promise?]]
-            [hara.protocol.state :refer [IStateful] :as p ]))
+            [hara.protocol.state :refer [IStateful]]))
 
 (extend-type clojure.lang.Atom
   IStateful

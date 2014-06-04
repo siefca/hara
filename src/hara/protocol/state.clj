@@ -7,20 +7,35 @@
   (-set [obj opts v]))
 
 (defn get
-  "get"
+  "Like deref but is extensible through the IStateful protocol
+
+  (p/get (atom 1)) => 1
+  
+  (p/get (ref 1)) => 1"
+  {:added "2.1"}
   ([obj] (get obj nil))
   ([obj opts]
      (-get obj opts)))
 
 (defn set
-  "set"
+  "Like reset! but is extensible through the IStateful protocol
+
+  (let [a (atom nil)]
+    (p/set a 1)
+    @a) => 1"
+  {:added "2.1"}
   ([obj v] (set obj nil v))
   ([obj opts v]
      (-set obj opts v)
      obj))
 
 (defn update
-  "update"
+  "Like swap! but is extensible through the IStateful protocol
+
+  (let [a (atom 0)]
+    (p/update a inc)
+    @a) => 1"
+  {:added "2.1"}
   ([obj f]
      (update obj nil f [])
      obj)
