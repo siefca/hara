@@ -1,24 +1,23 @@
 (ns hara.state
   (:require [hara.common.error :refer [error]]
             [hara.common.checks :refer [promise?]]
-            [hara.protocol.state :refer [IStateful]]))
+            [hara.protocol.state :refer [ISetState IGetState]]))
+
+(extend-type clojure.lang.IDeref
+  IGetState
+  (-get-state [obj _]
+    (deref obj)))
 
 (extend-type clojure.lang.Atom
-  IStateful
-  (-get [obj _]
-    (deref obj))
-
-  (-set [obj _ v]
+  ISetState
+  (-set-state [obj _ v]
     (reset! obj v))
 
-  (-update [obj _ f args ]
+  (-update-state [obj _ f args ]
     (apply swap! obj f args)))
 
 (extend-type clojure.lang.Ref
-  IStateful
-  (-get [obj _]
-    (deref obj))
-
+  ISetState
   (-set-state [obj _ v]
     (dosync (ref-set obj v)))
 
@@ -26,24 +25,22 @@
     (dosync (apply alter obj f args))))
 
 (extend-type clojure.lang.Agent
-  IStateful
-  (-get [obj _]
-    (deref obj))
-
-  (-set [obj _ v]
+  ISetState
+  (-set-state [obj _ v]
     (send obj (fn [_] v)))
 
-  (-update [obj _ f args]
+  (-update-state [obj _ f args]
     (println obj f args)
     (apply send obj f args)))
 
 (extend-type clojure.lang.IPending
-  IStateful
-  (-get [obj _]
+  IGetState
+  (-get-state [obj _]
     (if (.isRealized obj)
       (deref obj)))
 
-  (-set [obj _ v]
+  ISetState
+  (-set-state [obj _ v]
     (cond (.isRealized obj)
           (error "Already realised: " obj)
 
@@ -53,7 +50,7 @@
           :else
           (error "Cannot set state for: " obj)))
 
-  (-update [obj _ f args]
+  (-update-state [obj _ f args]
     (cond (.isRealized obj)
           (error "Already realised: " obj)
 
