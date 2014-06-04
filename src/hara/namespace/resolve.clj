@@ -22,6 +22,6 @@
   "lists the vars in a particular namespace
   
   (ns-vars 'hara.namespace.resolve) => '[ns-vars resolve-ns]"
-  {:added "2.1"} 
+  {:added "2.1"}
   [ns]
   (vec (sort (keys (ns-publics ns)))))

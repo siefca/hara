@@ -1,9 +1,10 @@
-(ns hara.protocol.stateful)
+(ns hara.protocol.state
+  (:refer-clojure :exclude [get]))
 
 (defprotocol IStateful
-  (-get-state [obj opts])
-  (-update-state [obj opts f args])
-  (-set-state [obj opts v]))
+  (-get [obj opts])
+  (-update [obj opts f args])
+  (-set [obj opts v]))
 
 (defn get-state
   ([obj] (-get-state obj nil))
@@ -18,7 +19,7 @@
 
 (defn update-state
   ([obj f]
-     (-update-state obj nil f [])
+     (update-state obj nil f [])
      obj)
   ([obj opts? f & args]
      (let [[opts f args]
