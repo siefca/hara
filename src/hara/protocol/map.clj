@@ -1,16 +1,9 @@
-(ns hara.protocol.map
-  (:require [hara.protocol.constructor :as constructor]))
+(ns hara.protocol.map)
+
+(defprotocol ILookup
+  (-get [obj k])
+  (-get-in [obj ks]))
 
 (defprotocol IMap
   (-to-map [obj])
   (-to-map-meta [obj]))
-
-(defn to [obj])
-
-(defmulti classify (fn [m mta] (:class mta)))
-
-(defmulti coerce (fn [cls m] cls))
-
-
-
-(defmulti from (fn [cls m mta] cls))

@@ -1,6 +1,7 @@
-(ns hara.protocol.watch)
+(ns hara.protocol.watch
+  (:require [hara.expression.shorthand :refer [get->]]))
 
 (defprotocol IWatch
-  (-add    [obj opts observer])
-  (-list   [obj opts])
-  (-remove [obj opts]))
+  (-add-watch    [obj opts f])
+  (-list-watch   [obj opts])
+  (-remove-watch [obj opts]))
