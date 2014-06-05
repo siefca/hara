@@ -102,6 +102,18 @@
   (promise? (promise)) => true
   (promise? (future))  => false)
 
+^{:refer hara.common.checks/interface? :added "2.1"}
+(fact "Returns `true` if `class` is an interface"
+
+  (interface? java.util.Map) => true
+  (interface? Class) => false)
+  
+^{:refer hara.common.checks/abstract? :added "2.1"}
+(fact "Returns `true` if `class` is an abstract class"
+
+  (abstract? java.util.Map) => true
+  (abstract? Class) => false)
+
 ^{:refer hara.common.checks/type-checker :added "2.0"}
 (fact "Returns the checking function associated with `k`"
 

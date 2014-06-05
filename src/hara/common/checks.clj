@@ -134,6 +134,12 @@
   (let [s (.getName (type obj))]
     (.startsWith s "clojure.core$promise$")))
 
+(defn interface? [class]
+  (.isInterface class))
+
+(defn abstract? [class]
+  (java.lang.reflect.Modifier/isAbstract (.getModifiers class)))
+
 (defn type-checker
   "Returns the checking function associated with `k`
 
