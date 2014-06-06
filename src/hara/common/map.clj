@@ -3,15 +3,18 @@
   (:refer-clojure :exclude [get get-in] :as core))
   
 (defn get
-  "get" [obj k]
+  "get"
+  [obj k]
   (-get obj k))
 
 (defn get-in
-  "get-in" [obj ks]
+  "get-in"
+  [obj ks]
   (-get-in obj ks))
 
 (defn to
-  "to" [obj]
+  "to"
+  [obj]
   nil)
 
 ;;(defmulti classify (fn [m mta] (:class mta)))

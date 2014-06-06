@@ -9,7 +9,6 @@
 
    (boolean? true)   => true
    (boolean? false)  => true
-
    "
   {:added "2.0"}
   [x] (instance? java.lang.Boolean x))
@@ -133,12 +132,6 @@
   [obj]
   (let [s (.getName (type obj))]
     (.startsWith s "clojure.core$promise$")))
-
-(defn interface? [class]
-  (.isInterface class))
-
-(defn abstract? [class]
-  (java.lang.reflect.Modifier/isAbstract (.getModifiers class)))
 
 (defn type-checker
   "Returns the checking function associated with `k`
