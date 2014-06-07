@@ -38,4 +38,5 @@
   [obj]
   (and (instance? clojure.lang.PersistentArrayMap obj)
        (every? #(contains? obj %) [:on :on-interface :var])
-       (-> obj :on str Class/forName class?)))
+       (-> obj :on str Class/forName class?)
+       (-> obj :on-interface class?)))

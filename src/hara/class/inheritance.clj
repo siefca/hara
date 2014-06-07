@@ -1,4 +1,5 @@
 (ns hara.class.inheritance
+  (:require [clojure.set :as set])
   (:refer-clojure :exclude [list]))
 
 (defn list
@@ -30,3 +31,21 @@
        (if-not base output
                (recur base
                       (conj output [base (-> (.getInterfaces cls) seq set)]))))))
+
+
+(defn best-match
+  "finds the best matching interface or class from a list of candidates
+
+  (best-match #{Object} Long) => Object
+  (best-match #{String} Long) => nil
+  (best-match #{Object Number} Long) => Number"
+  {:added "2.1"}
+  [candidates ^Class class]
+  (or (get candidates class)
+      (->> (apply concat (tree class))
+           (map (fn [v]
+                  (if (set? v)
+                    (first (set/intersection v candidates))
+                    (get candidates v))))
+           (filter identity)
+           first)))
