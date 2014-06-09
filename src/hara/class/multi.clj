@@ -36,8 +36,8 @@
   {:added "2.1"}
   [name & more]
   (let [varname (str *ns* "/" name)
-        [docstring attr-map & [[[[cls & nargs :as args]]]]]
-        (standardize more)]
+        [docstring attr-map [[cls & nargs :as args] & body]]
+        (apply standardize more)]
     `(when-not (get *register* ~varname)
        (let [rec# {:multi (clojure.lang.MultiFn. ~varname
                                                 (fn [~'&type ~cls ~@nargs] ~'&type)
@@ -52,12 +52,17 @@
          ~args
          (if-let [rec# (get *register* ~varname)]
            (let [{:keys ~'[multi types]} rec#
-                 ~'&type (best-match ~'types ~cls)]
+                 cls# ~(if (or (empty? body)
+                               (-> body first nil?))
+                         cls
+                         `(do ~@body))
+                 ~'_  (if-not (class? cls#) (throw (Exception. (str "input " cls# " is not of type class."))))
+                 ~'&type (best-match ~'types cls#)]
              (if ~'&type
                (~'multi ~'&type ~@args)
                (throw (Exception. (format "classmulti: %s not implemented for %s"
                                           ~varname
-                                          ~cls))))))))))
+                                          cls#))))))))))
 
 (defmacro remove-classmulti
   "Uninstalls the classmulti method.
