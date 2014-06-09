@@ -10,15 +10,15 @@
   very similar to the built-in defmulti, although this will dispatch on
   the value of the class. Used mainly for metaprogramming."
 
-  (defclassmulti  display [cls])
+  (defclassmulti  display [cls] (type cls))
   (defclassmethod display CharSequence [cls] "Chars")
   (defclassmethod display Number [cls] "Number")
-  (defclassmethod display Float  [cls] "Float")
+  (defclassmethod display Double  [cls] "Double")
 
-  (display Float)  => "Float"
-  (display Long)   => "Number"
-  (display String) => "Chars"
-  (display (type {})) => (throws Exception)
+  (display 1.0)  => "Double"
+  (display (long 1)) => "Number"
+  (display "hello") => "Chars"
+  (display {}) => (throws Exception)
   ^:hidden
   (remove-classmulti display))
 
@@ -65,3 +65,15 @@
   (display String) => (throws Exception)
   ^:hidden
   (remove-classmulti display))
+  
+^{:refer hara.class.multi/list-all-classmethods :added "2.1"}
+(fact "Lists all class specific multimethods."
+  (defclassmulti display [x])
+  (defclassmethod display Object [x])
+  (defclassmethod display String [x])
+  
+  (-> (list-all-classmethods display) keys)
+  => (just [Object String] :in-any-order)
+  ^:hidden
+  (remove-classmulti display))
+  

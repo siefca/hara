@@ -21,17 +21,17 @@
 (defmacro defclassmulti
   "Defines class-based multimethod dispatch. Supporting methods are
   very similar to the built-in defmulti, although this will dispatch on
-  the value of the class. Used mainly for metaprogramming
+  the value of the class. Used mainly for metaprogramming.
 
-  (defclassmulti  display [cls])
+  (defclassmulti  display [cls] (type cls))
   (defclassmethod display CharSequence [cls] \"Chars\")
   (defclassmethod display Number [cls] \"Number\")
-  (defclassmethod display Float  [cls] \"Float\")
+  (defclassmethod display Double  [cls] \"Double\")
 
-  (display Float)  => \"Float\"
-  (display Long)   => \"Number\"
-  (display String) => \"Chars\"
-  (display (type {})) => (throws Exception)
+  (display 1.0)  => \"Double\"
+  (display (long 1)) => \"Number\"
+  (display \"hello\") => \"Chars\"
+  (display {}) => (throws Exception)
   "
   {:added "2.1"}
   [name & more]
@@ -86,12 +86,12 @@
 (defmacro defclassmethod
   "Defines a class specific multimethod.
 
-  (defclassmulti  display [cls])
-  (defclassmethod display Object [cls] \"Object\")
-  (display String) => \"Object\"
+  (defclassmulti  display [cls m])
+  (defclassmethod display Object [cls m] m)
+  (display String {}) => {}
 
-  (defclassmethod display String [cls] \"String\")
-  (display String) => \"String\"
+  (defclassmethod display String [cls m] (str m))
+  (display String {}) => \"{}\"
   "
   {:added "2.1"}
   [multi dispatch-cls args & body]
@@ -102,10 +102,11 @@
     `(when (get *register* ~varname)
        (alter-var-root #'*register*
                        (fn [reg#]
-                         (let [multifn# (get-in reg# [~varname :multi])]
-                           (.addMethod multifn# ~dispatch-cls
-                                       (fn [~'&type ~@args]
-                                         ~@body)))
+                         (-> reg# 
+                             (get-in [~varname :multi])
+                             (.addMethod ~dispatch-cls
+                                         (fn [~'&type ~@args]
+                                           ~@body)))
                          (-> reg#
                              (update-in [~varname :types] conj ~dispatch-cls))))
        ~multi)))
@@ -128,8 +129,9 @@
     `(when (get *register* ~varname)
        (alter-var-root #'*register*
                        (fn [reg#]
-                         (let [multifn# (get-in reg# [~varname :multi])]
-                           (.removeMethod multifn# ~dispatch-cls))
+                         (-> reg# 
+                             (get-in [~varname :multi])
+                             (.removeMethod ~dispatch-cls))
                          (-> reg#
                              (update-in [~varname :types] disj ~dispatch-cls))))
        ~multi)))
@@ -150,8 +152,27 @@
     `(when (get *register* ~varname)
        (alter-var-root #'*register*
                        (fn [reg#]
-                         (let [multifn# (get-in reg# [~varname :multi])]
-                           (.reset multifn#))
+                         (-> reg# 
+                             (get-in [~varname :multi])
+                             (.reset))
                          (-> reg#
                              (update-in [~varname :types] empty))))
        ~multi)))
+
+(defmacro list-all-classmethods
+  "Lists all class specific multimethods.
+  (defclassmulti display [x])
+  (defclassmethod display Object [x])
+  (defclassmethod display String [x])
+  
+  (-> (list-all-classmethods display) keys)
+  => (just [Object String] :in-any-order)
+  "
+  {:added "2.1"}
+  [multi]
+  (let [varname (or (-> multi resolve meta :multi)
+                    (str *ns* "/" multi))]
+    `(if-let [entry# (get *register* ~varname)]
+      (->> (:types entry#)
+           (map #(vector % (.getMethod (:multi entry#) %)))
+           (into {})))))  
