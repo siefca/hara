@@ -1,4 +1,4 @@
-(ns hara.common.map
+(ns hara.coerce.map
   (:require [hara.protocol.map :refer :all])
   (:refer-clojure :exclude [get get-in] :as core))
   
