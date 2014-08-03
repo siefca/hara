@@ -41,8 +41,18 @@
 (fact "creates a :default defmethod form from a protocol basis"
 
   (protocol-default-form '{:args [this], :fn data-env, :name -data}
-                         '{#{-data} ([this & args] (Exception. "No input"))})
-  => '(defmethod data-env :default [this & args] (Exception. "No input")))
+                         '{#{-data} ([this & args] nil)})
+  => '(defmethod data-env :default [this & args] nil)
+
+  (protocol-default-form '{:args [this], :fn data-env, :name -data}
+                         '{#{-data} (fn [basis]
+                                      `(~(:args basis)
+                                        (throw (Exception. (str ~(str "No implementation of " (:fn basis) " for ")
+                                                                (-> ~(-> basis :args first) :meta :type))))))})
+  => '(defmethod data-env :default [this]
+        (throw (java.lang.Exception.
+                (clojure.core/str "No implementation of data-env for "
+                                  (clojure.core/-> this :meta :type))))))
 
 ^{:refer hara.extend.abstract/protocol-multi-form :added "2.1"}
 (fact "creates a :default defmethod form from a protocol basis"

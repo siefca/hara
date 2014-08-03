@@ -84,8 +84,12 @@
   (map-walk basis defaults [] :name
             (fn [_ _] nil)
             (fn [basis defaults]
-              (concat (list 'defmethod (:fn basis) :default (first defaults))
-                (rest defaults)))))
+              (let [form (cond (#{'fn 'clojure.core/fn} (first defaults))
+                               ((eval defaults) basis)
+
+                               :else defaults)]
+                (concat (list 'defmethod (:fn basis) :default (first form))
+                        (rest form))))))
 
 (defn protocol-multi-form
   "creates a :default defmethod form from a protocol basis
