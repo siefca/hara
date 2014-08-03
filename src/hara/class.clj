@@ -1,10 +1,10 @@
 (ns hara.class
-  (:require [hara.namespace.import :as im]
+  (:require [hara.namespace.import :as ns]
             [hara.class.checks]
             [hara.class.inheritance]
             [hara.class.multi]))
             
-(im/import 
+(ns/import 
   hara.class.checks      :all
   hara.class.inheritance :all
   hara.class.multi       :all)

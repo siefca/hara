@@ -1,8 +1,8 @@
 (ns hara.extend
-  (:require [hara.namespace.import :as im]
+  (:require [hara.namespace.import :as ns]
             [hara.extend.all]
             [hara.extend.abstract]))
             
-(im/import 
+(ns/import 
   hara.extend.all        [extend-all]
-  hara.class.abstract    [extend-abstract extend-implementations])
+  hara.extend.abstract   [extend-abstract extend-implementations])

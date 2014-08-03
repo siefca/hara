@@ -1,11 +1,11 @@
 (ns hara.common
-  (:require [hara.namespace.import :as im]
+  (:require [hara.namespace.import :as ns]
             [hara.common.checks]
             [hara.common.hash]
             [hara.common.error]
             [hara.common.primitives]))
             
-(im/import 
+(ns/import 
   hara.common.checks      :all
   hara.common.error       :all
   hara.common.hash        :all
