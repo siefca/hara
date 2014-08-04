@@ -1,5 +1,4 @@
 (ns hara.class.reflect.util
-  (:require [clojure.set :as set])
   (:import [java.lang.reflect Field]))
 
 (defn box-arg [^Class param-type ^Object arg]
