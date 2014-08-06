@@ -84,7 +84,8 @@
   (map-walk basis defaults [] :name
             (fn [_ _] nil)
             (fn [basis defaults]
-              (let [form (cond (#{'fn 'clojure.core/fn} (first defaults))
+              (let [form (cond (or (symbol? defaults)
+                                   (#{'fn 'clojure.core/fn} (first defaults)))
                                ((eval defaults) basis)
 
                                :else defaults)]
