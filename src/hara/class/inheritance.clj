@@ -1,6 +1,5 @@
 (ns hara.class.inheritance
-  (:require [clojure.set :as set])
-  (:refer-clojure :exclude [list]))
+  (:require [clojure.set :as set]))
 
 (defn ancestor-list
   "Lists the direct ancestors of a class

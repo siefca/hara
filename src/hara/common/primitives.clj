@@ -77,3 +77,12 @@
   => #(instance? java.net.URI %)"
   {:added "2.0"}
   [path] (java.net.URI/create path))
+
+(defn class-array
+  ([seq] (class-array (-> seq first type) seq))
+  ([type seq]
+    (let [total (count seq)
+        arr   (make-array type total)]
+    (doseq [i (range total)]
+      (aset arr i (nth seq i)))
+    arr)))
