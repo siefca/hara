@@ -70,38 +70,34 @@
   => '((defmulti data-env (fn [this] (-> this :meta :type)))
        (defmethod data-env :default [this & args] (Exception. "No input"))))
 
-^{:refer hara.extend.abstract/protocol-extend-type-template :added "2.1"}
+^{:refer hara.extend.abstract/protocol-extend-type-wrappers :added "2.1"}
 (fact "applies form template for simple template rewrites"
 
-  (protocol-extend-type-template '{:args [this], :fn data-env, :name -data}
+  (protocol-extend-type-wrappers '{:args [this], :fn data-env, :name -data}
                                  '{-data (process %)}
                                  '(data-env this))
-  => '(process (data-env this)))
+  => '(process (data-env this))
 
-^{:refer hara.extend.abstract/protocol-extend-type-macro :added "2.1"}
-(fact "applies a macro for simple template rewrites"
-
-  (protocol-extend-type-macro '{:args [this], :fn data-env, :name -data}
-                              '{-data (fn [form basis] (concat ['apply] form [[]]))}
-                              '(data-env this))
+  (protocol-extend-type-wrappers '{:args [this], :fn data-env, :name -data}
+                                 '{-data (fn [form basis] (concat ['apply] form [[]]))}
+                                 '(data-env this))
   => '(apply data-env this []))
+
 
 ^{:refer hara.extend.abstract/protocol-extend-type-function :added "2.1"}
 (fact "utility to create a extend-type function  with template and macros"
 
   (protocol-extend-type-function '{:args [this], :fn data-env, :name -data}
-                                 '{-data (process %)}
                                  '{-data (fn [form basis] (concat ['apply] form [[]]))})
-  => '(-data [this] (apply process (data-env this) [])))
+  => '(-data [this] (apply data-env this [])))
 
 ^{:refer hara.extend.abstract/protocol-extend-type :added "2.1"}
 (fact "utility to create an extend-type form"
   (protocol-extend-type 'Type 'IProtocol
                         '[{:args [this], :fn data-env, :name -data}]
-                        '{:template (process %)
-                          :macro (fn [form basis] (concat ['apply] form [[]]))})
+                        '{:wrappers (fn [form basis] (concat ['apply] form [[]]))})
   => '(extend-type Type IProtocol
-                   (-data [this] (apply process (data-env this) []))))
+                   (-data [this] (apply data-env this []))))
 
 ^{:refer hara.extend.abstract/extend-abstract :added "2.1"}
 (fact "Creates a set of abstract multimethods as well as extends a set of
@@ -112,7 +108,7 @@
    :select -
    :suffix -env
    :prefix nil
-   :template   {-data  (str "hello " %)}
+   :wrappers   {-data  (str "hello " %)}
    :dispatch   :type
    :defaults   {nil   ([this & args] (Exception. "No input"))
                 -data ([this] (:hello this))})
@@ -129,8 +125,8 @@
 
   (extend-implementations
    [IData]
-   :macro (fn [form _]
-            (list 'str form " again")))
+   :wrappers (fn [form _]
+               (list 'str form " again")))
 
   (data (map->Envelope {:hello "world"}))
   => "hello world again")

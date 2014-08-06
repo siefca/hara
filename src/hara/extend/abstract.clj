@@ -126,32 +126,17 @@
                      #(protocol-default-form % defaults)))
        (keep identity)))
 
-(defn protocol-extend-type-template
-  "applies form template for simple template rewrites
-
-  (protocol-extend-type-template '{:args [this], :fn data-env, :name -data}
-                                 '{-data (process %)}
-                                 '(data-env this))
-  => '(process (data-env this))"
-  {:added "2.1"}
-  [basis template form]
-  (map-walk basis template [form] :name
+(defn protocol-extend-type-wrappers
+  [basis wrappers form]
+  (map-walk basis wrappers [form] :name
             (fn [_ _ form] form)
-            (fn [_ template form]
-              (walk/prewalk-replace {'% form} template))))
+            (fn [basis wrapper form]
+              (cond (or (symbol? wrapper)
+                        (#{'fn 'clojure.core/fn} (first wrapper)))
+                    ((eval wrapper) form basis)
 
-(defn protocol-extend-type-macro
-  "applies a macro for simple template rewrites
-
-  (protocol-extend-type-macro '{:args [this], :fn data-env, :name -data}
-                              '{-data (fn [form basis] (concat ['apply] form [[]]))}
-                              '(data-env this))
-  => '(apply data-env this [])"
-  {:added "2.1"}
-  [basis macro form]
-  (map-walk basis macro [form] :name
-            (fn [_ _ form] form)
-            (fn [basis macro form] ((eval macro) form basis))))
+                    :else
+                    (walk/prewalk-replace {'% form} wrapper)))))
 
 (defn protocol-extend-type-function
   "utility to create a extend-type function  with template and macros
@@ -161,11 +146,10 @@
                                  '{-data (fn [form basis] (concat ['apply] form [[]]))})
   => '(-data [this] (apply process (data-env this) []))"
   {:added "2.1"}
-  [basis template macro]
+  [basis wrappers]
   (list (:name basis) (:args basis)
         (->> (cons (:fn basis) (:args basis))
-             (protocol-extend-type-template basis template)
-             (protocol-extend-type-macro basis macro))))
+             (protocol-extend-type-wrappers basis wrappers))))
 
 (defn protocol-extend-type
   "utility to create an extend-type form
@@ -176,9 +160,9 @@
   => '(extend-type Type IProtocol
                    (-data [this] (apply process (data-env this) [])))"
   {:added "2.1"}
-  [typesym protocolsym all-basis {:keys [macro template]}]
+  [typesym protocolsym all-basis {:keys [wrappers]}]
   (concat (list 'extend-type typesym protocolsym)
-          (map #(protocol-extend-type-function % template macro)
+          (map #(protocol-extend-type-function % wrappers)
                all-basis)))
 
 (defn protocol-all [typesym protocolsym {:keys [select prefix suffix] :as options}]
@@ -215,21 +199,20 @@
               (map #(protocol-all typesym % options)
                    protocolsyms))))
 
-(defn protocol-implementation-function [basis template macro pns]
+(defn protocol-implementation-function [basis wrappers pns]
   (list `defn (:fn basis) (:args basis)
         (->> (cons (symbol (str pns "/" (:name basis))) (:args basis))
-             (protocol-extend-type-template basis template)
-             (protocol-extend-type-macro basis macro))))
+             (protocol-extend-type-wrappers basis wrappers))))
 
 (defn protocol-ns [protocol]
   (-> protocol :var .ns str))
 
-(defn protocol-implementation [protocolsym {:keys [select prefix suffix template macro] :as options}]
+(defn protocol-implementation [protocolsym {:keys [select prefix suffix wrappers] :as options}]
   (let [select (or select '-)
         protocol  (eval protocolsym)
         all-basis (protocol-basis protocol select prefix suffix)
         pns (protocol-ns protocol)]
-    (map #(protocol-implementation-function % template macro pns)
+    (map #(protocol-implementation-function % wrappers pns)
          all-basis)))
 
 (defmacro extend-implementations
