@@ -6,6 +6,12 @@
   :dependencies [[org.clojure/clojure "1.6.0"]]
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
                    :plugins [[lein-midje "3.1.3"]
-                             [lein-midje-doc "0.0.21"]
+                             [lein-midje-doc "0.0.22"]
                              [lein-repack "0.1.3"]]}}
+  :documentation {:files {"docs/index"
+                        {:input "test/midje_doc/hara/outline.clj"
+                         :title "hara"
+                         :sub-title "General Purpose Utilities Library"
+                         :author "Chris Zheng"
+                         :email  "z@caudate.me"}}}
   :repack {:levels 2})
