@@ -1,0 +1,1011 @@
+<html><head><meta content="chrome=1" http-equiv="X-UA-Compatible" /><meta charset="utf-8" /><meta content="width=device-width, initial-scale=1, user-scalable=no" name="viewport" /><title>hara</title><style>body {
+  padding:50px;
+  font:14px/1.5 Helvetica, Arial, sans-serif;
+  color:#777;
+  font-weight:300;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color:#222;
+  margin:0 0 20px;
+}
+
+p, ul, ol, table, pre, dl {
+  margin:0 0 20px;
+}
+
+h1, h2, h3 {
+  line-height:1.1;
+}
+
+h1 {
+  font-size:28px;
+}
+
+h2 {
+  color:#393939;
+}
+
+h4, h5, h6 {
+  color:#494949;
+  margin:0;
+}
+
+header h4{
+  margin: 10 0 0 0px;
+}
+
+a {
+  color:#39c;
+  font-weight:400;
+  text-decoration:none;
+}
+
+a small {
+  font-size:11px;
+  color:#777;
+  margin-top:-0.6em;
+  display:block;
+}
+
+.wrapper {
+  width:860px;
+  margin:0 auto;
+}
+
+.figure div.img {
+  text-align: center;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+blockquote {
+  border-left:1px solid #e5e5e5;
+  margin:0;
+  padding:0 0 0 20px;
+  font-style:italic;
+}
+
+code, pre {
+  font-family:Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
+  color:#333;
+  font-size:12px;
+}
+
+pre {
+  padding:8px 15px;
+  background: #f8f8f8;  
+  border-radius:5px;
+  border:1px solid #e5e5e5;
+  overflow-x: auto;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td {
+  text-align:left;
+  padding:5px 10px;
+  border-bottom:1px solid #e5e5e5;
+}
+
+dt {
+  color:#444;
+  font-weight:700;
+}
+
+th {
+  color:#444;
+}
+
+img {
+  max-width:100%;
+}
+
+header {
+  width:270px;
+  float:left;
+  /*position:fixed;*/
+}
+
+header ul {
+  list-style:none;
+  height:40px;
+  
+  padding:0;
+  
+  background: #eee;
+  background: -moz-linear-gradient(top, #f8f8f8 0%, #dddddd 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
+  background: -webkit-linear-gradient(top, #f8f8f8 0%,#dddddd 100%);
+  background: -o-linear-gradient(top, #f8f8f8 0%,#dddddd 100%);
+  background: -ms-linear-gradient(top, #f8f8f8 0%,#dddddd 100%);
+  background: linear-gradient(top, #f8f8f8 0%,#dddddd 100%);
+  
+  border-radius:5px;
+  border:1px solid #d2d2d2;
+  box-shadow:inset #fff 0 1px 0, inset rgba(0,0,0,0.03) 0 -1px 0;
+  width:270px;
+}
+
+header li {
+  width:89px;
+  float:left;
+  border-right:1px solid #d2d2d2;
+  height:40px;
+}
+
+header ul a {
+  line-height:1;
+  font-size:11px;
+  color:#999;
+  display:block;
+  text-align:center;
+  padding-top:6px;
+  height:40px;
+}
+
+strong {
+  font-weight:700;
+}
+
+header ul li + li {
+  width:88px;
+  border-left:1px solid #fff;
+}
+
+header ul li + li + li {
+  border-right:none;
+  width:89px;
+}
+
+header ul a strong {
+  font-size:14px;
+  display:block;
+  color:#222;
+}
+
+section {
+  width: 60%;
+  float:right;
+  padding-bottom:50px;
+  padding-right: 10%;
+}
+
+small {
+  font-size:11px;
+}
+
+hr {
+  border:0;
+  background:#e5e5e5;
+  height:1px;
+  margin:0 0 20px;
+}
+
+footer {
+  width:270px;
+  float:left;
+  position:fixed;
+  bottom:50px;
+}
+
+header div.heading {
+  display:none;
+}
+
+
+@media print, screen and (max-width: 960px) {
+  
+  div.wrapper {
+    width:auto;
+    margin:0;
+  }
+  
+  header, section, footer {
+    float:none;
+    position:static;
+    width:auto;
+  }
+  
+  header div.heading {
+    display:block;
+  }
+    
+  section div.heading {
+    display:none;
+  }
+  
+  section {
+    border:1px solid #e5e5e5;
+    border-width:1px 0;
+    padding:20px 0;
+    margin:0 0 20px;
+  }
+  
+  header a small {
+    display:inline;
+  }
+  
+  header ul {
+    position:absolute;
+    right:50px;
+    top:52px;
+  }
+}
+
+@media print, screen and (max-width: 720px) {
+  body {
+    word-wrap:break-word;
+  }
+  
+  header {
+    padding:0;
+  }
+  
+  header ul, header p.view {
+    position:static;
+  }
+  
+  pre, code {
+    word-wrap:normal;
+  }
+}
+
+@media print, screen and (max-width: 480px) {
+  body {
+    padding:15px;
+  }
+  
+  header ul {
+    display:none;
+  }
+}
+
+@media print {
+  body {
+    padding:0.4in;
+    font-size:12pt;
+    color:#444;
+  }
+}
+
+
+.highlight  { background: #ffffff; }
+.highlight .c { color: #999988; font-style: italic } /* Comment */
+.highlight .err { color: #a61717; background-color: #e3d2d2 } /* Error */
+.highlight .k { font-weight: bold } /* Keyword */
+.highlight .o { font-weight: bold } /* Operator */
+.highlight .cm { color: #999988; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #999999; font-weight: bold } /* Comment.Preproc */
+.highlight .c1 { color: #999988; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #999999; font-weight: bold; font-style: italic } /* Comment.Special */
+.highlight .gd { color: #000000; background-color: #ffdddd } /* Generic.Deleted */
+.highlight .gd .x { color: #000000; background-color: #ffaaaa } /* Generic.Deleted.Specific */
+.highlight .ge { font-style: italic } /* Generic.Emph */
+.highlight .gr { color: #aa0000 } /* Generic.Error */
+.highlight .gh { color: #999999 } /* Generic.Heading */
+.highlight .gi { color: #000000; background-color: #ddffdd } /* Generic.Inserted */
+.highlight .gi .x { color: #000000; background-color: #aaffaa } /* Generic.Inserted.Specific */
+.highlight .go { color: #888888 } /* Generic.Output */
+.highlight .gp { color: #555555 } /* Generic.Prompt */
+.highlight .gs { font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #800080; font-weight: bold; } /* Generic.Subheading */
+.highlight .gt { color: #aa0000 } /* Generic.Traceback */
+.highlight .kc { font-weight: bold } /* Keyword.Constant */
+.highlight .kd { font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { font-weight: bold } /* Keyword.Pseudo */
+.highlight .kr { font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #445588; font-weight: bold } /* Keyword.Type */
+.highlight .m { color: #009999 } /* Literal.Number */
+.highlight .s { color: #d14 } /* Literal.String */
+.highlight .na { color: #008080 } /* Name.Attribute */
+.highlight .nb { color: #0086B3 } /* Name.Builtin */
+.highlight .nc { color: #445588; font-weight: bold } /* Name.Class */
+.highlight .no { color: #008080 } /* Name.Constant */
+.highlight .ni { color: #800080 } /* Name.Entity */
+.highlight .ne { color: #990000; font-weight: bold } /* Name.Exception */
+.highlight .nf { color: #990000; font-weight: bold } /* Name.Function */
+.highlight .nn { color: #555555 } /* Name.Namespace */
+.highlight .nt { color: #000080 } /* Name.Tag */
+.highlight .nv { color: #008080 } /* Name.Variable */
+.highlight .ow { font-weight: bold } /* Operator.Word */
+.highlight .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight .mf { color: #009999 } /* Literal.Number.Float */
+.highlight .mh { color: #009999 } /* Literal.Number.Hex */
+.highlight .mi { color: #009999 } /* Literal.Number.Integer */
+.highlight .mo { color: #009999 } /* Literal.Number.Oct */
+.highlight .sb { color: #d14 } /* Literal.String.Backtick */
+.highlight .sc { color: #d14 } /* Literal.String.Char */
+.highlight .sd { color: #d14 } /* Literal.String.Doc */
+.highlight .s2 { color: #d14 } /* Literal.String.Double */
+.highlight .se { color: #d14 } /* Literal.String.Escape */
+.highlight .sh { color: #d14 } /* Literal.String.Heredoc */
+.highlight .si { color: #d14 } /* Literal.String.Interpol */
+.highlight .sx { color: #d14 } /* Literal.String.Other */
+.highlight .sr { color: #009926 } /* Literal.String.Regex */
+.highlight .s1 { color: #d14 } /* Literal.String.Single */
+.highlight .ss { color: #990073 } /* Literal.String.Symbol */
+.highlight .bp { color: #999999 } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #008080 } /* Name.Variable.Class */
+.highlight .vg { color: #008080 } /* Name.Variable.Global */
+.highlight .vi { color: #008080 } /* Name.Variable.Instance */
+.highlight .il { color: #009999 } /* Literal.Number.Integer.Long */
+
+.type-csharp .highlight .k { color: #0000FF }
+.type-csharp .highlight .kt { color: #0000FF }
+.type-csharp .highlight .nf { color: #000000; font-weight: normal }
+.type-csharp .highlight .nc { color: #2B91AF }
+.type-csharp .highlight .nn { color: #000000 }
+.type-csharp .highlight .s { color: #A31515 }
+.type-csharp .highlight .sc { color: #A31515 }
+
+
+</style></head><body><header><div class="heading"><h1>hara</h1><h3>General Purpose Utilities Library</h3><hr /><div class="info"><h5>Author: Chris Zheng<b>&nbsp;&nbsp;<a href="mailto:z@caudate.me">(z@caudate.me)</a></b></h5><h5>Library: v2.1.1</h5><h5>Date: 18 August 2014</h5><h5>Website: <a href="http://github.com/zcaudate/hara">http://github.com/zcaudate/hara</a></h5><h5>Generated By: <a href="http://www.github.com/zcaudate/lein-midje-doc">MidjeDoc</a></h5></div><br /><hr /></div><h4><a href="#introduction">1 &nbsp; Introduction</a></h4><h4><a href="#haracommon">2 &nbsp; hara.common</a></h4><h5>&nbsp;&nbsp;<i><a href="#commonprimitives">2.1 &nbsp; common.primitives</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#commonchecks">2.2 &nbsp; common.checks</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#commonerror">2.3 &nbsp; common.error</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#commonhash">2.4 &nbsp; common.hash</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#commonstate">2.5 &nbsp; common.state</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#commonwatch">2.6 &nbsp; common.watch</a></i></h5><h4><a href="#harafunction">3 &nbsp; hara.function</a></h4><h5>&nbsp;&nbsp;<i><a href="#functionargs">3.1 &nbsp; function.args</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#functiondispatch">3.2 &nbsp; function.dispatch</a></i></h5><h4><a href="#haranamespace">4 &nbsp; hara.namespace</a></h4><h5>&nbsp;&nbsp;<i><a href="#namespaceimport">4.1 &nbsp; namespace.import</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#namespaceresolve">4.2 &nbsp; namespace.resolve</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#namespaceeval">4.3 &nbsp; namespace.eval</a></i></h5><h4><a href="#haraclass">5 &nbsp; hara.class</a></h4><h5>&nbsp;&nbsp;<i><a href="#classchecks">5.1 &nbsp; class.checks</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#classinheritance">5.2 &nbsp; class.inheritance</a></i></h5><h4><a href="#haraexpression">6 &nbsp; hara.expression</a></h4><h5>&nbsp;&nbsp;<i><a href="#expressionform">6.1 &nbsp; expression.form</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#expressionshorthand">6.2 &nbsp; expression.shorthand</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#expressioncompile">6.3 &nbsp; expression.compile</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#expressionload">6.4 &nbsp; expression.load</a></i></h5><h4><a href="#haraextend">7 &nbsp; hara.extend</a></h4><h5>&nbsp;&nbsp;<i><a href="#extendall">7.1 &nbsp; extend.all</a></i></h5><h5>&nbsp;&nbsp;<i><a href="#extendabstract">7.2 &nbsp; extend.abstract</a></i></h5><br /></header><section><div class="heading"><h1>hara</h1><h3>General Purpose Utilities Library</h3><hr /><div class="info"><h5>Author: Chris Zheng<b>&nbsp;&nbsp;<a href="mailto:z@caudate.me">(z@caudate.me)</a></b></h5><h5>Library: v2.1.1</h5><h5>Date: 18 August 2014</h5><h5>Website: <a href="http://github.com/zcaudate/hara">http://github.com/zcaudate/hara</a></h5><h5>Generated By: <a href="http://www.github.com/zcaudate/lein-midje-doc">MidjeDoc</a></h5></div><br /><hr /></div><div><a name="introduction"></a><h2><b>1 &nbsp;&nbsp; Introduction</b></h2></div><div><p><code>hara</code> provides a set of functions, best practises and code abstractions. It serves a <code>clojure.contrib</code> like  purpose but attempts to uphold the higher principles of programming:</p><ul><li>synergistic design</li><li>maximal code reuse</li><li>minimal code repetition and wastage</li><li>functional orthogonality</li><li>functional modularity</li><li>functional extensibility</li><li>self-documentated code </li></ul></div><div><a name="haracommon"></a><h2><b>2 &nbsp;&nbsp; hara.common</b></h2></div><div><p>commonly used functions and forms</p></div><div><a name="commonprimitives"></a><h3>2.1 &nbsp;&nbsp; common.primitives</h3></div><div><a name="t"></a><h4><i>e.2.1  &nbsp;-&nbsp; T</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` for any combination of input `args`&quot;</span>
+
+<span class="p">(</span><span class="nf">T</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">T</span> <span class="ss">:hello</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">T</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="f"></a><h4><i>e.2.2  &nbsp;-&nbsp; F</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `false` for any combination of input `args`&quot;</span>
+
+<span class="p">(</span><span class="nf">F</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+<span class="p">(</span><span class="nf">F</span> <span class="ss">:hello</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+<span class="p">(</span><span class="nf">F</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="nil"></a><h4><i>e.2.3  &nbsp;-&nbsp; NIL</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `nil` for any combination of input `args`&quot;</span>
+
+<span class="p">(</span><span class="nf">NIL</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+<span class="p">(</span><span class="nf">NIL</span> <span class="ss">:hello</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+<span class="p">(</span><span class="nf">NIL</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+</pre></div>
+</div><div><a name="queue"></a><h4><i>e.2.4  &nbsp;-&nbsp; queue</i></h4><div class="highlight"><pre><span class="s">&quot;Returns a `clojure.lang.PersistentQueue` object.&quot;</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">a</span> <span class="p">(</span><span class="nf">queue</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span><span class="p">))</span>
+<span class="p">(</span><span class="nb">pop </span><span class="nv">a</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span><span class="p">]</span>
+</pre></div>
+</div><div><a name="uuid"></a><h4><i>e.2.5  &nbsp;-&nbsp; uuid</i></h4><div class="highlight"><pre><span class="s">&quot;Returns a `java.util.UUID` object&quot;</span>
+
+<span class="p">(</span><span class="nf">uuid</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="o">#</span><span class="p">(</span><span class="nb">instance? </span><span class="nv">java.util.UUID</span> <span class="nv">%</span><span class="p">)</span> <span class="c1">; &lt;random uuid&gt;</span>
+
+<span class="p">(</span><span class="nf">uuid</span> <span class="s">&quot;00000000-0000-0000-0000-000000000000&quot;</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="o">#</span><span class="nv">uuid</span> <span class="s">&quot;00000000-0000-0000-0000-000000000000&quot;</span>
+</pre></div>
+</div><div><a name="instant"></a><h4><i>e.2.6  &nbsp;-&nbsp; instant</i></h4><div class="highlight"><pre><span class="s">&quot;Returns a `java.util.Date` object&quot;</span>
+
+<span class="p">(</span><span class="nf">instant</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="o">#</span><span class="p">(</span><span class="nb">instance? </span><span class="nv">java.util.Date</span> <span class="nv">%</span><span class="p">)</span> <span class="c1">; &lt;current time&gt;</span>
+
+<span class="p">(</span><span class="nf">instant</span> <span class="mi">0</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="o">#</span><span class="nv">inst</span> <span class="s">&quot;1970-01-01T00:00:00.000-00:00&quot;</span>
+</pre></div>
+</div><div><a name="uri"></a><h4><i>e.2.7  &nbsp;-&nbsp; uri</i></h4><div class="highlight"><pre><span class="s">&quot;Returns a `java.net.URI` object&quot;</span>
+
+<span class="p">(</span><span class="nf">uri</span> <span class="s">&quot;http://www.google.com&quot;</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="o">#</span><span class="p">(</span><span class="nb">instance? </span><span class="nv">java.net.URI</span> <span class="nv">%</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="commonchecks"></a><h3>2.2 &nbsp;&nbsp; common.checks</h3></div><div><a name="boolean?"></a><h4><i>e.2.8  &nbsp;-&nbsp; boolean?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.lang.Boolean`.&quot;</span>
+
+ <span class="p">(</span><span class="nf">boolean?</span> <span class="nv">true</span><span class="p">)</span>   <span class="nv">=&gt;</span> <span class="nv">true</span>
+ <span class="p">(</span><span class="nf">boolean?</span> <span class="nv">false</span><span class="p">)</span>  <span class="nv">=&gt;</span> <span class="nv">true</span>
+ <span class="o">^</span><span class="ss">:hidden</span>
+ <span class="p">(</span><span class="nf">boolean?</span> <span class="nv">nil</span><span class="p">)</span>    <span class="nv">=&gt;</span> <span class="nv">false</span>
+ <span class="p">(</span><span class="nf">boolean?</span> <span class="mi">1</span><span class="p">)</span>      <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="hash-map?"></a><h4><i>e.2.9  &nbsp;-&nbsp; hash-map?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` implements `clojure.lang.APersistentMap`.&quot;</span>
+
+ <span class="p">(</span><span class="nf">hash-map?</span> <span class="p">{})</span>    <span class="nv">=&gt;</span> <span class="nv">true</span>
+ <span class="p">(</span><span class="nf">hash-map?</span> <span class="p">[])</span>    <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="long?"></a><h4><i>e.2.10  &nbsp;-&nbsp; long?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.lang.Long`.&quot;</span>
+
+<span class="p">(</span><span class="nf">long?</span> <span class="mi">1</span><span class="p">)</span>          <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">long?</span> <span class="mi">1</span><span class="nv">N</span><span class="p">)</span>         <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="bigint?"></a><h4><i>e.2.11  &nbsp;-&nbsp; bigint?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `clojure.lang.BigInt`.&quot;</span>
+
+<span class="p">(</span><span class="nf">bigint?</span> <span class="mi">1</span><span class="nv">N</span><span class="p">)</span>       <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">bigint?</span> <span class="mi">1</span><span class="p">)</span>        <span class="nv">=&gt;</span>  <span class="nv">false</span>
+</pre></div>
+</div><div><a name="bigdec?"></a><h4><i>e.2.12  &nbsp;-&nbsp; bigdec?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.math.BigDecimal`.&quot;</span>
+
+<span class="p">(</span><span class="nf">bigdec?</span> <span class="mi">1</span><span class="nv">M</span><span class="p">)</span>       <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">bigdec?</span> <span class="mf">1.0</span><span class="p">)</span>      <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="instant?"></a><h4><i>e.2.13  &nbsp;-&nbsp; instant?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.util.Date`.&quot;</span>
+
+<span class="p">(</span><span class="nf">instant?</span> <span class="p">(</span><span class="nf">java.util.Date.</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="uuid?"></a><h4><i>e.2.14  &nbsp;-&nbsp; uuid?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.util.UUID`.&quot;</span>
+
+<span class="p">(</span><span class="nf">uuid?</span> <span class="p">(</span><span class="nf">java.util.UUID/randomUUID</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="uri?"></a><h4><i>e.2.15  &nbsp;-&nbsp; uri?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.net.URI`.&quot;</span>
+
+<span class="p">(</span><span class="nf">uri?</span> <span class="p">(</span><span class="nf">java.net.URI.</span> <span class="s">&quot;http://www.google.com&quot;</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="regex?"></a><h4><i>e.2.16  &nbsp;-&nbsp; regex?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` implements `clojure.lang.IPersistentMap`.&quot;</span>
+
+<span class="p">(</span><span class="nf">regex?</span> <span class="o">#</span><span class="s">&quot;\d+&quot;</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+ 
+</pre></div>
+</div><div><a name="bytes?"></a><h4><i>e.2.17  &nbsp;-&nbsp; bytes?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is a primitive `byte` array.&quot;</span>
+
+<span class="p">(</span><span class="nf">bytes?</span> <span class="p">(</span><span class="nf">byte-array</span> <span class="mi">8</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="atom?"></a><h4><i>e.2.18  &nbsp;-&nbsp; atom?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `clojure.lang.Atom`.&quot;</span>
+
+<span class="p">(</span><span class="nf">atom?</span> <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="ref?"></a><h4><i>e.2.19  &nbsp;-&nbsp; ref?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `clojure.lang.Ref`.&quot;</span>
+
+<span class="p">(</span><span class="nf">ref?</span> <span class="p">(</span><span class="nb">ref </span><span class="nv">nil</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="agent?"></a><h4><i>e.2.20  &nbsp;-&nbsp; agent?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `clojure.lang.Agent`.&quot;</span>
+
+<span class="p">(</span><span class="nf">agent?</span> <span class="p">(</span><span class="nb">agent </span><span class="nv">nil</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="iref?"></a><h4><i>e.2.21  &nbsp;-&nbsp; iref?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `clojure.lang.IRef`.&quot;</span>
+
+<span class="p">(</span><span class="nf">iref?</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">iref?</span> <span class="p">(</span><span class="nb">ref </span><span class="mi">0</span><span class="p">))</span>   <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">iref?</span> <span class="p">(</span><span class="nb">agent </span><span class="mi">0</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">iref?</span> <span class="p">(</span><span class="nf">promise</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+<span class="p">(</span><span class="nf">iref?</span> <span class="p">(</span><span class="nf">future</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="ideref?"></a><h4><i>e.2.22  &nbsp;-&nbsp; ideref?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `x` is of type `java.lang.IDeref`.&quot;</span>
+
+<span class="p">(</span><span class="nf">ideref?</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">ideref?</span> <span class="p">(</span><span class="nf">promise</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">ideref?</span> <span class="p">(</span><span class="nf">future</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="promise?"></a><h4><i>e.2.23  &nbsp;-&nbsp; promise?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` is `x` is a promise&quot;</span>
+
+<span class="p">(</span><span class="nf">promise?</span> <span class="p">(</span><span class="nf">promise</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">promise?</span> <span class="p">(</span><span class="nf">future</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="type-checker"></a><h4><i>e.2.24  &nbsp;-&nbsp; type-checker</i></h4><div class="highlight"><pre><span class="s">&quot;Returns the checking function associated with `k`&quot;</span>
+
+<span class="p">(</span><span class="nf">type-checker</span> <span class="ss">:string</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="o">#</span><span class="ss">&#39;clojure.core/string?</span>
+
+<span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">hara.common.checks</span> <span class="ss">:refer</span> <span class="p">[</span><span class="nv">bytes?</span><span class="p">]])</span>
+<span class="p">(</span><span class="nf">type-checker</span> <span class="ss">:bytes</span><span class="p">)</span>  <span class="nv">=&gt;</span> <span class="o">#</span><span class="ss">&#39;hara.common.checks/bytes?</span>
+</pre></div>
+</div><div><a name="commonerror"></a><h3>2.3 &nbsp;&nbsp; common.error</h3></div><div><a name="error"></a><h4><i>e.2.25  &nbsp;-&nbsp; error</i></h4><div class="highlight"><pre><span class="s">&quot;Throws an exception when called.&quot;</span>
+
+<span class="p">(</span><span class="nf">error</span> <span class="s">&quot;This is an error&quot;</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="p">(</span><span class="nf">throws</span> <span class="nv">Exception</span> <span class="s">&quot;This is an error&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">error</span> <span class="p">(</span><span class="nf">Exception.</span> <span class="s">&quot;This is an error&quot;</span><span class="p">)</span>
+       <span class="s">&quot;This is a chained error&quot;</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="p">(</span><span class="nf">throws</span> <span class="nv">Exception</span> <span class="s">&quot;This is a chained error&quot;</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="suppress"></a><h4><i>e.2.26  &nbsp;-&nbsp; suppress</i></h4><div class="highlight"><pre><span class="s">&quot;Suppresses any errors thrown in the body.&quot;</span>
+
+<span class="p">(</span><span class="nf">suppress</span> <span class="p">(</span><span class="nf">error</span> <span class="s">&quot;Error&quot;</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+
+<span class="p">(</span><span class="nf">suppress</span> <span class="p">(</span><span class="nf">error</span> <span class="s">&quot;Error&quot;</span><span class="p">)</span> <span class="ss">:error</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="ss">:error</span>
+
+<span class="p">(</span><span class="nf">suppress</span> <span class="p">(</span><span class="nf">error</span> <span class="s">&quot;Error&quot;</span><span class="p">)</span>
+          <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">e</span><span class="p">]</span>
+            <span class="p">(</span><span class="nf">.getMessage</span> <span class="nv">e</span><span class="p">)))</span> <span class="nv">=&gt;</span> <span class="s">&quot;Error&quot;</span>
+</pre></div>
+</div><div><a name="commonhash"></a><h3>2.4 &nbsp;&nbsp; common.hash</h3></div><div><a name="hash-label"></a><h4><i>e.2.27  &nbsp;-&nbsp; hash-label</i></h4><div class="highlight"><pre><span class="s">&quot;Returns a keyword repesentation of the hash-code. For use in </span>
+<span class="s"> generating internally unique keys&quot;</span>
+
+ <span class="p">(</span><span class="nf">hash-label</span> <span class="mi">1</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="s">&quot;__1__&quot;</span>
+ <span class="p">(</span><span class="nf">hash-label</span> <span class="s">&quot;a&quot;</span> <span class="s">&quot;b&quot;</span> <span class="s">&quot;c&quot;</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="s">&quot;__97_98_99__&quot;</span>
+ <span class="p">(</span><span class="nf">hash-label</span> <span class="s">&quot;abc&quot;</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="s">&quot;__96354__&quot;</span>
+</pre></div>
+</div><div><a name="commonstate"></a><h3>2.5 &nbsp;&nbsp; common.state</h3></div><div><a name="get"></a><h4><i>e.2.28  &nbsp;-&nbsp; get</i></h4><div class="highlight"><pre><span class="s">&quot;Like deref but is extensible through the IStateGet protocol&quot;</span>
+
+<span class="p">(</span><span class="nf">state/get</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="mi">1</span>
+
+<span class="p">(</span><span class="nf">state/get</span> <span class="p">(</span><span class="nb">ref </span><span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div><div><a name="set"></a><h4><i>e.2.29  &nbsp;-&nbsp; set</i></h4><div class="highlight"><pre><span class="s">&quot;Like reset! but is extensible through the IStateSet protocol&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">a</span> <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">state/set</span> <span class="nv">a</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="o">@</span><span class="nv">a</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div><div><a name="update"></a><h4><i>e.2.30  &nbsp;-&nbsp; update</i></h4><div class="highlight"><pre><span class="s">&quot;Like swap! but is extensible through the IStateSet protocol&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">a</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">state/update</span> <span class="nv">a</span> <span class="nb">+ </span><span class="mi">1</span><span class="p">)</span>
+  <span class="o">@</span><span class="nv">a</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">1</span>
+
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">a</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">state/update</span> <span class="nv">a</span> <span class="nv">inc</span><span class="p">)</span>
+  <span class="o">@</span><span class="nv">a</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div><div><a name="dispatch"></a><h4><i>e.2.31  &nbsp;-&nbsp; dispatch</i></h4><div class="highlight"><pre><span class="s">&quot;Updates the value contained within a container using another thread.&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">res</span> <span class="p">(</span><span class="nf">state/dispatch</span> <span class="p">(</span><span class="nf">atom</span> <span class="mi">0</span><span class="p">)</span>
+              <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>  <span class="p">(</span><span class="nb">inc </span><span class="nv">x</span><span class="p">)))]</span>
+  <span class="nv">res</span>   <span class="nv">=&gt;</span> <span class="nv">future?</span>
+  <span class="o">@</span><span class="nv">res</span>  <span class="nv">=&gt;</span> <span class="nv">atom?</span>
+  <span class="o">@@</span><span class="nv">res</span> <span class="nv">=&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="commonwatch"></a><h3>2.6 &nbsp;&nbsp; common.watch</h3></div><div><a name="add"></a><h4><i>e.2.32  &nbsp;-&nbsp; add</i></h4><div class="highlight"><pre><span class="s">&quot;Adds a watch function through the IWatch protocol&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">subject</span> <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)</span>
+      <span class="nv">observer</span>  <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">watch/add</span> <span class="nv">subject</span> <span class="ss">:follow</span>
+             <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span> <span class="nv">n</span><span class="p">]</span>
+               <span class="p">(</span><span class="nf">reset!</span> <span class="nv">observer</span> <span class="nv">n</span><span class="p">)))</span>
+  <span class="p">(</span><span class="nf">reset!</span> <span class="nv">subject</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="o">@</span><span class="nv">observer</span> <span class="nv">=&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="list"></a><h4><i>e.2.33  &nbsp;-&nbsp; list</i></h4><div class="highlight"><pre><span class="s">&quot;Lists watch functions through the IWatch protocol&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">subject</span>   <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)</span>
+      <span class="nv">observer</span>  <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">watch/add</span> <span class="nv">subject</span> <span class="ss">:a</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span> <span class="nv">n</span><span class="p">]))</span>
+  <span class="p">(</span><span class="nf">watch/add</span> <span class="nv">subject</span> <span class="ss">:b</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span> <span class="nv">n</span><span class="p">]))</span>
+  <span class="p">(</span><span class="nf">watch/list</span> <span class="nv">subject</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="p">(</span><span class="nf">contains</span> <span class="p">{</span><span class="ss">:a</span> <span class="nv">fn?</span> <span class="ss">:b</span> <span class="nv">fn?</span><span class="p">}))</span>
+</pre></div>
+</div><div><a name="remove"></a><h4><i>e.2.34  &nbsp;-&nbsp; remove</i></h4><div class="highlight"><pre><span class="s">&quot;Removes watch function through the IWatch protocol&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">subject</span>   <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)</span>
+      <span class="nv">observer</span>  <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">watch/add</span> <span class="nv">subject</span> <span class="ss">:a</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span> <span class="nv">n</span><span class="p">]))</span>
+  <span class="p">(</span><span class="nf">watch/add</span> <span class="nv">subject</span> <span class="ss">:b</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span> <span class="nv">n</span><span class="p">]))</span>
+  <span class="p">(</span><span class="nf">watch/remove</span> <span class="nv">subject</span> <span class="ss">:b</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">watch/list</span> <span class="nv">subject</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="p">(</span><span class="nf">contains</span> <span class="p">{</span><span class="ss">:a</span> <span class="nv">fn?</span><span class="p">})</span>
+</pre></div>
+</div><div><a name="add-change"></a><h4><i>e.2.35  &nbsp;-&nbsp; add-change</i></h4><div class="highlight"><pre><span class="s">&quot;Adds a watch function that only triggers when there is change</span>
+<span class="s"> in `(sel &lt;value&gt;)`.&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">subject</span>  <span class="p">(</span><span class="nf">atom</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span> <span class="ss">:b</span> <span class="mi">2</span><span class="p">})</span>
+      <span class="nv">observer</span> <span class="p">(</span><span class="nf">atom</span> <span class="nv">nil</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">watch/add-change</span> <span class="nv">subject</span> <span class="ss">:clone</span>
+                    <span class="ss">:b</span>  <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span> <span class="nv">n</span><span class="p">]</span> <span class="p">(</span><span class="nf">reset!</span> <span class="nv">observer</span> <span class="nv">n</span><span class="p">)))</span>
+
+  <span class="p">(</span><span class="nf">swap!</span> <span class="nv">subject</span> <span class="nb">assoc </span><span class="ss">:a</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">;; change in :a does not</span>
+  <span class="o">@</span><span class="nv">observer</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>           <span class="c1">;; affect watch</span>
+
+  <span class="p">(</span><span class="nf">swap!</span> <span class="nv">subject</span> <span class="nb">assoc </span><span class="ss">:b</span> <span class="mi">1</span><span class="p">)</span> <span class="c1">;; change in :b does</span>
+  <span class="o">@</span><span class="nv">observer</span> <span class="nv">=&gt;</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="harafunction"></a><h2><b>3 &nbsp;&nbsp; hara.function</b></h2></div><div><a name="functionargs"></a><h3>3.1 &nbsp;&nbsp; function.args</h3></div><div><a name="vargs?"></a><h4><i>e.3.1  &nbsp;-&nbsp; vargs?</i></h4><div class="highlight"><pre><span class="s">&quot;checks that function contain variable arguments&quot;</span>
+
+<span class="p">(</span><span class="nf">vargs?</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]))</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+
+<span class="p">(</span><span class="nf">vargs?</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span> <span class="o">&amp;</span> <span class="nv">xs</span><span class="p">]))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="varg-count"></a><h4><i>e.3.2  &nbsp;-&nbsp; varg-count</i></h4><div class="highlight"><pre><span class="s">&quot;counts the number of arguments types before variable arguments&quot;</span>
+
+<span class="p">(</span><span class="nf">varg-count</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span> <span class="nv">y</span> <span class="o">&amp;</span> <span class="nv">xs</span><span class="p">]))</span> <span class="nv">=&gt;</span> <span class="mi">2</span>
+
+<span class="p">(</span><span class="nf">varg-count</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]))</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+</pre></div>
+</div><div><a name="arg-count"></a><h4><i>e.3.3  &nbsp;-&nbsp; arg-count</i></h4><div class="highlight"><pre><span class="s">&quot;counts the number of non-varidic argument types&quot;</span>
+
+<span class="p">(</span><span class="nf">arg-count</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span><span class="p">]))</span> <span class="nv">=&gt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="p">(</span><span class="nf">arg-count</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">x</span> <span class="o">&amp;</span> <span class="nv">xs</span><span class="p">]))</span> <span class="nv">=&gt;</span> <span class="p">[]</span>
+
+<span class="p">(</span><span class="nf">arg-count</span> <span class="p">(</span><span class="k">fn </span><span class="p">([</span><span class="nv">x</span><span class="p">])</span> <span class="p">([</span><span class="nv">x</span> <span class="nv">y</span><span class="p">])))</span> <span class="nv">=&gt;</span> <span class="p">[</span><span class="mi">1</span> <span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div><div><a name="functiondispatch"></a><h3>3.2 &nbsp;&nbsp; function.dispatch</h3></div><div><a name="call"></a><h4><i>e.3.4  &nbsp;-&nbsp; call</i></h4><div class="highlight"><pre><span class="s">&quot;Executes `(f v1 ... vn)` if `f` is not nil&quot;</span>
+
+<span class="p">(</span><span class="nf">call</span> <span class="nv">nil</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+
+<span class="p">(</span><span class="nf">call</span> <span class="nb">+ </span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">6</span>
+</pre></div>
+</div><div><a name="msg"></a><h4><i>e.3.5  &nbsp;-&nbsp; msg</i></h4><div class="highlight"><pre><span class="s">&quot;Message dispatch for object orientated type calling convention.&quot;</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">obj</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">10</span>
+          <span class="ss">:b</span> <span class="mi">20</span>
+          <span class="ss">:get-sum</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span>
+                    <span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="ss">:b</span> <span class="nv">this</span><span class="p">)</span> <span class="p">(</span><span class="ss">:a</span> <span class="nv">this</span><span class="p">)))})</span>
+
+<span class="p">(</span><span class="nf">msg</span> <span class="nv">obj</span> <span class="ss">:get-sum</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">30</span>
+</pre></div>
+</div><div><a name="haranamespace"></a><h2><b>4 &nbsp;&nbsp; hara.namespace</b></h2></div><div><a name="namespaceimport"></a><h3>4.1 &nbsp;&nbsp; namespace.import</h3></div><div><a name="import-var"></a><h4><i>e.4.1  &nbsp;-&nbsp; import-var</i></h4><div class="highlight"><pre><span class="s">&quot;Imports a single var from one namespace to the current one.&quot;</span>
+
+<span class="p">(</span><span class="nf">import-var</span> <span class="ss">&#39;ifl</span> <span class="o">#</span><span class="ss">&#39;clojure.core/if-let</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="nv">anything</span> <span class="c1">; #&#39;hara.namespace.import-test/ifl</span>
+<span class="p">(</span><span class="nb">eval </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">ifl</span> <span class="p">[</span><span class="nv">a</span> <span class="mi">1</span><span class="p">]</span> <span class="p">(</span><span class="nb">inc </span><span class="nv">a</span><span class="p">)))</span> <span class="nv">=&gt;</span> <span class="mi">2</span>
+
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="nb">ns-unmap </span><span class="nv">*ns*</span> <span class="ss">&#39;ifl</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="import-namespace"></a><h4><i>e.4.2  &nbsp;-&nbsp; import-namespace</i></h4><div class="highlight"><pre><span class="s">&quot;Imports all or a selection of vars from one namespace to the current one.&quot;</span>
+
+<span class="p">(</span><span class="nf">import-namespace</span> <span class="ss">&#39;hara.common.checks</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">bytes?</span> <span class="nv">long?</span><span class="p">])</span>
+<span class="p">(</span><span class="nb">eval </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">long?</span> <span class="mi">1</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nb">eval </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">bytes?</span> <span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="nb">ns-unmap </span><span class="nv">*ns*</span> <span class="ss">&#39;long?</span><span class="p">)</span>
+<span class="p">(</span><span class="nb">ns-unmap </span><span class="nv">*ns*</span> <span class="ss">&#39;bytes?</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="import"></a><h4><i>e.4.3  &nbsp;-&nbsp; import</i></h4><div class="highlight"><pre><span class="s">&quot;Imports all or a selection of vars from one namespace to the current one.&quot;</span>
+
+<span class="p">(</span><span class="nb">import </span><span class="nv">hara.common.checks</span> <span class="p">[</span><span class="nv">bytes?</span> <span class="nv">long?</span><span class="p">])</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+<span class="p">(</span><span class="nb">eval </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">long?</span> <span class="mi">1</span><span class="p">))</span>  <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nb">eval </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">bytes?</span> <span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+
+<span class="p">(</span><span class="nb">import </span><span class="nv">hara.common.checks</span> <span class="ss">:all</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+<span class="p">(</span><span class="nb">eval </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">bigint?</span> <span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">k</span> <span class="p">(</span><span class="nb">keys </span><span class="p">(</span><span class="nb">ns-interns </span><span class="nv">*ns*</span><span class="p">))]</span>
+  <span class="p">(</span><span class="nb">ns-unmap </span><span class="nv">*ns*</span> <span class="nv">k</span><span class="p">))</span>
+</pre></div>
+</div><div><a name="namespaceresolve"></a><h3>4.2 &nbsp;&nbsp; namespace.resolve</h3></div><div><a name="resolve-ns"></a><h4><i>e.4.4  &nbsp;-&nbsp; resolve-ns</i></h4><div class="highlight"><pre><span class="s">&quot;resolves the namespace or else returns nil if it does not exist&quot;</span>
+
+<span class="p">(</span><span class="nf">resolve-ns</span> <span class="ss">&#39;clojure.core</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="ss">&#39;clojure.core</span>
+
+<span class="p">(</span><span class="nf">resolve-ns</span> <span class="ss">&#39;clojure.core/some</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="ss">&#39;clojure.core</span>
+
+<span class="p">(</span><span class="nf">resolve-ns</span> <span class="ss">&#39;clojure.hello</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+</pre></div>
+</div><div><a name="ns-vars"></a><h4><i>e.4.5  &nbsp;-&nbsp; ns-vars</i></h4><div class="highlight"><pre><span class="s">&quot;lists the vars in a particular namespace&quot;</span>
+
+<span class="p">(</span><span class="nf">ns-vars</span> <span class="ss">&#39;hara.namespace.resolve</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">ns-vars</span> <span class="nv">resolve-ns</span><span class="p">]</span>
+</pre></div>
+</div><div><a name="namespaceeval"></a><h3>4.3 &nbsp;&nbsp; namespace.eval</h3></div><div><a name="with-ns"></a><h4><i>e.4.6  &nbsp;-&nbsp; with-ns</i></h4><div class="highlight"><pre><span class="s">&quot;Evaluates `body` forms in an existing namespace given by `ns`.&quot;</span>
+
+<span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">hara.common.checks</span><span class="p">])</span>
+<span class="p">(</span><span class="nf">with-ns</span> <span class="ss">&#39;hara.common.checks</span>
+  <span class="p">(</span><span class="nf">long?</span> <span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="with-temp-ns"></a><h4><i>e.4.7  &nbsp;-&nbsp; with-temp-ns</i></h4><div class="highlight"><pre><span class="s">&quot;Evaluates `body` forms in a temporaryily created namespace.&quot;</span>
+
+<span class="p">(</span><span class="nf">with-temp-ns</span>
+  <span class="p">(</span><span class="k">def </span> <span class="nv">inc1</span> <span class="nv">inc</span><span class="p">)</span>
+  <span class="p">(</span><span class="kd">defn </span><span class="nv">inc2</span> <span class="p">[</span><span class="nv">x</span><span class="p">]</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">x</span><span class="p">))</span>
+  <span class="p">(</span><span class="nb">-&gt; </span><span class="mi">1</span> <span class="nv">inc1</span> <span class="nv">inc2</span><span class="p">))</span>
+<span class="nv">=&gt;</span> <span class="mi">3</span>
+
+<span class="s">&quot;All created vars will be destroyed after evaluation.&quot;</span>
+
+<span class="p">(</span><span class="nb">resolve </span><span class="ss">&#39;inc1</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+</pre></div>
+</div><div><a name="haraclass"></a><h2><b>5 &nbsp;&nbsp; hara.class</b></h2></div><div><a name="classchecks"></a><h3>5.1 &nbsp;&nbsp; class.checks</h3></div><div><a name="interface?"></a><h4><i>e.5.1  &nbsp;-&nbsp; interface?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `class` is an interface&quot;</span>
+
+<span class="p">(</span><span class="nf">interface?</span> <span class="nv">java.util.Map</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">interface?</span> <span class="nv">Class</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="abstract?"></a><h4><i>e.5.2  &nbsp;-&nbsp; abstract?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `class` is an abstract class&quot;</span>
+
+<span class="p">(</span><span class="nf">abstract?</span> <span class="nv">java.util.Map</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">abstract?</span> <span class="nv">Class</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="multimethod?"></a><h4><i>e.5.3  &nbsp;-&nbsp; multimethod?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `obj` is a multimethod&quot;</span>
+
+<span class="p">(</span><span class="nf">multimethod?</span> <span class="nv">print-method</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+<span class="p">(</span><span class="nf">multimethod?</span> <span class="nv">println</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="protocol?"></a><h4><i>e.5.4  &nbsp;-&nbsp; protocol?</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `obj` is a protocol&quot;</span>
+
+<span class="p">(</span><span class="kd">defprotocol </span><span class="nv">ISomeProtocol</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">protocol?</span> <span class="nv">ISomeProtocol</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">protocol?</span> <span class="nv">clojure.lang.ILookup</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+</pre></div>
+</div><div><a name="classinheritance"></a><h3>5.2 &nbsp;&nbsp; class.inheritance</h3></div><div><a name="ancestor-list"></a><h4><i>e.5.5  &nbsp;-&nbsp; ancestor-list</i></h4><div class="highlight"><pre><span class="s">&quot;Lists the direct ancestors of a class&quot;</span>
+<span class="p">(</span><span class="nf">ancestor-list</span> <span class="nv">clojure.lang.PersistentHashMap</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="p">[</span><span class="nv">clojure.lang.PersistentHashMap</span>
+    <span class="nv">clojure.lang.APersistentMap</span>
+    <span class="nv">clojure.lang.AFn</span>
+    <span class="nv">java.lang.Object</span><span class="p">]</span>
+</pre></div>
+</div><div><a name="ancestor-tree"></a><h4><i>e.5.6  &nbsp;-&nbsp; ancestor-tree</i></h4><div class="highlight"><pre><span class="s">&quot;Lists the hierarchy of bases and interfaces of a class.&quot;</span>
+<span class="p">(</span><span class="nf">ancestor-tree</span> <span class="nv">Class</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="p">[[</span><span class="nv">java.lang.Object</span> <span class="o">#</span><span class="p">{</span><span class="nv">java.io.Serializable</span>
+                        <span class="nv">java.lang.reflect.Type</span>
+                        <span class="nv">java.lang.reflect.AnnotatedElement</span>
+                        <span class="nv">java.lang.reflect.GenericDeclaration</span><span class="p">}]]</span>
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="nf">ancestor-tree</span> <span class="nv">clojure.lang.PersistentHashMap</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="p">[[</span><span class="nv">clojure.lang.APersistentMap</span> <span class="o">#</span><span class="p">{</span><span class="nv">clojure.lang.IEditableCollection</span>
+                                   <span class="nv">clojure.lang.IObj</span><span class="p">}]</span>
+    <span class="p">[</span><span class="nv">clojure.lang.AFn</span> <span class="o">#</span><span class="p">{</span><span class="nv">java.io.Serializable</span>
+                        <span class="nv">clojure.lang.IHashEq</span>
+                        <span class="nv">clojure.lang.MapEquivalence</span>
+                        <span class="nv">java.util.Map</span>
+                        <span class="nv">java.lang.Iterable</span>
+                        <span class="nv">clojure.lang.IPersistentMap</span><span class="p">}]</span>
+    <span class="p">[</span><span class="nv">java.lang.Object</span> <span class="o">#</span><span class="p">{</span><span class="nv">clojure.lang.IFn</span><span class="p">}]]</span>
+</pre></div>
+</div><div><a name="best-match"></a><h4><i>e.5.7  &nbsp;-&nbsp; best-match</i></h4><div class="highlight"><pre><span class="s">&quot;finds the best matching interface or class from a list of candidates&quot;</span>
+
+<span class="p">(</span><span class="nf">best-match</span> <span class="o">#</span><span class="p">{</span><span class="nv">Object</span><span class="p">}</span> <span class="nv">Long</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">Object</span>
+<span class="p">(</span><span class="nf">best-match</span> <span class="o">#</span><span class="p">{</span><span class="nv">String</span><span class="p">}</span> <span class="nv">Long</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+<span class="p">(</span><span class="nf">best-match</span> <span class="o">#</span><span class="p">{</span><span class="nv">Object</span> <span class="nv">Number</span><span class="p">}</span> <span class="nv">Long</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">Number</span>
+</pre></div>
+</div><div><a name="haraexpression"></a><h2><b>6 &nbsp;&nbsp; hara.expression</b></h2></div><div><a name="expressionform"></a><h3>6.1 &nbsp;&nbsp; expression.form</h3></div><div><a name="form-require"></a><h4><i>e.6.1  &nbsp;-&nbsp; form-require</i></h4><div class="highlight"><pre><span class="s">&quot;Makes sure that the namespace is loaded for a particular symbol&quot;</span>
+
+<span class="p">(</span><span class="nf">form-require</span> <span class="ss">&#39;cons</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="ss">&#39;cons</span>
+
+<span class="p">(</span><span class="nf">form-require</span> <span class="ss">&#39;clojure.core/cons</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="ss">&#39;clojure.core/cons</span>
+</pre></div>
+</div><div><a name="form-prep"></a><h4><i>e.6.2  &nbsp;-&nbsp; form-prep</i></h4><div class="highlight"><pre><span class="s">&quot;Prepares the form into a function form&quot;</span>
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">my-inc</span> <span class="p">(</span><span class="nf">form-prep</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">%</span><span class="p">))]</span>
+  
+  <span class="p">((</span><span class="nb">eval </span><span class="nv">my-inc</span><span class="p">)</span> <span class="mi">1</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">2</span>
+  
+  <span class="p">(</span><span class="nb">meta </span><span class="nv">my-inc</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="p">{</span><span class="ss">:source</span> <span class="s">&quot;#(+ 1 %)\n&quot;</span><span class="p">})</span>
+</pre></div>
+</div><div><a name="form-fn"></a><h4><i>e.6.3  &nbsp;-&nbsp; form-fn</i></h4><div class="highlight"><pre><span class="s">&quot;Creates a function out of a list&quot;</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">my-inc</span> <span class="p">(</span><span class="nf">form-fn</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">%</span><span class="p">))]</span>
+
+  <span class="p">(</span><span class="nf">my-inc</span> <span class="mi">1</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">2</span>
+
+  <span class="p">(</span><span class="nb">meta </span><span class="nv">my-inc</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="p">{</span><span class="ss">:source</span> <span class="s">&quot;#(+ 1 %)\n&quot;</span><span class="p">})</span>
+</pre></div>
+</div><div><a name="form-eval"></a><h4><i>e.6.4  &nbsp;-&nbsp; form-eval</i></h4><div class="highlight"><pre><span class="s">&quot;Evaluates a list as a functions and to a set of arguments.&quot;</span>
+
+<span class="p">(</span><span class="nf">form-eval</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">%1</span> <span class="nv">%2</span><span class="p">)</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">6</span>
+</pre></div>
+</div><div><a name="form-apply"></a><h4><i>e.6.5  &nbsp;-&nbsp; form-apply</i></h4><div class="highlight"><pre><span class="s">&quot;Applies a list as a function to an argument vector&quot;</span>
+
+<span class="p">(</span><span class="nf">form-apply</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">%1</span> <span class="nv">%2</span><span class="p">)</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">3</span><span class="p">])</span> <span class="nv">=&gt;</span> <span class="mi">6</span>
+</pre></div>
+</div><div><a name="expressionshorthand"></a><h3>6.2 &nbsp;&nbsp; expression.shorthand</h3></div><div><a name="shorthand-form"></a><h4><i>e.6.6  &nbsp;-&nbsp; shorthand-form</i></h4><div class="highlight"><pre><span class="s">&quot;Makes an expression using `sym`&quot;</span>
+
+<span class="p">(</span><span class="nf">shorthand-form</span> <span class="ss">&#39;y</span> <span class="o">&#39;</span><span class="p">(</span><span class="nf">str</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">str </span><span class="nv">y</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">shorthand-form</span> <span class="ss">&#39;x</span> <span class="o">&#39;</span><span class="p">((</span><span class="nf">inc</span><span class="p">)</span> <span class="p">(</span><span class="nb">- </span><span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="p">)))</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="nb">- </span><span class="p">(</span><span class="nb">inc </span><span class="nv">x</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div><div><a name="shorthand-fn-expr"></a><h4><i>e.6.7  &nbsp;-&nbsp; shorthand-fn-expr</i></h4><div class="highlight"><pre><span class="s">&quot;Makes a function expression out of the form&quot;</span>
+
+<span class="p">(</span><span class="nf">shorthand-fn-expr</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span><span class="p">))</span> 
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">%</span><span class="p">]</span> <span class="p">(</span><span class="nb">+ </span><span class="nv">%</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div><div><a name="fn-&gt;"></a><h4><i>e.6.8  &nbsp;-&nbsp; fn-></i></h4><div class="highlight"><pre><span class="s">&quot;Constructs a function from a form representation.&quot;</span>
+
+<span class="p">((</span><span class="nf">fn-&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">10</span><span class="p">))</span> <span class="mi">10</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="mi">20</span>
+</pre></div>
+</div><div><a name="call-&gt;"></a><h4><i>e.6.9  &nbsp;-&nbsp; call-></i></h4><div class="highlight"><pre><span class="s">&quot;Indirect call, takes `obj` and a list containing either a function, </span>
+<span class="s"> a symbol representing the function or the symbol `?` and any additional</span>
+<span class="s"> arguments. Used for calling functions that have been stored as symbols.&quot;</span>
+
+<span class="p">(</span><span class="nf">call-&gt;</span> <span class="mi">1</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="mi">10</span>
+
+<span class="p">(</span><span class="nf">call-&gt;</span> <span class="mi">1</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">&lt; </span><span class="mi">2</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">call-&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="mi">1</span><span class="p">}}</span> <span class="o">&#39;</span><span class="p">((</span><span class="nf">get-in</span> <span class="p">[</span><span class="ss">:a</span> <span class="ss">:b</span><span class="p">])</span> <span class="nb">= </span><span class="mi">1</span><span class="p">))</span>
+<span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="get-&gt;"></a><h4><i>e.6.10  &nbsp;-&nbsp; get-></i></h4><div class="highlight"><pre><span class="s">&quot;Provides a shorthand way of getting a return value.</span>
+<span class="s"> `sel` can be a function, a vector, or a value.&quot;</span>
+
+<span class="p">(</span><span class="nf">get-&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="p">{</span><span class="ss">:c</span> <span class="mi">1</span><span class="p">}}}</span> <span class="ss">:a</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="p">{</span><span class="ss">:b</span> <span class="p">{</span><span class="ss">:c</span> <span class="mi">1</span><span class="p">}}</span>
+
+<span class="p">(</span><span class="nf">get-&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="p">{</span><span class="ss">:c</span> <span class="mi">1</span><span class="p">}}}</span> <span class="p">[</span><span class="ss">:a</span> <span class="ss">:b</span><span class="p">])</span> <span class="nv">=&gt;</span> <span class="p">{</span><span class="ss">:c</span> <span class="mi">1</span><span class="p">}</span>
+</pre></div>
+</div><div><a name="eq-&gt;"></a><h4><i>e.6.11  &nbsp;-&nbsp; eq-></i></h4><div class="highlight"><pre><span class="s">&quot;Compare if two vals are equal.&quot;</span>
+
+<span class="p">(</span><span class="nf">eq-&gt;</span> <span class="p">{</span><span class="ss">:id</span> <span class="mi">1</span> <span class="ss">:a</span> <span class="mi">1</span><span class="p">}</span> <span class="p">{</span><span class="ss">:id</span> <span class="mi">1</span> <span class="ss">:a</span> <span class="mi">2</span><span class="p">}</span> <span class="ss">:id</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">eq-&gt;</span> <span class="p">{</span><span class="ss">:db</span> <span class="p">{</span><span class="ss">:id</span> <span class="mi">1</span><span class="p">}</span> <span class="ss">:a</span> <span class="mi">1</span><span class="p">}</span>
+      <span class="p">{</span><span class="ss">:db</span> <span class="p">{</span><span class="ss">:id</span> <span class="mi">1</span><span class="p">}</span> <span class="ss">:a</span> <span class="mi">2</span><span class="p">}</span> <span class="p">[</span><span class="ss">:db</span> <span class="ss">:id</span><span class="p">])</span>
+<span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="check"></a><h4><i>e.6.12  &nbsp;-&nbsp; check</i></h4><div class="highlight"><pre><span class="s">&quot;checks&quot;</span>
+
+<span class="p">(</span><span class="nf">check</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">check</span> <span class="mi">2</span> <span class="nv">even?</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">check</span> <span class="mi">2</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">&gt; </span><span class="mi">1</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">check</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="mi">1</span><span class="p">}}</span> <span class="o">&#39;</span><span class="p">([</span><span class="ss">:a</span> <span class="ss">:b</span><span class="p">]</span> <span class="p">(</span><span class="nb">= </span><span class="mi">1</span><span class="p">)))</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">check</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="mi">1</span><span class="p">}}</span> <span class="ss">:a</span> <span class="nv">vector?</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">false</span>
+
+<span class="p">(</span><span class="nf">check</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="mi">1</span><span class="p">}}</span> <span class="p">[</span><span class="ss">:a</span> <span class="ss">:b</span><span class="p">]</span> <span class="mi">1</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="check-all"></a><h4><i>e.6.13  &nbsp;-&nbsp; check-all</i></h4><div class="highlight"><pre><span class="s">&quot;Returns `true` if `obj` satisfies all pairs of sel and chk&quot;</span>
+
+<span class="p">(</span><span class="nf">check-all</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="mi">1</span><span class="p">}}</span>
+  <span class="ss">:a</span>       <span class="o">#</span><span class="p">(</span><span class="nb">instance? </span><span class="nv">clojure.lang.IPersistentMap</span> <span class="nv">%</span><span class="p">)</span>
+  <span class="p">[</span><span class="ss">:a</span> <span class="ss">:b</span><span class="p">]</span>  <span class="mi">1</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="check-&gt;"></a><h4><i>e.6.14  &nbsp;-&nbsp; check-></i></h4><div class="highlight"><pre><span class="s">&quot;Shorthand ways of checking where `m` fits `prchk`&quot;</span>
+
+<span class="p">(</span><span class="nf">check-&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span><span class="p">}</span> <span class="ss">:a</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">check-&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span> <span class="ss">:val</span> <span class="mi">1</span><span class="p">}</span> <span class="p">[</span><span class="ss">:val</span> <span class="mi">1</span><span class="p">])</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+
+<span class="p">(</span><span class="nf">check-&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="p">{</span><span class="ss">:b</span> <span class="mi">1</span><span class="p">}}</span> <span class="p">[[</span><span class="ss">:a</span> <span class="ss">:b</span><span class="p">]</span> <span class="nv">odd?</span><span class="p">])</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="check?-&gt;"></a><h4><i>e.6.15  &nbsp;-&nbsp; check?-></i></h4><div class="highlight"><pre><span class="s">&quot;Tests obj using prchk and returns `obj` or `res` if true&quot;</span>
+
+<span class="p">(</span><span class="nf">check?-&gt;</span> <span class="ss">:3</span> <span class="nv">even?</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+
+<span class="p">(</span><span class="nf">check?-&gt;</span> <span class="mi">3</span> <span class="nv">even?</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">nil</span>
+
+<span class="p">(</span><span class="nf">check?-&gt;</span> <span class="mi">2</span> <span class="nv">even?</span><span class="p">)</span> <span class="nv">=&gt;</span> <span class="nv">true</span>
+</pre></div>
+</div><div><a name="expressioncompile"></a><h3>6.3 &nbsp;&nbsp; expression.compile</h3></div><div><a name="const"></a><h4><i>e.6.16  &nbsp;-&nbsp; const</i></h4><div class="highlight"><pre><span class="s">&quot;converts an expression into a constant at compile time&quot;</span>
+
+<span class="p">(</span><span class="nf">const</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">))</span> <span class="nv">=&gt;</span> <span class="mi">3</span>
+
+<span class="p">(</span><span class="nb">macroexpand </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">const</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)))</span> <span class="nv">=&gt;</span> <span class="mi">3</span>
+</pre></div>
+</div><div><a name="applym"></a><h4><i>e.6.17  &nbsp;-&nbsp; applym</i></h4><div class="highlight"><pre><span class="s">&quot;Allow macros to be applied to arguments just like functions&quot;</span>
+
+<span class="p">(</span><span class="nf">applym</span> <span class="nv">const</span> <span class="o">&#39;</span><span class="p">((</span><span class="nb">+ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">)))</span> <span class="nv">=&gt;</span> <span class="mi">3</span>
+
+<span class="p">(</span><span class="nb">macroexpand </span><span class="o">&#39;</span><span class="p">(</span><span class="nf">applym</span> <span class="nv">const</span> <span class="o">&#39;</span><span class="p">((</span><span class="nb">+ </span><span class="mi">1</span> <span class="mi">2</span><span class="p">))))</span>
+<span class="nv">=&gt;</span> <span class="mi">3</span>
+</pre></div>
+</div><div><a name="expressionload"></a><h3>6.4 &nbsp;&nbsp; expression.load</h3></div><div><a name="load-single"></a><h4><i>e.6.18  &nbsp;-&nbsp; load-single</i></h4><div class="highlight"><pre><span class="s">&quot;Perform a single step in the load process&quot;</span>
+<span class="o">^</span><span class="ss">:hidden</span>
+<span class="p">(</span><span class="nf">load-single</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span><span class="p">}</span> <span class="p">[</span><span class="ss">:b</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">inc </span><span class="p">(</span><span class="ss">:a</span> <span class="nv">%</span><span class="p">))])</span> <span class="nv">=&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span> <span class="ss">:b</span> <span class="mi">2</span><span class="p">}</span>
+</pre></div>
+</div><div><a name="load"></a><h4><i>e.6.19  &nbsp;-&nbsp; load</i></h4><div class="highlight"><pre><span class="s">&quot;Seeds an initial map using forms&quot;</span>
+
+<span class="p">(</span><span class="nb">load </span><span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span><span class="p">}</span> <span class="p">[</span><span class="ss">:b</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">inc </span><span class="p">(</span><span class="ss">:a</span> <span class="nv">%</span><span class="p">))</span>
+              <span class="ss">:c</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="ss">:a</span> <span class="nv">%</span><span class="p">)</span> <span class="p">(</span><span class="ss">:b</span> <span class="nv">%</span><span class="p">))])</span> 
+<span class="nv">=&gt;</span> <span class="p">{</span><span class="ss">:a</span> <span class="mi">1</span> <span class="ss">:b</span> <span class="mi">2</span> <span class="ss">:c</span> <span class="mi">3</span><span class="p">}</span>
+</pre></div>
+</div><div><a name="haraextend"></a><h2><b>7 &nbsp;&nbsp; hara.extend</b></h2></div><div><a name="extendall"></a><h3>7.1 &nbsp;&nbsp; extend.all</h3></div><div><a name="extend-single"></a><h4><i>e.7.1  &nbsp;-&nbsp; extend-single</i></h4><div class="highlight"><pre><span class="s">&quot;Transforms a protocol template into an extend-type expression&quot;</span>
+
+<span class="p">(</span><span class="nf">extend-single</span> <span class="ss">&#39;Type</span>
+               <span class="ss">&#39;IProtocol</span>
+               <span class="o">&#39;</span><span class="p">[(</span><span class="nf">op</span> <span class="p">[</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]</span> <span class="p">(</span><span class="nf">%</span> <span class="nv">x</span> <span class="nv">y</span><span class="p">))]</span>
+               <span class="o">&#39;</span><span class="p">[</span><span class="nv">op-object</span><span class="p">])</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nf">clojure.core/extend-type</span> <span class="nv">Type</span> <span class="nv">IProtocol</span> <span class="p">(</span><span class="nf">op</span> <span class="p">[</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]</span> <span class="p">(</span><span class="nf">op-object</span> <span class="nv">x</span> <span class="nv">y</span><span class="p">)))</span>
+</pre></div>
+</div><div><a name="extend-all"></a><h4><i>e.7.2  &nbsp;-&nbsp; extend-all</i></h4><div class="highlight"><pre><span class="s">&quot;Transforms a protocl template into multiple extend-type expresions&quot;</span>
+
+<span class="p">(</span><span class="nf">macroexpand-1</span>
+ <span class="o">&#39;</span><span class="p">(</span><span class="nf">extend-all</span> <span class="nv">Magma</span>
+              <span class="p">[(</span><span class="nf">op</span> <span class="p">([</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]</span> <span class="p">(</span><span class="nf">%</span> <span class="nv">x</span> <span class="nv">y</span><span class="p">))</span> <span class="p">)]</span>
+
+              <span class="nv">Number</span>        <span class="p">[</span><span class="nv">op-number</span><span class="p">]</span>
+              <span class="p">[</span><span class="nv">List</span> <span class="nv">Vector</span><span class="p">]</span> <span class="p">[</span><span class="nv">op-list</span><span class="p">]))</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="k">do </span><span class="p">(</span><span class="nf">clojure.core/extend-type</span> <span class="nv">Number</span> <span class="nv">Magma</span> <span class="p">(</span><span class="nf">op</span> <span class="p">([</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]</span> <span class="p">(</span><span class="nf">op-number</span> <span class="nv">x</span> <span class="nv">y</span><span class="p">))))</span>
+        <span class="p">(</span><span class="nf">clojure.core/extend-type</span> <span class="nv">List</span> <span class="nv">Magma</span> <span class="p">(</span><span class="nf">op</span> <span class="p">([</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]</span> <span class="p">(</span><span class="nf">op-list</span> <span class="nv">x</span> <span class="nv">y</span><span class="p">))))</span>
+        <span class="p">(</span><span class="nf">clojure.core/extend-type</span> <span class="nv">Vector</span> <span class="nv">Magma</span> <span class="p">(</span><span class="nf">op</span> <span class="p">([</span><span class="nv">x</span> <span class="nv">y</span><span class="p">]</span> <span class="p">(</span><span class="nf">op-list</span> <span class="nv">x</span> <span class="nv">y</span><span class="p">)))))</span>
+</pre></div>
+</div><div><a name="extendabstract"></a><h3>7.2 &nbsp;&nbsp; extend.abstract</h3></div><div><a name="protocol-basis"></a><h4><i>e.7.3  &nbsp;-&nbsp; protocol-basis</i></h4><div class="highlight"><pre><span class="p">(</span><span class="kd">defprotocol </span><span class="nv">IData</span> <span class="p">(</span><span class="nf">-data</span> <span class="p">[</span><span class="nv">this</span><span class="p">]))</span>
+
+<span class="p">(</span><span class="kd">defrecord </span><span class="nv">Envelope</span> <span class="p">[])</span>
+</pre></div>
+</div><div><div class="highlight"><pre><span class="s">&quot;Helper function that transforms the functions in the protocol to</span>
+<span class="s">the neccessary format in preparation for extend-abstract and extend-implementations&quot;</span>
+
+<span class="p">(</span><span class="kd">defprotocol </span><span class="nv">IVal</span>
+  <span class="p">(</span><span class="nf">-set</span> <span class="p">[</span><span class="nv">this</span> <span class="nv">val</span><span class="p">])</span>
+  <span class="p">(</span><span class="nf">-get</span> <span class="p">[</span><span class="nv">this</span><span class="p">]))</span>
+
+<span class="p">(</span><span class="nf">protocol-basis</span> <span class="nv">IVal</span> <span class="ss">&#39;-</span> <span class="ss">&#39;pre-</span> <span class="ss">&#39;-tail</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">({</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">pre-get-tail</span>, <span class="ss">:name</span> <span class="nv">-get</span><span class="p">}</span>
+     <span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span> <span class="nv">val</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">pre-set-tail</span>, <span class="ss">:name</span> <span class="nv">-set</span><span class="p">})</span>
+</pre></div>
+</div><div><a name="map-walk-submap"></a><h4><i>e.7.4  &nbsp;-&nbsp; map-walk-submap</i></h4><div class="highlight"><pre><span class="s">&quot;Gets a submap depending on whether it is a key or it</span>
+<span class="s">is a key witthin a hashset&quot;</span>
+
+<span class="p">(</span><span class="nf">map-walk-submap</span> <span class="p">{</span><span class="ss">:hello</span> <span class="s">&quot;world&quot;</span><span class="p">}</span> <span class="ss">:hello</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="s">&quot;world&quot;</span>
+
+<span class="p">(</span><span class="nf">map-walk-submap</span> <span class="p">{</span><span class="o">#</span><span class="p">{</span><span class="ss">:hello</span><span class="p">}</span> <span class="s">&quot;world&quot;</span><span class="p">}</span> <span class="ss">:hello</span><span class="p">)</span>
+<span class="nv">=&gt;</span> <span class="s">&quot;world&quot;</span>
+</pre></div>
+</div><div><a name="map-walk"></a><h4><i>e.7.5  &nbsp;-&nbsp; map-walk</i></h4><div class="highlight"><pre><span class="s">&quot;Helper function for evaluation of various utility functions</span>
+<span class="s">within the namespace&quot;</span>
+
+<span class="p">(</span><span class="nf">map-walk</span> <span class="ss">:hello</span> <span class="p">{</span><span class="o">#</span><span class="p">{</span><span class="ss">:hello</span><span class="p">}</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">k</span> <span class="nv">arg1</span><span class="p">]</span> <span class="p">(</span><span class="nb">str </span><span class="p">(</span><span class="nb">name </span><span class="nv">k</span><span class="p">)</span> <span class="s">&quot; world &quot;</span> <span class="nv">arg1</span><span class="p">))}</span>
+          <span class="p">[</span><span class="s">&quot;again&quot;</span><span class="p">]</span>  <span class="nv">identity</span>
+          <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">_</span> <span class="nv">_</span> <span class="nv">_</span><span class="p">]</span> <span class="ss">:none</span><span class="p">)</span>
+          <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">obj</span> <span class="nv">func</span> <span class="nv">arg1</span><span class="p">]</span> <span class="p">(</span><span class="nf">func</span> <span class="nv">obj</span> <span class="nv">arg1</span><span class="p">)))</span>
+<span class="nv">=&gt;</span> <span class="s">&quot;hello world again&quot;</span>
+</pre></div>
+</div><div><a name="protocol-default-form"></a><h4><i>e.7.6  &nbsp;-&nbsp; protocol-default-form</i></h4><div class="highlight"><pre><span class="s">&quot;creates a :default defmethod form from a protocol basis&quot;</span>
+
+<span class="p">(</span><span class="nf">protocol-default-form</span> <span class="o">&#39;</span><span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}</span>
+                       <span class="o">&#39;</span><span class="p">{</span><span class="o">#</span><span class="p">{</span><span class="nv">-data</span><span class="p">}</span> <span class="p">([</span><span class="nv">this</span> <span class="o">&amp;</span> <span class="nv">args</span><span class="p">]</span> <span class="nv">nil</span><span class="p">)})</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="kd">defmethod </span><span class="nv">data-env</span> <span class="ss">:default</span> <span class="p">[</span><span class="nv">this</span> <span class="o">&amp;</span> <span class="nv">args</span><span class="p">]</span> <span class="nv">nil</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">protocol-default-form</span> <span class="o">&#39;</span><span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}</span>
+                       <span class="o">&#39;</span><span class="p">{</span><span class="o">#</span><span class="p">{</span><span class="nv">-data</span><span class="p">}</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">basis</span><span class="p">]</span>
+                                    <span class="o">`</span><span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="ss">:args</span> <span class="nv">basis</span><span class="p">)</span>
+                                      <span class="p">(</span><span class="nf">throw</span> <span class="p">(</span><span class="nf">Exception.</span> <span class="p">(</span><span class="nb">str </span><span class="o">~</span><span class="p">(</span><span class="nb">str </span><span class="s">&quot;No implementation of &quot;</span> <span class="p">(</span><span class="ss">:fn</span> <span class="nv">basis</span><span class="p">)</span> <span class="s">&quot; for &quot;</span><span class="p">)</span>
+                                                              <span class="p">(</span><span class="nb">-&gt; </span><span class="o">~</span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">basis</span> <span class="ss">:args</span> <span class="nv">first</span><span class="p">)</span> <span class="ss">:meta</span> <span class="ss">:type</span><span class="p">))))))})</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="kd">defmethod </span><span class="nv">data-env</span> <span class="ss">:default</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>
+      <span class="p">(</span><span class="nf">throw</span> <span class="p">(</span><span class="nf">java.lang.Exception.</span>
+              <span class="p">(</span><span class="nf">clojure.core/str</span> <span class="s">&quot;No implementation of data-env for &quot;</span>
+                                <span class="p">(</span><span class="nf">clojure.core/-&gt;</span> <span class="nv">this</span> <span class="ss">:meta</span> <span class="ss">:type</span><span class="p">)))))</span>
+</pre></div>
+</div><div><a name="protocol-multi-form"></a><h4><i>e.7.7  &nbsp;-&nbsp; protocol-multi-form</i></h4><div class="highlight"><pre><span class="s">&quot;creates a :default defmethod form from a protocol basis&quot;</span>
+
+<span class="p">(</span><span class="nf">protocol-multi-form</span> <span class="o">&#39;</span><span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}</span>
+                     <span class="o">&#39;</span><span class="p">{</span><span class="o">#</span><span class="p">{</span><span class="nv">-data</span><span class="p">}</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">%</span> <span class="ss">:meta</span> <span class="ss">:type</span><span class="p">)})</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="kd">defmulti </span><span class="nv">data-env</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">this</span> <span class="ss">:meta</span> <span class="ss">:type</span><span class="p">)))</span>
+</pre></div>
+</div><div><a name="protocol-multimethods"></a><h4><i>e.7.8  &nbsp;-&nbsp; protocol-multimethods</i></h4><div class="highlight"><pre><span class="s">&quot;creates a set of defmulti and defmethods for each entry in all-basis&quot;</span>
+
+<span class="p">(</span><span class="nf">protocol-multimethods</span> <span class="o">&#39;</span><span class="p">[{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}]</span>
+                       <span class="p">{</span><span class="ss">:defaults</span> <span class="o">&#39;</span><span class="p">([</span><span class="nv">this</span> <span class="o">&amp;</span> <span class="nv">args</span><span class="p">]</span> <span class="p">(</span><span class="nf">Exception.</span> <span class="s">&quot;No input&quot;</span><span class="p">))</span>
+                        <span class="ss">:dispatch</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">%</span> <span class="ss">:meta</span> <span class="ss">:type</span><span class="p">)})</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">((</span><span class="kd">defmulti </span><span class="nv">data-env</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="nv">this</span> <span class="ss">:meta</span> <span class="ss">:type</span><span class="p">)))</span>
+     <span class="p">(</span><span class="kd">defmethod </span><span class="nv">data-env</span> <span class="ss">:default</span> <span class="p">[</span><span class="nv">this</span> <span class="o">&amp;</span> <span class="nv">args</span><span class="p">]</span> <span class="p">(</span><span class="nf">Exception.</span> <span class="s">&quot;No input&quot;</span><span class="p">)))</span>
+</pre></div>
+</div><div><a name="protocol-extend-type-wrappers"></a><h4><i>e.7.9  &nbsp;-&nbsp; protocol-extend-type-wrappers</i></h4><div class="highlight"><pre><span class="s">&quot;applies form template for simple template rewrites&quot;</span>
+
+<span class="p">(</span><span class="nf">protocol-extend-type-wrappers</span> <span class="o">&#39;</span><span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}</span>
+                               <span class="o">&#39;</span><span class="p">{</span><span class="nv">-data</span> <span class="p">(</span><span class="nf">process</span> <span class="nv">%</span><span class="p">)}</span>
+                               <span class="o">&#39;</span><span class="p">(</span><span class="nf">data-env</span> <span class="nv">this</span><span class="p">))</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nf">process</span> <span class="p">(</span><span class="nf">data-env</span> <span class="nv">this</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">protocol-extend-type-wrappers</span> <span class="o">&#39;</span><span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}</span>
+                               <span class="o">&#39;</span><span class="p">{</span><span class="nv">-data</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">form</span> <span class="nv">basis</span><span class="p">]</span> <span class="p">(</span><span class="nb">concat </span><span class="p">[</span><span class="ss">&#39;apply</span><span class="p">]</span> <span class="nv">form</span> <span class="p">[[]]))}</span>
+                               <span class="o">&#39;</span><span class="p">(</span><span class="nf">data-env</span> <span class="nv">this</span><span class="p">))</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nb">apply </span><span class="nv">data-env</span> <span class="nv">this</span> <span class="p">[])</span>
+</pre></div>
+</div><div><a name="protocol-extend-type-function"></a><h4><i>e.7.10  &nbsp;-&nbsp; protocol-extend-type-function</i></h4><div class="highlight"><pre><span class="s">&quot;utility to create a extend-type function  with template and macros&quot;</span>
+
+<span class="p">(</span><span class="nf">protocol-extend-type-function</span> <span class="o">&#39;</span><span class="p">{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}</span>
+                               <span class="o">&#39;</span><span class="p">{</span><span class="nv">-data</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">form</span> <span class="nv">basis</span><span class="p">]</span> <span class="p">(</span><span class="nb">concat </span><span class="p">[</span><span class="ss">&#39;apply</span><span class="p">]</span> <span class="nv">form</span> <span class="p">[[]]))})</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nf">-data</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span> <span class="p">(</span><span class="nb">apply </span><span class="nv">data-env</span> <span class="nv">this</span> <span class="p">[]))</span>
+</pre></div>
+</div><div><a name="protocol-extend-type"></a><h4><i>e.7.11  &nbsp;-&nbsp; protocol-extend-type</i></h4><div class="highlight"><pre><span class="s">&quot;utility to create an extend-type form&quot;</span>
+<span class="p">(</span><span class="nf">protocol-extend-type</span> <span class="ss">&#39;Type</span> <span class="ss">&#39;IProtocol</span>
+                      <span class="o">&#39;</span><span class="p">[{</span><span class="ss">:args</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>, <span class="ss">:fn</span> <span class="nv">data-env</span>, <span class="ss">:name</span> <span class="nv">-data</span><span class="p">}]</span>
+                      <span class="o">&#39;</span><span class="p">{</span><span class="ss">:wrappers</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">form</span> <span class="nv">basis</span><span class="p">]</span> <span class="p">(</span><span class="nb">concat </span><span class="p">[</span><span class="ss">&#39;apply</span><span class="p">]</span> <span class="nv">form</span> <span class="p">[[]]))})</span>
+<span class="nv">=&gt;</span> <span class="o">&#39;</span><span class="p">(</span><span class="nf">extend-type</span> <span class="nv">Type</span> <span class="nv">IProtocol</span>
+                 <span class="p">(</span><span class="nf">-data</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span> <span class="p">(</span><span class="nb">apply </span><span class="nv">data-env</span> <span class="nv">this</span> <span class="p">[])))</span>
+</pre></div>
+</div><div><a name="extend-abstract"></a><h4><i>e.7.12  &nbsp;-&nbsp; extend-abstract</i></h4><div class="highlight"><pre><span class="s">&quot;Creates a set of abstract multimethods as well as extends a set of</span>
+<span class="s">protocols to a given type&quot;</span>
+
+<span class="p">(</span><span class="nf">extend-abstract</span>
+ <span class="nv">Envelope</span> <span class="p">[</span><span class="nv">IData</span><span class="p">]</span>
+ <span class="ss">:select</span> <span class="nv">-</span>
+ <span class="ss">:suffix</span> <span class="nv">-env</span>
+ <span class="ss">:prefix</span> <span class="nv">nil</span>
+ <span class="ss">:wrappers</span>   <span class="p">{</span><span class="nv">-data</span>  <span class="p">(</span><span class="nb">str </span><span class="s">&quot;hello &quot;</span> <span class="nv">%</span><span class="p">)}</span>
+ <span class="ss">:dispatch</span>   <span class="ss">:type</span>
+ <span class="ss">:defaults</span>   <span class="p">{</span><span class="nv">nil</span>   <span class="p">([</span><span class="nv">this</span> <span class="o">&amp;</span> <span class="nv">args</span><span class="p">]</span> <span class="p">(</span><span class="nf">Exception.</span> <span class="s">&quot;No input&quot;</span><span class="p">))</span>
+              <span class="nv">-data</span> <span class="p">([</span><span class="nv">this</span><span class="p">]</span> <span class="p">(</span><span class="ss">:hello</span> <span class="nv">this</span><span class="p">))})</span>
+
+<span class="p">(</span><span class="nf">data-env</span> <span class="p">(</span><span class="nf">map-&gt;Envelope</span> <span class="p">{</span><span class="ss">:hello</span> <span class="s">&quot;world&quot;</span><span class="p">}))</span>
+<span class="nv">=&gt;</span> <span class="s">&quot;world&quot;</span>
+
+<span class="p">(</span><span class="nf">-data</span> <span class="p">(</span><span class="nf">map-&gt;Envelope</span> <span class="p">{</span><span class="ss">:hello</span> <span class="s">&quot;world&quot;</span><span class="p">}))</span>
+<span class="nv">=&gt;</span> <span class="s">&quot;hello world&quot;</span>
+</pre></div>
+</div><div><a name="extend-implementations"></a><h4><i>e.7.13  &nbsp;-&nbsp; extend-implementations</i></h4><div class="highlight"><pre><span class="s">&quot;Creates a set of implementation functions for implementation</span>
+<span class="s">of protocol functionality&quot;</span>
+
+<span class="p">(</span><span class="nf">extend-implementations</span>
+ <span class="p">[</span><span class="nv">IData</span><span class="p">]</span>
+ <span class="ss">:wrappers</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">form</span> <span class="nv">_</span><span class="p">]</span>
+             <span class="p">(</span><span class="nb">list </span><span class="ss">&#39;str</span> <span class="nv">form</span> <span class="s">&quot; again&quot;</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">data</span> <span class="p">(</span><span class="nf">map-&gt;Envelope</span> <span class="p">{</span><span class="ss">:hello</span> <span class="s">&quot;world&quot;</span><span class="p">}))</span>
+<span class="nv">=&gt;</span> <span class="s">&quot;hello world again&quot;</span>
+</pre></div>
+</div></section></body><script type="text/javascript">var metas = document.getElementsByTagName('meta');
+var i;
+if (navigator.userAgent.match(/iPhone/i)) {
+  for (i=0; i<metas.length; i++) {
+    if (metas[i].name == "viewport") {
+      metas[i].content = "width=device-width, minimum-scale=1.0, maximum-scale=1.0";
+    }
+  }
+  document.addEventListener("gesturestart", gestureStart, false);
+}
+function gestureStart() {
+  for (i=0; i<metas.length; i++) {
+    if (metas[i].name == "viewport") {
+      metas[i].content = "width=device-width, minimum-scale=0.25, maximum-scale=1.6";
+    }
+  }
+}</script></html>
