@@ -1,7 +1,36 @@
 (ns hara.common.watch
   (:require [hara.protocol.watch :refer :all]
-            [hara.expression.shorthand :refer [get->]])
+            [hara.expression.shorthand :refer [get->]]
+            [hara.function.args :as args])
   (:refer-clojure :exclude [list remove]))
+
+(defn wrap-select [f sel]
+  (fn [& args]
+    (let [[n p & more] (reverse args)
+          pv    (get-> p sel)
+          nv    (get-> n sel)]
+      (apply f (-> more (cons p) (cons n) reverse)))))
+
+(defn wrap-change? [f]
+  (fn [& args]
+    (let [[nv pv & more] (reverse args)]
+      (cond (and (nil? pv) (nil? nv))
+            nil
+
+            (or (nil? pv) (nil? nv)
+                (not (= pv nv)))
+            (apply f args)))))
+
+(defn process-options
+  [opts f]
+  (let [_ (args/arg-check f (or (:args opts) 4))
+        f (if-let [sel (:select opts)]
+            (wrap-select f sel)
+            f)
+        f (if (:change? opts)
+            (wrap-change? f)
+            f)]
+    f))
 
 (defn add
   "Adds a watch function through the IWatch protocol
@@ -14,9 +43,11 @@
     (reset! subject 1)
     @observer => 1)"
   {:added "2.1"}
-  ([obj f] (-add-watch obj nil f))
-  ([obj opts f]
-     (-add-watch obj opts f)))
+  ([obj f] (add obj nil f nil))
+  ([obj k f] (add obj k f nil))
+  ([obj k f opts]
+     (let [f (process-watch-options opts f)]
+       (-add-watch obj k f opts))))
 
 (defn list
   "Lists watch functions through the IWatch protocol
@@ -27,9 +58,8 @@
     (watch/add subject :b (fn [_ _ _ n]))
     (watch/list subject) => (contains {:a fn? :b fn?}))"
   {:added "2.1"}
-  ([obj] (-list-watch obj nil))
-  ([obj opts]
-     (-list-watch obj opts)))
+  ([obj] (list obj nil))
+  ([obj opts] (-list-watch obj opts)))
 
 (defn remove
   "Removes watch function through the IWatch protocol
@@ -41,40 +71,24 @@
     (watch/remove subject :b)
     (watch/list subject)) => (contains {:a fn?})"
   {:added "2.1"}
-  ([obj] (-remove-watch obj nil))
+  ([obj]   (remove obj nil nil))
+  ([obj k] (remove obj k nil))
+  ([obj k opts] (-remove-watch obj k opts)))
+
+(defn clear
+  ([obj] (clear obj nil))
   ([obj opts]
-     (-remove-watch obj opts)))
-
-(defn add-change
-  "Adds a watch function that only triggers when there is change
- in `(sel <value>)`.
-
-  (let [subject  (atom {:a 1 :b 2})
-        observer (atom nil)]
-    (watch/add-change subject :clone
-                      :b  (fn [_ _ _ n] (reset! observer n)))
-
-    (swap! subject assoc :a 0) ;; change in :a does not
-    @observer => nil           ;; affect watch
-
-    (swap! subject assoc :b 1) ;; change in :b does
-    @observer => 1)"
-  {:added "2.1"}
-  ([ref k f] (add-change ref k identity f))
-  ([ref k sel f]
-     (add ref k (fn [k ref p n]
-                  (let [pv (get-> p sel)
-                        nv (get-> n sel)]
-                    (if-not (or (= pv nv) (nil? nv))
-                      (f k ref pv nv)))))))
+     (let [watches (list obj opts)]
+       (doseq [k (keys watches)]
+         (remove obj k opts)))))
 
 (extend-protocol IWatch
   clojure.lang.IRef
-  (-add-watch [obj k f]
-    (add-watch obj k f))
+  (-add-watch [obj k f opts]
+    (add-watch obj k f opts))
 
   (-list-watch [obj _]
     (.getWatches obj))
 
-  (-remove-watch [obj k]
+  (-remove-watch [obj k _]
     (remove-watch obj k)))

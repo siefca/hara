@@ -2,6 +2,7 @@
   (:require [hara.expression.shorthand :refer [get->]]))
 
 (defprotocol IWatch
-  (-add-watch    [obj opts f])
+  (-add-watch    [obj k f opts])
+  (-remove-watch [obj k opts])
   (-list-watch   [obj opts])
-  (-remove-watch [obj opts]))
+  (-clear-watch  [obj opts]))

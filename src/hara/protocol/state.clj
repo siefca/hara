@@ -5,4 +5,5 @@
 
 (defprotocol IStateSet
   (-update-state [obj opts f args])
-  (-set-state [obj opts v]))
+  (-set-state [obj opts v])
+  (-empty-state [obj opts]))

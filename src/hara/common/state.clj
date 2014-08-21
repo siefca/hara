@@ -2,7 +2,7 @@
   (:require [hara.common.error :refer [error]]
             [hara.common.checks :refer [promise?]]
             [hara.protocol.state :refer :all])
-  (:refer-clojure :exclude [get set]))
+  (:refer-clojure :exclude [get set empty]))
 
 (defn get
   "Like deref but is extensible through the IStateGet protocol
@@ -26,6 +26,10 @@
   ([obj opts v]
      (-set-state obj opts v)
      obj))
+
+(defn empty
+  ([obj] (empty obj nil))
+  ([obj opts] (-empty-state obj opts)))
 
 (defn update
   "Like swap! but is extensible through the IStateSet protocol

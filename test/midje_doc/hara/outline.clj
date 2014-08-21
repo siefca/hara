@@ -3,7 +3,7 @@
 [[:chapter {:title "Introduction"}]]
 
 "`hara` provides a set of functions, best practises and code abstractions. It serves a `clojure.contrib` like 
-purpose but attempts to uphold the higher principles of programming:
+purpose but attempts to uphold the higher principles of programming. 
 
  - synergistic design
  - maximal code reuse 

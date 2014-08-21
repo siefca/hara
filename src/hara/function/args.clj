@@ -17,7 +17,7 @@
   "counts the number of arguments types before variable arguments
 
   (varg-count (fn [x y & xs])) => 2
-  
+
   (varg-count (fn [x])) => nil"
   {:added "2.1"}
   [f]
@@ -29,9 +29,9 @@
   "counts the number of non-varidic argument types
 
   (arg-count (fn [x])) => [1]
-  
+
   (arg-count (fn [x & xs])) => []
-  
+
   (arg-count (fn ([x]) ([x y]))) => [1 2]"
   {:added "2.1"}
   [f]
@@ -39,3 +39,9 @@
                    (.getDeclaredMethods (class f)))
         ps (map (fn [m] (.getParameterTypes m)) ms)]
     (map alength ps)))
+
+(defn arg-check [f num]
+  (or (if-let [vc (varg-count f)]
+        (<= vc num))
+      (some #(= num %) (arg-count f))
+      (throw (Exception. (str "Function must accomodate " num " arguments")))))
