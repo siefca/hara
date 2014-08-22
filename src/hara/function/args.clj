@@ -40,7 +40,17 @@
         ps (map (fn [m] (.getParameterTypes m)) ms)]
     (map alength ps)))
 
-(defn arg-check [f num]
+(defn arg-check
+  "counts the number of non-varidic argument types
+
+  (arg-check (fn [x]) 1) => true
+
+  (arg-check (fn [x & xs]) 1) => true
+
+  (arg-check (fn [x & xs]) 0)
+  => (throws Exception \"Function must accomodate 0 arguments\")"
+  {:added "2.1"}
+  [f num]
   (or (if-let [vc (varg-count f)]
         (<= vc num))
       (some #(= num %) (arg-count f))

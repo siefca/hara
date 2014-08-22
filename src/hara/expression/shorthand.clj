@@ -23,7 +23,7 @@
 (defn shorthand-fn-expr
   "Makes a function expression out of the form
 
-  (shorthand-fn-expr '(+ 2)) 
+  (shorthand-fn-expr '(+ 2))
   => '(fn [%] (+ % 2))"
   {:added "2.1"}
   [form]
@@ -39,7 +39,7 @@
   (eval (shorthand-fn-expr form)))
 
 (defn call->
-  "Indirect call, takes `obj` and a list containing either a function, 
+  "Indirect call, takes `obj` and a list containing either a function,
    a symbol representing the function or the symbol `?` and any additional
    arguments. Used for calling functions that have been stored as symbols.
 
@@ -158,7 +158,9 @@
 
   (check?-> 3 even?) => nil
 
-  (check?-> 2 even?) => true"
+  (check?-> 2 even?) => true
+
+  (check?-> {:id :1} '[:id (= :1)]) => true"
   {:added "2.1"}
   ([obj prchk] (check?-> obj prchk true))
   ([obj prchk res]

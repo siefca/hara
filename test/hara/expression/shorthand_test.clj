@@ -13,7 +13,7 @@
 ^{:refer hara.expression.shorthand/shorthand-fn-expr :added "2.1"}
 (fact "Makes a function expression out of the form"
 
-  (shorthand-fn-expr '(+ 2)) 
+  (shorthand-fn-expr '(+ 2))
   => '(fn [%] (+ % 2)))
 
 ^{:refer hara.expression.shorthand/fn-> :added "2.1"}
@@ -22,7 +22,7 @@
   ((fn-> '(+ 10)) 10) => 20)
 
 ^{:refer hara.expression.shorthand/call-> :added "2.1"}
-(fact "Indirect call, takes `obj` and a list containing either a function, 
+(fact "Indirect call, takes `obj` and a list containing either a function,
    a symbol representing the function or the symbol `?` and any additional
    arguments. Used for calling functions that have been stored as symbols."
 
@@ -90,4 +90,6 @@
 
   (check?-> 3 even?) => nil
 
-  (check?-> 2 even?) => true)
+  (check?-> 2 even?) => true
+
+  (check?-> {:id :1} '[:id (= :1)]) => true)

@@ -77,8 +77,18 @@
   "creates a :default defmethod form from a protocol basis
 
   (protocol-default-form '{:args [this], :fn data-env, :name -data}
-                         '{#{-data} ([this & args] (Exception. \"No input\"))})
-  => '(defmethod data-env :default [this & args] (Exception. \"No input\"))"
+                         '{#{-data} ([this & args] nil)})
+  => '(defmethod data-env :default [this & args] nil)
+
+  (protocol-default-form '{:args [this], :fn data-env, :name -data}
+                         '{#{-data} (fn [basis]
+                                      `(~(:args basis)
+                                        (throw (Exception. (str ~(str \"No implementation of \" (:fn basis) \" for \")
+                                                                (-> ~(-> basis :args first) :meta :type))))))})
+  => '(defmethod data-env :default [this]
+        (throw (java.lang.Exception.
+                (clojure.core/str \"No implementation of data-env for \"
+                                  (clojure.core/-> this :meta :type)))))"
   {:added "2.1"}
   [basis defaults]
   (map-walk basis defaults [] :name
@@ -127,6 +137,18 @@
        (keep identity)))
 
 (defn protocol-extend-type-wrappers
+  "applies form template for simple template rewrites
+
+  (protocol-extend-type-wrappers '{:args [this], :fn data-env, :name -data}
+                                 '{-data (process %)}
+                                 '(data-env this))
+  => '(process (data-env this))
+
+  (protocol-extend-type-wrappers '{:args [this], :fn data-env, :name -data}
+                                 '{-data (fn [form basis] (concat ['apply] form [[]]))}
+                                 '(data-env this))
+  => '(apply data-env this [])"
+  {:added "2.1"}
   [basis wrappers form]
   (map-walk basis wrappers [form] :name
             (fn [_ _ form] form)
@@ -142,9 +164,8 @@
   "utility to create a extend-type function  with template and macros
 
   (protocol-extend-type-function '{:args [this], :fn data-env, :name -data}
-                                 '{-data (process %)}
                                  '{-data (fn [form basis] (concat ['apply] form [[]]))})
-  => '(-data [this] (apply process (data-env this) []))"
+  => '(-data [this] (apply data-env this []))"
   {:added "2.1"}
   [basis wrappers]
   (list (:name basis) (:args basis)
@@ -155,10 +176,9 @@
   "utility to create an extend-type form
   (protocol-extend-type 'Type 'IProtocol
                         '[{:args [this], :fn data-env, :name -data}]
-                        '{:template (process %)
-                          :macro (fn [form basis] (concat ['apply] form [[]]))})
+                        '{:wrappers (fn [form basis] (concat ['apply] form [[]]))})
   => '(extend-type Type IProtocol
-                   (-data [this] (apply process (data-env this) [])))"
+                   (-data [this] (apply data-env this [])))"
   {:added "2.1"}
   [typesym protocolsym all-basis {:keys [wrappers]}]
   (concat (list 'extend-type typesym protocolsym)
@@ -182,7 +202,7 @@
    :select -
    :suffix -env
    :prefix nil
-   :template   {-data  (str \"hello \" %)}
+   :wrappers   {-data  (str \"hello \" %)}
    :dispatch   :type
    :defaults   {nil   ([this & args] (Exception. \"No input\"))
                 -data ([this] (:hello this))})
@@ -221,8 +241,8 @@
 
   (extend-implementations
    [IData]
-   :macro (fn [form _]
-            (list 'str form \" again\")))
+   :wrappers (fn [form _]
+               (list 'str form \" again\")))
 
   (data (map->Envelope {:hello \"world\"}))
   => \"hello world again\""
