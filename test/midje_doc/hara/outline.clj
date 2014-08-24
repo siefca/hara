@@ -39,6 +39,10 @@ purpose but attempts to uphold the higher principles of programming.
 
 [[:file {:src "test/hara/common/state_test.clj"}]]
 
+[[:section {:title "common.string"}]]
+
+[[:file {:src "test/hara/common/string_test.clj"}]]
+
 [[:section {:title "common.watch"}]]
 
 [[:file {:src "test/hara/common/watch_test.clj"}]]
@@ -54,6 +58,14 @@ purpose but attempts to uphold the higher principles of programming.
 [[:section {:title "function.dispatch"}]]
 
 [[:file {:src "test/hara/function/dispatch_test.clj"}]]
+
+;;-------
+
+[[:chapter {:title "hara.string"}]]
+
+[[:section {:title "string.path"}]]
+
+[[:file {:src "test/hara/string/path_test.clj"}]]
 
 ;;-------
 
@@ -115,3 +127,20 @@ purpose but attempts to uphold the higher principles of programming.
 
 [[:file {:src "test/hara/extend/abstract_test.clj"}]]
 
+;;-------
+
+[[:chapter {:title "hara.concurrent"}]]
+
+[[:section {:title "concurrent.latch"}]]
+
+[[:file {:src "test/hara/concurrent/latch_test.clj"}]]
+
+[[:section {:title "concurrent.notification"}]]
+
+[[:file {:src "test/hara/concurrent/notification_test.clj"}]]
+
+;;-------
+
+[[:chapter {:title "hara.ova"}]]
+
+[[:file {:src "test/hara/ova_test.clj"}]]

@@ -258,7 +258,7 @@
     (<< ov))
   => [{:id :1 :c 3 :a {:b 2}}])
 
-^{:refer hara.ova :added "2.1"}
+^{:refer hara.common.watch/add :added "2.1"}
 (fact "testing the watch/add function with map"
   (let [ov     (ova [1 2 3 4])
         out    (atom [])
@@ -269,7 +269,7 @@
     (persistent! ov) => [2 3 4 5]
     (sort @out) => [[1 2] [2 3] [3 4] [4 5]]))
 
-^{:refer hara.ova :added "2.1"}
+^{:refer hara.common.watch/add :added "2.1"}
 (fact "testing the watch/add with ova functionality"
   (let [ov     (ova [])
         out    (atom [])

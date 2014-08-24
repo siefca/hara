@@ -8,7 +8,7 @@
   (form-require 'cons) => 'cons
   
   (form-require 'clojure.core/cons) => 'clojure.core/cons"
-  {:added "2.1"}
+  {:added "2.1" :hidden true}
   [x]
   (if (symbol? x)
     (do (if-let [nsp (.getNamespace x)]
@@ -19,7 +19,7 @@
 (defn form-prep
   "Prepares the form into a function form
   "
-  {:added "2.1"}
+  {:added "2.1" :hidden true}
   [form]
   (let [rform (clojure.walk/prewalk
                form-require

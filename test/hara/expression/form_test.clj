@@ -2,14 +2,14 @@
   (:use midje.sweet)
   (:require [hara.expression.form :refer :all]))
 
-^{:refer hara.expression.form/form-require :added "2.1"}
+^{:refer hara.expression.form/form-require :added "2.1" :hidden true}
 (fact "Makes sure that the namespace is loaded for a particular symbol"
 
   (form-require 'cons) => 'cons
   
   (form-require 'clojure.core/cons) => 'clojure.core/cons)
 
-^{:refer hara.expression.form/form-prep :added "2.1"}
+^{:refer hara.expression.form/form-prep :added "2.1" :hidden true}
 (fact "Prepares the form into a function form"
   ^:hidden
   (let [my-inc (form-prep '(+ 1 %))]
