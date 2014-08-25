@@ -13,6 +13,23 @@ purpose but attempts to uphold the higher principles of programming.
  - functional extensibility
  - self-documentated code
  
+Please See [finding a middle ground](http://z.caudate.me/finding-a-middle-ground/) for motivations and reasoning."
+
+[[:chapter {:title "Installation"}]]
+
+"Add to `project.clj` dependencies: 
+
+`[im.chit/hara `\"`{{PROJECT.version}}`\"`]`
+
+or
+
+`[im.chit/hara.PACKAGE `\"`{{PROJECT.version}}`\"`]`
+
+or
+
+`[im.chit/hara.PACKAGE.NAMESPACE `\"`{{PROJECT.version}}`\"`]`
+
+Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the subsequent chapters:
 "
 
 [[:chapter {:title "hara.common"}]]
