@@ -103,6 +103,10 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 
 [[:chapter {:title "hara.string"}]]
 
+[[:section {:title "string.case"}]]
+
+[[:file {:src "test/hara/string/case_test.clj"}]]
+
 [[:section {:title "string.path"}]]
 
 [[:file {:src "test/hara/string/path_test.clj"}]]
