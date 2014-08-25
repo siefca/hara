@@ -23,7 +23,6 @@
          \"This is a chained error\")
   => (throws Exception \"This is a chained error\")"
   {:added "2.0"}
-  {:added "2.0"}
   [e & [opt? & more]]
   `(if (instance? Throwable ~e)
      (throw (Exception. (str ~opt? ~@more) ~e))

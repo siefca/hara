@@ -10,7 +10,8 @@
 
   (from-string {:type clojure.lang.Keyword} \"hello/world\")
   => :hello/world"
-  {:added "2.1"} (fn [meta string] (or (:type meta) meta)))
+  {:added "2.1"}
+  (fn [meta string] (or (:type meta) meta)))
 
 (defmethod from-string String
   [meta string]
@@ -32,7 +33,8 @@
 
   (to-string :hello/world)
   => \"hello/world\""
-  {:added "2.1"} [x]
+  {:added "2.1"}
+  [x]
   (-to-string x))
 
 (defn to-meta
@@ -43,7 +45,8 @@
 
   (to-meta :hello/world)
   => {:type clojure.lang.Keyword}"
-  {:added "2.1"} [x]
+  {:added "2.1"}
+  [x]
   (-to-string-meta x))
 
 (extend-type String

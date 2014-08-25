@@ -49,6 +49,14 @@ purpose but attempts to uphold the higher principles of programming.
 
 ;;-------
 
+[[:chapter {:title "hara.data"}]]
+
+[[:section {:title "data.map"}]]
+
+[[:file {:src "test/hara/data/map_test.clj"}]]
+
+;;-------
+
 [[:chapter {:title "hara.function"}]]
 
 [[:section {:title "function.args"}]]
@@ -138,6 +146,10 @@ purpose but attempts to uphold the higher principles of programming.
 [[:section {:title "concurrent.notification"}]]
 
 [[:file {:src "test/hara/concurrent/notification_test.clj"}]]
+
+[[:section {:title "concurrent.propagate"}]]
+
+[[:file {:src "test/hara/concurrent/propagate_test.clj"}]]
 
 ;;-------
 
