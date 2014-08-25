@@ -55,6 +55,21 @@ purpose but attempts to uphold the higher principles of programming.
 
 [[:file {:src "test/hara/data/map_test.clj"}]]
 
+[[:section {:title "data.nested"}]]
+
+[[:file {:src "test/hara/data/nested_test.clj"}]]
+
+[[:section {:title "data.combine"}]]
+
+[[:file {:src "test/hara/data/combine_test.clj"}]]
+
+[[:section {:title "data.complex"}]]
+
+[[:file {:src "test/hara/data/complex_test.clj"}]]
+
+[[:section {:title "data.path"}]]
+
+[[:file {:src "test/hara/data/path_test.clj"}]]
 ;;-------
 
 [[:chapter {:title "hara.function"}]]

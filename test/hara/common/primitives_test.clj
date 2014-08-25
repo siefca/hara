@@ -49,3 +49,14 @@
 
   (uri "http://www.google.com")
   => #(instance? java.net.URI %))
+
+^{:refer hara.common.primitives/class-array :added "2.0"}
+(fact "Returns a Class array"
+
+  (let [a (class-array ["a" "b" "c"])]
+
+    (type a) => (Class/forName "[Ljava.lang.String;")
+
+    (aget a 0) => "a"
+
+    (count a) => 3))

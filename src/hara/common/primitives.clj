@@ -79,6 +79,16 @@
   [path] (java.net.URI/create path))
 
 (defn class-array
+  "Returns a Class array
+
+  (let [a (class-array [\"a\" \"b\" \"c\"])]
+
+    (type a) => (Class/forName \"[Ljava.lang.String;\")
+
+    (aget a 0) => \"a\"
+
+    (count a) => 3)"
+  {:added "2.0"}
   ([seq] (class-array (-> seq first type) seq))
   ([type seq]
     (let [total (count seq)
