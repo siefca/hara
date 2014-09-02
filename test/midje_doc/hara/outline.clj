@@ -87,6 +87,11 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 [[:section {:title "data.path"}]]
 
 [[:file {:src "test/hara/data/path_test.clj"}]]
+
+[[:section {:title "data.record"}]]
+
+[[:file {:src "test/hara/data/record_test.clj"}]]
+
 ;;-------
 
 [[:chapter {:title "hara.function"}]]
@@ -110,6 +115,14 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 [[:section {:title "string.path"}]]
 
 [[:file {:src "test/hara/string/path_test.clj"}]]
+
+;;-------
+
+[[:chapter {:title "hara.sort"}]]
+
+[[:section {:title "sort.topological"}]]
+
+[[:file {:src "test/hara/sort/topological_test.clj"}]]
 
 ;;-------
 
@@ -186,6 +199,12 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 [[:section {:title "concurrent.propagate"}]]
 
 [[:file {:src "test/hara/concurrent/propagate_test.clj"}]]
+
+;;-------
+
+[[:chapter {:title "hara.component"}]]
+
+[[:file {:src "test/hara/component_test.clj"}]]
 
 ;;-------
 
