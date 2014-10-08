@@ -90,3 +90,76 @@
 
   (system? (system {} {}))
   => true)
+
+
+
+
+(do
+  (defrecord Filesystem []
+    Object
+    (toString [fs]
+      (str "#fs" (into {} fs)))
+
+    IComponent
+    (-start [fs]
+      (assoc fs :status "started"))
+    (-stop [fs]
+      (dissoc fs :status)))
+
+  (defmethod print-method Filesystem
+    [v w]
+    (.write w (str v)))
+
+  (defrecord Camera []
+    Object
+    (toString [cam]
+      (str "#cam" (into {} cam)))
+
+    IComponent
+    (-start [cam]
+      (assoc cam :status "started"))
+    (-stop [cam]
+      (dissoc cam :status)))
+
+  (defmethod print-method Camera
+    [v w]
+    (.write w (str v)))
+
+  (defrecord Watchman []
+    Object
+    (toString [wc]
+      (str "#wc" (into {} wc)))
+
+    IComponent
+    (-start [wc]
+      (assoc wc :status "started"))
+    (-stop [wc]
+      (dissoc wc :status)))
+
+  (defmethod print-method Watchman
+    [v w]
+    (.write w (str v)))
+
+  (def topology {:database   [{:constructor map->Database
+                               :initialiser #(assoc % :a 1)}]
+
+                 :cameras    [{:constructor [map->Camera]
+                               :initialiser #(assoc % :a 2)}
+                              :database]
+                 ;;:watchmen   [[map->Watchman] [:cameras :camera] :filesystem :database]
+                 })
+
+  (system)
+
+  (#'hara.component/system-constructors topology)
+  (#'hara.component/system-dependencies topology)
+  (#'hara.component/system-augmentations topology)
+
+  #_(stop (start (system topology
+
+                         {:watchmen [{:id 1} {:id 2}]
+                          :cameras ^{:hello "world"} [{:id 1} {:id 2 :hello "again"} {:id 3}]})))
+  #_(array map->Watchman ^{:hello "world"} [{:id 1} {:id 2 :hello "again"}])
+  (start (system topology
+                       {:watchmen [{:id 1} {:id 2}]
+                        :cameras ^{:hello "world"} [{:id 1} {:id 2 :hello "again"}]})))
