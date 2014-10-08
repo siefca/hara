@@ -1,7 +1,17 @@
 (ns hara.reflect.util
   (:import [java.lang.reflect Field]))
 
-(defn box-arg [^Class param-type ^Object arg]
+(defn box-arg
+  "boxArg
+  (box-arg Float/TYPE 2)
+  => 2.0
+
+  (box-arg Integer/TYPE 2.001)
+  => 2
+
+  (type (box-arg Short/TYPE 1.0))
+  => java.lang.Short"
+  {:added "2.1"} [^Class param-type ^Object arg]
   (cond (not (.isPrimitive param-type))
         (.cast param-type arg)
 
@@ -11,14 +21,14 @@
         (= param-type Character/TYPE)
         (.cast Character arg)
 
-        (instance? arg Number)
+        (instance? Number arg)
         (condp = param-type
-          Integer (.intValue arg)
-          Float   (.floatValue arg)
-          Double  (.doubleValue arg)
-          Long    (.longValue arg)
-          Short   (.shortValue arg)
-          Byte    (.byteValue arg))
+          Integer/TYPE (.intValue arg)
+          Float/TYPE   (.floatValue arg)
+          Double/TYPE  (.doubleValue arg)
+          Long/TYPE    (.longValue arg)
+          Short/TYPE   (.shortValue arg)
+          Byte/TYPE    (.byteValue arg))
 
         :else
         (throw (ClassCastException.
@@ -50,7 +60,34 @@
                   (format "Unexpected param type, expected: %s, given: %s"
                         ftype (-> val .getClass .getName)))))))
 
-(defn param-arg-match [^Class param-type ^Class arg-type]
+(defn param-arg-match
+  "(param-arg-match Double/TYPE Float/TYPE)
+ => true
+
+ (param-arg-match Float/TYPE Double/TYPE)
+ => true
+
+ (param-arg-match Integer/TYPE Float/TYPE)
+ => false
+
+ (param-arg-match Byte/TYPE Long/TYPE)
+ => false
+
+ (param-arg-match Long/TYPE Byte/TYPE)
+ => true
+
+ (param-arg-match Long/TYPE Long)
+ => true
+
+ (param-arg-match Long Byte)
+ => false
+
+ (param-arg-match clojure.lang.PersistentHashMap java.util.Map)
+ => false
+
+ (param-arg-match java.util.Map clojure.lang.PersistentHashMap)
+ => true"
+  {:added "2.1"} [^Class param-type ^Class arg-type]
   (cond (nil? arg-type)
         (-> param-type .isPrimitive not)
 
@@ -85,6 +122,6 @@
 
         (= (count args) (count params))
         (-> (map param-arg-match params args)
-            (every? #(= true)))
+            (every? #(= true %)))
 
         :else false))
