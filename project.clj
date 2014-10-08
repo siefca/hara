@@ -1,4 +1,4 @@
-(defproject im.chit/hara "2.1.3"
+(defproject im.chit/hara "2.1.4"
   :description "General purpose utilities library "
   :url "https://github.com/zcaudate/hara"
   :license {:name "The MIT License"
@@ -14,4 +14,7 @@
                          :sub-title "General Purpose Utilities Library"
                          :author "Chris Zheng"
                          :email  "z@caudate.me"}}}
-  :repack {:levels 2})
+  :repack [{:type :clojure
+            :levels 2
+            :path "src"
+            :standalone #{"reflect"}}])

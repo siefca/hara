@@ -1,4 +1,4 @@
-(ns hara.class.reflect.util
+(ns hara.reflect.util
   (:import [java.lang.reflect Field]))
 
 (defn box-arg [^Class param-type ^Object arg]
