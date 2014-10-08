@@ -1,5 +1,6 @@
 (ns hara.component
-  (:require [hara.data.nested :refer [merge-nested]]
+  (:require [hara.common.checks :refer [hash-map?]]
+            [hara.data.nested :refer [merge-nested]]
             [hara.data.record :refer [empty-record]]
             [hara.sort.topological :refer [topological-sort]]))
 
@@ -198,8 +199,22 @@
    topology))
 
 (defn- system-constructors [topology]
-  (reduce (fn [m [k v]]
-            (assoc m k (first v)))
+  (reduce (fn [m [k [const & _]]]
+            (assoc m k
+                   (cond (hash-map? const)
+                         (or (:constructor const) identity)
+
+                         :else const)))
+   {}
+   topology))
+
+(defn- system-initialisers [topology]
+  (reduce (fn [m [k [const & _]]]
+            (assoc m k
+                   (cond (hash-map? const)
+                         (or (:initialiser const) identity)
+
+                         :else identity)))
    {}
    topology))
 
@@ -227,21 +242,23 @@
   (let [graph (meta csys)
         cmp-keys  (-> graph :dependencies topological-sort)
         cmp-ctors (-> graph :constructors)
+        cmp-inits (-> graph :initialisers)
         cmp-augs  (-> graph :augmentations)]
     (-> (reduce (fn [m k]
                   (let [component  (get csys k)
                         ctor       (get cmp-ctors k)
+                        init       (get cmp-inits k)
                         aug        (get cmp-augs k)]
-                    (assoc m k (cond (vector? ctor)
-                                     (->> (seq component)
-                                          (map-indexed (augmentation-fn m aug))
-                                          (ComponentArray.)
-                                          (start))
+                    (init (assoc m k (cond (vector? ctor)
+                                           (->> (seq component)
+                                                (map-indexed (augmentation-fn m aug))
+                                                (ComponentArray.)
+                                                (start))
 
-                                     :else
-                                     (-> component
-                                         (merge (select-keys m aug))
-                                         start)))))
+                                           :else
+                                           (-> component
+                                               (merge (select-keys m aug))
+                                               start))))))
                 (ComponentSystem.)
                 cmp-keys)
         (with-meta graph))))
@@ -297,6 +314,7 @@
   [topology config]
   (let [deps  (system-dependencies  topology)
         ctors (system-constructors  topology)
+        inits (system-initialisers  topology)
         augms (system-augmentations topology)]
     (with-meta
       (reduce (fn [sys [k ctor]]
@@ -315,6 +333,7 @@
               ctors)
       {:dependencies deps
        :constructors ctors
+       :initialisers inits
        :augmentations augms})))
 
 (defn system?
