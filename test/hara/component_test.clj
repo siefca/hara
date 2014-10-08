@@ -91,26 +91,7 @@
   (system? (system {} {}))
   => true)
 
-
-
-
-(do
-  (defrecord Filesystem []
-    Object
-    (toString [fs]
-      (str "#fs" (into {} fs)))
-
-    IComponent
-    (-start [fs]
-      (assoc fs :status "started"))
-    (-stop [fs]
-      (dissoc fs :status)))
-
-  (defmethod print-method Filesystem
-    [v w]
-    (.write w (str v)))
-
-  (defrecord Camera []
+(defrecord Camera []
     Object
     (toString [cam]
       (str "#cam" (into {} cam)))
@@ -125,41 +106,28 @@
     [v w]
     (.write w (str v)))
 
-  (defrecord Watchman []
-    Object
-    (toString [wc]
-      (str "#wc" (into {} wc)))
-
-    IComponent
-    (-start [wc]
-      (assoc wc :status "started"))
-    (-stop [wc]
-      (dissoc wc :status)))
-
-  (defmethod print-method Watchman
-    [v w]
-    (.write w (str v)))
+^{:refer hara.component/more-tests :added "2.1"}
+(fact "creates a system of components"
 
   (def topology {:database   [{:constructor map->Database
                                :initialiser #(assoc % :a 1)}]
 
                  :cameras    [{:constructor [map->Camera]
                                :initialiser #(assoc % :a 2)}
-                              :database]
-                 ;;:watchmen   [[map->Watchman] [:cameras :camera] :filesystem :database]
-                 })
-
-  (system)
+                              :database]})
 
   (#'hara.component/system-constructors topology)
+  => (contains {:cameras (contains [fn?])
+                :database fn?})
   (#'hara.component/system-dependencies topology)
+  => {:cameras #{:database}, :database #{}}
   (#'hara.component/system-augmentations topology)
+  => {:cameras #{:database}, :database #{}}
 
-  #_(stop (start (system topology
-
-                         {:watchmen [{:id 1} {:id 2}]
-                          :cameras ^{:hello "world"} [{:id 1} {:id 2 :hello "again"} {:id 3}]})))
-  #_(array map->Watchman ^{:hello "world"} [{:id 1} {:id 2 :hello "again"}])
   (start (system topology
-                       {:watchmen [{:id 1} {:id 2}]
-                        :cameras ^{:hello "world"} [{:id 1} {:id 2 :hello "again"}]})))
+                 {:watchmen [{:id 1} {:id 2}]
+                  :cameras ^{:hello "world"} [{:id 1} {:id 2 :hello "again"}]}))
+  => (contains {:database (contains {:status "started"})
+                :a 2,
+                :cameras anything #_(contains [(contains {:hello "world", :id 1,  :status "started"})
+                                               (contains {:hello "again", :id 2,  :status "started"})])}))
