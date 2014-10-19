@@ -115,7 +115,17 @@
     (ComponentArray. (with-meta arr m)))
 
   clojure.lang.IMeta
-  (meta [this] (meta arr)))
+  (meta [this] (meta arr))
+
+  clojure.lang.Counted
+  (count [this] (count arr))
+
+  clojure.lang.Indexed
+  (nth [this i]
+    (nth arr i nil))
+
+  (nth [ova i not-found]
+    (nth arr i not-found)))
 
 (defmethod print-method ComponentArray
   [v w]
@@ -255,10 +265,12 @@
                                                 (ComponentArray.)
                                                 (start))
 
-                                           :else
+                                           (instance? clojure.lang.IPersistentCollection component)
                                            (-> component
                                                (merge (select-keys m aug))
-                                               start))))))
+                                               start)
+
+                                           :else component)))))
                 (ComponentSystem.)
                 cmp-keys)
         (with-meta graph))))

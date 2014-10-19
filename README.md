@@ -5,6 +5,9 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 
 ## Whats New
 
+#### 2.1.5
+- Fix for `hara.component` to work with none record-based components
+
 #### 2.1.4
 
 - Moved [iroh](http://github.com/zcaudate/iroh) to `im.chit/hara.reflect`
@@ -15,15 +18,15 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 Add to project.clj dependencies:
 
 ```clojure
-[im.chit/hara "2.1.4"]
+[im.chit/hara "2.1.5"]
 
 or
 
-[im.chit/hara.<PACKAGE> "2.1.4"]
+[im.chit/hara.<PACKAGE> "2.1.5"]
 
 or
 
-[im.chit/hara.<PACKAGE>.<NAMESPACE> "2.1.4"]
+[im.chit/hara.<PACKAGE>.<NAMESPACE> "2.1.5"]
 ```
 
 Where `PACKAGE` and `NAMESPACE` can be seen from the [API Documentation](http://docs.caudate.me/hara/). Please see documentation for examples of usage.
