@@ -11,7 +11,8 @@
 
   (type (box-arg Short/TYPE 1.0))
   => java.lang.Short"
-  {:added "2.1"} [^Class param-type ^Object arg]
+  {:added "2.1"}
+  [^Class param-type ^Object arg]
   (cond (not (.isPrimitive param-type))
         (.cast param-type arg)
 
@@ -87,7 +88,8 @@
 
  (param-arg-match java.util.Map clojure.lang.PersistentHashMap)
  => true"
-  {:added "2.1"} [^Class param-type ^Class arg-type]
+  {:added "2.1"}
+  [^Class param-type ^Class arg-type]
   (cond (nil? arg-type)
         (-> param-type .isPrimitive not)
 

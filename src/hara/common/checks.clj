@@ -38,6 +38,11 @@
   [x] (instance? clojure.lang.BigInt x))
 
 (defn double?
+  "Returns `true` if `x` is of type `java.lang.Long`.
+
+  (double? 1)            => false
+  (double? (double 1))   => true"
+  {:added "2.1"}
   [x] (instance? java.lang.Double x))
 
 (defn bigdec?
