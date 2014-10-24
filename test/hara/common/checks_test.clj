@@ -30,7 +30,7 @@
   (bigint? 1)        =>  false)
 
 ^{:refer hara.common.checks/double? :added "2.1"}
-(fact "Returns `true` if `x` is of type `java.lang.Long`."
+(fact "Returns `true` if `x` is of type `java.lang.Double`."
 
   (double? 1)            => false
   (double? (double 1))   => true)
