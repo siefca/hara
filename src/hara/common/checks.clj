@@ -37,6 +37,9 @@
   {:added "2.0"}
   [x] (instance? clojure.lang.BigInt x))
 
+(defn double?
+  [x] (instance? java.lang.Double x))
+
 (defn bigdec?
   "Returns `true` if `x` is of type `java.math.BigDecimal`.
 

@@ -22,13 +22,18 @@
 
   (long? 1)          => true
   (long? 1N)         => false)
-
+  
 ^{:refer hara.common.checks/bigint? :added "2.0"}
 (fact "Returns `true` if `x` is of type `clojure.lang.BigInt`."
 
   (bigint? 1N)       => true
-  (bigint? 1)        =>  false
-)
+  (bigint? 1)        =>  false)
+
+^{:refer hara.common.checks/double? :added "2.1"}
+(fact "Returns `true` if `x` is of type `java.lang.Long`."
+
+  (double? 1)            => false
+  (double? (double 1))   => true)
 
 ^{:refer hara.common.checks/bigdec? :added "2.0"}
 (fact "Returns `true` if `x` is of type `java.math.BigDecimal`."

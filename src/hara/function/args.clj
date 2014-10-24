@@ -55,3 +55,16 @@
         (<= vc num))
       (some #(= num %) (arg-count f))
       (throw (Exception. (str "Function must accomodate " num " arguments")))))
+
+(defn op
+  [f & args]
+  (let [nargs (count args)
+        vargs (varg-count f)]
+    (if (and vargs (>= nargs vargs))
+      (apply f args)
+      (let [fargs (arg-count f)
+            candidates (filter #(< % nargs) fargs)]
+        (if (empty? candidates)
+          (throw (Exception. (str "arguments have to be of at least length " (apply min fargs))))
+          (let [cnt (apply max candidates)]
+            (apply f (take cnt args))))))))
