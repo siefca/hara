@@ -38,7 +38,7 @@
   [x] (instance? clojure.lang.BigInt x))
 
 (defn double?
-  "Returns `true` if `x` is of type `java.lang.Long`.
+  "Returns `true` if `x` is of type `java.lang.Double`.
 
   (double? 1)            => false
   (double? (double 1))   => true"
