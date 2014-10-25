@@ -165,13 +165,13 @@
   (assoc-nil {:a 1} :b 2)
   => {:a 1 :b 2}
 
-  (assoc-nil {:a 1} :a 2)
-  => {:a 1}"
+  (assoc-nil {:a 1} :a 2 :b 2)
+  => {:a 1 :b 2}"
   {:added "2.1"}
   ([m k v]
      (if (get m k) m (assoc m k v)))
   ([m k v & more]
-     (apply (assoc-nil m k v) more)))
+     (apply assoc-nil (assoc-nil m k v) more)))
 
 (defn assoc-in-nil
   "only assoc-in if the value in the original map is nil

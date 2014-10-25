@@ -102,8 +102,8 @@
   (assoc-nil {:a 1} :b 2)
   => {:a 1 :b 2}
 
-  (assoc-nil {:a 1} :a 2)
-  => {:a 1})
+  (assoc-nil {:a 1} :a 2 :b 2)
+  => {:a 1 :b 2})
 
 ^{:refer hara.data.map/assoc-in-nil :added "2.1"}
 (fact "only assoc-in if the value in the original map is nil"
