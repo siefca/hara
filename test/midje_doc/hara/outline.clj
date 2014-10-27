@@ -211,3 +211,9 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 [[:chapter {:title "hara.ova"}]]
 
 [[:file {:src "test/hara/ova_test.clj"}]]
+
+;;-------
+
+[[:chapter {:title "hara.io.watch"}]]
+
+[[:file {:src "test/hara/io/watch_test.clj"}]]
