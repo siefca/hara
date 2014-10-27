@@ -54,7 +54,7 @@
   => {:a 1}"
   {:added "2.1"}
   ([m k v]
-     (if v (assoc m k v) m))
+     (if (not (nil? v)) (assoc m k v) m))
   ([m k v & more]
      (apply assoc-if (assoc-if m k v) more)))
 
@@ -68,7 +68,7 @@
   => {}"
   {:added "2.1"}
   [m arr v]
-  (if v (assoc-in m arr v) m))
+  (if (not (nil? v)) (assoc-in m arr v) m))
 
 (defn update-in-if
   "update-in a nested key/value pair only if the value exists
@@ -80,9 +80,10 @@
   => {}"
   {:added "2.1"}
   [m arr f & args]
-  (if-let [v (get-in m arr)]
-    (assoc-in m arr (apply f v args))
-    m))
+  (let [v (get-in m arr)]
+    (if (not (nil? v))
+      (assoc-in m arr (apply f v args))
+      m)))
 
 (defn merge-if
   "merges key/value pairs into a single map only if the value exists
@@ -98,11 +99,11 @@
   {:added "2.1"}
   ([m]
      (reduce (fn [i [k v]]
-               (if v (assoc i k v) i))
+               (if (not (nil? v)) (assoc i k v) i))
              {} m))
   ([m1 m2]
      (reduce (fn [i [k v]]
-               (if v (assoc i k v) i))
+               (if (not (nil? v)) (assoc i k v) i))
              (merge-if m1) m2))
   ([m1 m2 & more]
      (apply merge-if (merge-if m1 m2) more)))
@@ -119,8 +120,8 @@
   {:added "2.1"}
   [to from]
   (reduce (fn [i e]
-            (if (or (and (coll? e) (second e))
-                    (and (not (coll? e)) e))
+            (if (or (and (coll? e) (not (nil? (second e))))
+                    (and (not (coll? e)) (not (nil? e))))
               (conj i e)
               i))
           to from))
@@ -136,9 +137,10 @@
   {:added "2.1"}
   [m ks]
   (reduce (fn [i k]
-            (if-let [v (get m k)]
-              (assoc i k v)
-              i))
+            (let [v (get m k)]
+              (if (not (nil? v))
+                (assoc i k v)
+                i)))
           nil ks))
 
 (defn merge-nil
@@ -152,7 +154,7 @@
   {:added "2.1"}
   ([m1 m2]
      (reduce (fn [i [k v]]
-               (if (get i k)
+               (if (not (nil? (get i k)))
                  i
                  (assoc i k v)))
              m1 m2))
@@ -169,7 +171,7 @@
   => {:a 1 :b 2}"
   {:added "2.1"}
   ([m k v]
-     (if (get m k) m (assoc m k v)))
+     (if (not (nil? (get m k))) m (assoc m k v)))
   ([m k v & more]
      (apply assoc-nil (assoc-nil m k v) more)))
 
@@ -183,4 +185,4 @@
   => {:a {:b 1}}"
   {:added "2.1"}
   [m ks v]
-  (if (get-in m ks) m (assoc-in m ks v)))
+  (if (not (nil? (get-in m ks))) m (assoc-in m ks v)))
