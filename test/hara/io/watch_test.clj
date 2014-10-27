@@ -5,15 +5,20 @@
             [clojure.java.io :as io]))
 
 ^{:refer hara.io.watch/watcher :added "2.1"}
-(fact "playing with the watch service"
+(fact "the watch interface provided for java.io.File"
+
   (def ^:dynamic *happy* (promise))
 
   (watch/add (io/file ".") :save
-             (fn [_ _ _ [cmd file]]
+             (fn [f k _ [cmd file]]
+               (watch/remove f k)
+               (.delete file)
                (deliver *happy* [cmd (.getName file)]))
-             {:filter [".hara"]
+             {:types #{:create :modify}
+              :recursive false
+              :filter  [".hara"]
               :exclude [".git" "target"]
-              :async true})
+              :async false})
 
   (watch/list (io/file "."))
   => (contains {:save fn?})
@@ -23,5 +28,5 @@
   @*happy*
   => [:create "happy.hara"]
 
-  (.delete (io/file "happy.hara"))
-  (watch/remove (io/file ".") :save))
+  (watch/list (io/file "."))
+  => {})

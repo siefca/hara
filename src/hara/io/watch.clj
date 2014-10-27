@@ -7,7 +7,8 @@
            [java.util.concurrent TimeUnit]))
 
 (def ^:dynamic *defaults* {:recursive true
-                           :types :all})
+                           :types :all
+                           :exclude [".*"]})
 
 (def ^:dynamic *filewatchers* (atom {}))
 
@@ -90,22 +91,27 @@
 (defrecord Watcher [paths callback options]
   Object
   (toString [this]
-    (str "#watcher" (assoc options :paths paths))))
+    (str "#watcher" (assoc options :paths paths :running (-> this :running not not)))))
 
 (defmethod print-method Watcher
   [v w]
   (.write w (str v)))
 
 (defn watcher
-  "playing with the watch service
+  "the watch interface provided for java.io.File
+
   (def ^:dynamic *happy* (promise))
 
   (watch/add (io/file \".\") :save
-             (fn [_ _ _ [cmd file]]
+             (fn [f k _ [cmd file]]
+               (watch/remove f k)
+               (.delete file)
                (deliver *happy* [cmd (.getName file)]))
-             {:filter [\".hara\"]
+             {:types #{:create :modify}
+              :recursive false
+              :filter  [\".hara\"]
               :exclude [\".git\" \"target\"]
-              :async true})
+              :async false})
 
   (watch/list (io/file \".\"))
   => (contains {:save fn?})
@@ -115,9 +121,10 @@
   @*happy*
   => [:create \"happy.hara\"]
 
-  (.delete (io/file \"happy.hara\"))
-  (watch/remove (io/file \".\") :save)"
-  {:added "2.1"} [paths callback options]
+  (watch/list (io/file \".\"))
+  => {}"
+  {:added "2.1"}
+  [paths callback options]
   (let [paths   (if (coll? paths) paths [paths])]
     (Watcher. paths callback
               (merge-nil options *defaults*))))
