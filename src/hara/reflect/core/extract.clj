@@ -30,6 +30,22 @@
                   (string/join ", " (map name (:modifiers ele))))))))
 
 (defn extract-to-var
+  "extracts a class method into a namespace.
+
+  (extract-to-var 'hash-without clojure.lang.IPersistentMap 'without [])
+
+  (with-out-str (clojure.repl/doc hash-without))
+  => (str \"-------------------------\\n\"
+          \"hara.reflect.core.extract-test/hash-without\\n\"
+          \"[[clojure.lang.IPersistentMap java.lang.Object]]\\n\"
+          \"  \\n\"
+          \"member: clojure.lang.IPersistentMap/without\\n\"
+          \"type: clojure.lang.IPersistentMap\\n\"
+          \"modifiers: instance, method, public, abstract\\n\")
+
+  (eval '(hash-without {:a 1 :b 2} :a))
+  => {:b 2}"
+  {:added "2.1"}
   ([varsym class method selectors]
    (extract-to-var *ns* varsym class method selectors))
   ([nssym varsym class method selectors]
@@ -38,6 +54,12 @@
       v)))
 
 (defn extract-to-ns
+  "extracts all class methods into its own namespace.
+
+  (map #(.sym %)
+       (extract-to-ns 'test.string String [:private #\"serial\"]))
+  => '[serialPersistentFields serialVersionUID]"
+  {:added "2.1"}
   [nssym class selectors]
   (let [eles (q/list-class-elements class selectors)
         methods (distinct (map :name eles))]

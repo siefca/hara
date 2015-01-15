@@ -46,7 +46,7 @@
   (let [a   \"hello\"
         >a  (delegate a)]
 
-    (keys >a) => (just [:hash :hash32 :value] :in-any-order)
+    (keys >a) => (contains [:hash :value] :in-any-order)
 
     (seq (>a :value)) => [\\h \\e \\l \\l \\o]
 

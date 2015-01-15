@@ -24,13 +24,13 @@
 
 (defmacro .>var
   ([name [class method & selectors]]
-   `(reflect/extract-var ~name ~class ~(str method) (args/args-convert selectors)))
+   `(reflect/extract-to-var ~name ~class ~(str method) (args/args-convert selectors)))
   ([name objvec & more]
    [`(.>var ~name ~objvec)]
     ~@(map #(cons `.>var %) (partition 2 more))))
 
 (defmacro .>ns [ns class & selectors]
-  `(relect/extract-ns ~ns ~class (args/args-convert selectors)))
+  `(relect/extract-to-ns ~ns ~class (args/args-convert selectors)))
 
 (defmacro .>
   "Threads the first input into the rest of the functions. Same as `->` but

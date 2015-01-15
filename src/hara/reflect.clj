@@ -6,5 +6,5 @@
  hara.reflect.core.apply          [apply-element]
  hara.reflect.core.class          [class-info class-hierarchy]
  hara.reflect.core.delegate       [delegate]
- hara.reflect.core.extract        [extract-var extract-ns]
+ hara.reflect.core.extract        [extract-to-var extract-to-ns]
  hara.reflect.core.query          [query-class query-instance])
