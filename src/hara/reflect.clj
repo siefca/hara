@@ -1,12 +1,10 @@
 (ns hara.reflect
-  (:require [hara.reflect.core apply delegate hierarchy import query-class query-instance]
-            [hara.namespace.import :as ns])
-  (:refer-clojure :exclude [.> .* .? .% .%> >ns >var]))
+  (:require [hara.reflect.core apply delegate class extract query]
+            [hara.namespace.import :as ns]))
 
 (ns/import
- hara.reflect.core.apply          [.>]
+ hara.reflect.core.apply          [apply-element]
+ hara.reflect.core.class          [class-info class-hierarchy]
  hara.reflect.core.delegate       [delegate]
- hara.reflect.core.hierarchy      [.% .%>]
- hara.reflect.core.import         [>ns >var]
- hara.reflect.core.query-class    [.?]
- hara.reflect.core.query-instance [.*])
+ hara.reflect.core.extract        [extract-var extract-ns]
+ hara.reflect.core.query          [query-class query-instance])

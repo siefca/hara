@@ -2,8 +2,7 @@
   (:require [hara.reflect.common :as common]
             [hara.reflect.types.element :as element]
             [hara.reflect.element multi method field constructor]
-            [hara.reflect.core.query-instance :as q])
-  (:refer-clojure :exclude [.>]))
+            [hara.reflect.core.query :as q]))
 
 (defn instance-lookup-path
   [ele]
@@ -81,42 +80,3 @@
             :else
             (apply ele obj args))
       (throw (Exception. (format "Class member not Found for %s - `%s`" (common/context-class obj) method))))))
-
-(defmacro .>
-  "Threads the first input into the rest of the functions. Same as `->` but
-   allows access to private fields using both `:keyword` and `.symbol` lookup:
-
-  (.> \"abcd\" :value String.) => \"abcd\"
-
-  (.> \"abcd\" .value String.) => \"abcd\"
-
-  (let [a  \"hello\"
-        _  (.> a (.value (char-array \"world\")))]
-    a)
-  => \"world\""
-  {:added "2.1"}
-  ([obj] obj)
-  ([obj method]
-     (cond (not (list? method))
-           `(.> ~obj (~method))
-
-           (list? method)
-           (let [[method & args] method]
-             (cond (#{'.* '.? '.% '.%>} method)
-                   `(~(symbol (str "hara.reflect.core/" method)) ~obj ~@args)
-
-                   (and (symbol? method) (.startsWith (name method) "."))
-                   `(apply-element ~obj ~(subs (name method) 1) ~(vec args))
-
-                   (keyword? method)
-                   `(or (~method ~obj ~@args)
-                        (let [nm# ~(subs (str method) 1)]
-                          (if (some #(= % nm#) (q/.* ~obj :name))
-                            (apply-element ~obj nm# ~(vec args)))))
-
-                   :else
-                   `(~method ~obj ~@args)
-                   ))))
-
-  ([obj method & more]
-     `(.> (.> ~obj ~method) ~@more)))

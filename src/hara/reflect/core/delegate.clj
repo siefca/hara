@@ -1,5 +1,5 @@
 (ns hara.reflect.core.delegate
-  (:require [hara.reflect.core.query-instance :as q]))
+  (:require [hara.reflect.core.query :as q]))
 
 (deftype Delegate [pointer fields]
   Object
@@ -54,9 +54,9 @@
     a => \"world\")"
   {:added "2.1"}
   [obj]
-    (let [fields (->> (map (juxt (comp keyword :name) identity) (q/.* obj :field))
-                      (into {}))]
-      (Delegate. obj fields)))
+  (let [fields (->> (map (juxt (comp keyword :name) identity) (q/query-instance obj [:field]))
+                    (into {}))]
+    (Delegate. obj fields)))
 
 (defmethod print-method Delegate
   [v w] (.write w (str v)))

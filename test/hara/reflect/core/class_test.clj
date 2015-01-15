@@ -1,12 +1,11 @@
-(ns hara.reflect.core.hierarchy-test
+(ns hara.reflect.core.class-test
   (:use midje.sweet)
-  (:require [hara.reflect.core.hierarchy :refer :all])
-  (:refer-clojure :exclude [.% .%>]))
+  (:require [hara.reflect.core.class :refer :all]))
 
-^{:refer hara.reflect.core.hierarchy/.% :added "2.1"}
+^{:refer hara.reflect.core.class/class-info :added "2.1"}
 (fact "Lists class information"
 
-  (.% String)  ;; or (.%> "")
+  (class-info String)
   => (contains {:name "java.lang.String"
                 :tag :class
                 :hash anything
@@ -15,10 +14,10 @@
                 :static false
                 :delegate java.lang.String}))
 
-^{:refer hara.reflect.core.hierarchy/.%> :added "2.1"}
+^{:refer hara.reflect.core.class/class-hierarchy :added "2.1"}
 (fact "Lists the class and interface hierarchy for the class"
 
-  (.%> String)   ;; or (.%> "")
+  (class-hierarchy String)
   => [java.lang.String
       [java.lang.Object
        #{java.io.Serializable
