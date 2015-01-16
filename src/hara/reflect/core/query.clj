@@ -29,7 +29,8 @@
   => [\"charAt\" \"checkBounds\" \"codePointAt\" \"codePointBefore\"
       \"codePointCount\" \"compareTo\" \"compareToIgnoreCase\"
       \"concat\" \"contains\" \"contentEquals\" \"copyValueOf\"]"
-  {:added "2.1"} [obj selectors]
+  {:added "2.1"}
+  [obj selectors]
   (list-class-elements (common/context-class obj) selectors))
 
 

@@ -14,7 +14,8 @@
                 :modifiers #{:instance :class :public :final}
                 :static false
                 :delegate java.lang.String})"
-  {:added "2.1"} [obj]
+  {:added "2.1"}
+  [obj]
   (element/seed :class (common/context-class obj)))
 
 (defn class-hierarchy
@@ -26,6 +27,7 @@
        #{java.io.Serializable
          java.lang.Comparable
          java.lang.CharSequence}]]"
-  {:added "2.1"} [obj]
+  {:added "2.1"}
+  [obj]
   (let [t (common/context-class obj)]
     (vec (cons t (inheritance/ancestor-tree t)))))

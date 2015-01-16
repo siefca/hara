@@ -7,7 +7,7 @@
 
   (extract-to-var 'hash-without clojure.lang.IPersistentMap 'without [])
 
-  (with-out-str (clojure.repl/doc hash-without))
+  (with-out-str (eval '(clojure.repl/doc hash-without)))
   => (str "-------------------------\n"
           "hara.reflect.core.extract-test/hash-without\n"
           "[[clojure.lang.IPersistentMap java.lang.Object]]\n"
