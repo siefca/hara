@@ -177,7 +177,9 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 
 ;;-------
 
-[[:chapter {:title "hara.io.watch"}]]
+[[:chapter {:title "hara.io"}]]
+
+[[:section {:title "io.watch"}]]
 
 [[:file {:src "test/hara/io/watch_test.clj"}]]
 
@@ -236,4 +238,3 @@ Where `PACKAGE` and `NAMESPACE` can be glean from the sections listed in the sub
 [[:section {:title "string.path"}]]
 
 [[:file {:src "test/hara/string/path_test.clj"}]]
-

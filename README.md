@@ -5,6 +5,9 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 
 ## Whats New
 
+#### 2.1.8
+- Reworked `hara.reflect` to use only functions, moved helper macros into vinyasa 
+
 #### 2.1.5
 - Fix for `hara.component` to work with none record-based components
 
@@ -15,25 +18,24 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 
 ## Installation
 
-
 Add to project.clj dependencies:
 
 ```clojure
-[im.chit/hara "2.1.5"]
+[im.chit/hara "2.1.8"]
 
 or
 
-[im.chit/hara.<PACKAGE> "2.1.5"]
+[im.chit/hara.<PACKAGE> "2.1.8"]
 
 or
 
-[im.chit/hara.<PACKAGE>.<NAMESPACE> "2.1.5"]
+[im.chit/hara.<PACKAGE>.<NAMESPACE> "2.1.8"]
 ```
 
 Where `PACKAGE` and `NAMESPACE` can be seen from the [API Documentation](http://docs.caudate.me/hara/). Please see documentation for examples of usage.
 
 ## License
 
-Copyright © 2014 Chris Zheng
+Copyright © 2015 Chris Zheng
 
 Distributed under the MIT License
