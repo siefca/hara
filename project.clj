@@ -1,4 +1,4 @@
-(defproject im.chit/hara "2.1.8"
+(defproject im.chit/hara "2.1.9-SNAPSHOT"
   :description "General purpose utilities library"
   :url "https://github.com/zcaudate/hara"
   :license {:name "The MIT License"
@@ -7,7 +7,7 @@
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
                    :plugins [[lein-midje "3.1.3"]
                              [lein-midje-doc "0.0.23"]
-                             [lein-repack "0.2.4"]]}}
+                             [lein-repack "0.2.8"]]}}
   :documentation {:files {"docs/index"
                         {:input "test/midje_doc/hara/outline.clj"
                          :title "hara"
