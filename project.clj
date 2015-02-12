@@ -14,6 +14,7 @@
                          :sub-title "General Purpose Utilities Library"
                          :author "Chris Zheng"
                          :email  "z@caudate.me"}}}
+  :global-vars {*warn-on-reflection* true}
   :repack [{:type :clojure
             :levels 2
             :path "src"
