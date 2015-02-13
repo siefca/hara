@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]))
 
 (defn hash-label
-  "Returns a keyword repesentation of the hash-code. For use in
+  "Returns a keyword repesentation of the hash-code. For use in 
    generating internally unique keys
 
    (hash-label 1) => \"__1__\"

@@ -7,7 +7,7 @@
   "Makes sure that the namespace is loaded for a particular symbol
 
   (form-require 'cons) => 'cons
-
+  
   (form-require 'clojure.core/cons) => 'clojure.core/cons"
   {:added "2.1" :hidden true}
   [x]
@@ -32,9 +32,9 @@
   "Creates a function out of a list
 
   (let [my-inc (form-fn '(+ 1 %))]
-
+  
     (my-inc 1) => 2
-
+  
     (meta my-inc) => {:source \"#(+ 1 %)\\n\"})"
   {:added "2.1"}
   [form]

@@ -46,7 +46,7 @@
           (map list bcls icls)))
 
 (defn has-overridden-method
-  "Checks to see that the method can be
+  "Checks to see that the method can be 
 
   (has-overridden-method without-method String)
   => nil

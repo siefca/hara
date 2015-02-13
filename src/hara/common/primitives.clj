@@ -81,7 +81,7 @@
 (defn class-array
   "Returns a Class array
 
-  (let [a (class-array [\"a\" \"b\" \"c\"])]
+  (let [^\"[Ljava.lang.String;\" a (class-array [\"a\" \"b\" \"c\"])]
 
     (type a) => (Class/forName \"[Ljava.lang.String;\")
 

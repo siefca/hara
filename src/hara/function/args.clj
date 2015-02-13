@@ -68,7 +68,7 @@
   (op (fn [x] x) 1 2 3) => 1
 
   (op (fn [_ y] y) 1 2 3) => 2
-
+  
   (op (fn [_] nil)) => (throws Exception)"
   {:added "2.1"}
   [f & args]
