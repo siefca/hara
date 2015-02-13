@@ -4,7 +4,7 @@
 (deftype Delegate [pointer fields]
   Object
   (toString [self]
-    (format "<%s@%s %s>" (.getName (type pointer)) (.hashCode pointer) (self)))
+    (format "<%s@%s %s>" (.getName ^Class (type pointer)) (.hashCode pointer) (self)))
 
   clojure.lang.IDeref
   (deref [self]
@@ -59,4 +59,5 @@
     (Delegate. obj fields)))
 
 (defmethod print-method Delegate
-  [v w] (.write w (str v)))
+  [v ^java.io.Writer w]
+  (.write w (str v)))

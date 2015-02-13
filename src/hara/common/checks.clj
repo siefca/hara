@@ -87,29 +87,33 @@
 
   (bytes? (byte-array 8)) => true"
   {:added "2.0"}
-  [x] (= (Class/forName "[B")
-         (.getClass x)))
+  [^Object x]
+  (= (Class/forName "[B")
+     (.getClass x)))
 
 (defn atom?
   "Returns `true` if `x` is of type `clojure.lang.Atom`.
 
   (atom? (atom nil)) => true"
   {:added "2.0"}
-  [obj] (instance? clojure.lang.Atom obj))
+  [obj]
+  (instance? clojure.lang.Atom obj))
 
 (defn ref?
   "Returns `true` if `x` is of type `clojure.lang.Ref`.
 
   (ref? (ref nil)) => true"
   {:added "2.0"}
-  [obj]  (instance? clojure.lang.Ref obj))
+  [obj]
+  (instance? clojure.lang.Ref obj))
 
 (defn agent?
   "Returns `true` if `x` is of type `clojure.lang.Agent`.
 
   (agent? (agent nil)) => true"
   {:added "2.0"}
-  [obj] (instance? clojure.lang.Agent obj))
+  [obj]
+  (instance? clojure.lang.Agent obj))
 
 (defn iref?
   "Returns `true` if `x` is of type `clojure.lang.IRef`.
@@ -120,7 +124,8 @@
   (iref? (promise)) => false
   (iref? (future))  => false"
   {:added "2.0"}
-  [obj]  (instance? clojure.lang.IRef obj))
+  [obj]
+  (instance? clojure.lang.IRef obj))
 
 (defn ideref?
   "Returns `true` if `x` is of type `java.lang.IDeref`.
@@ -129,7 +134,8 @@
   (ideref? (promise)) => true
   (ideref? (future))  => true"
   {:added "2.0"}
-  [obj]  (instance? clojure.lang.IDeref obj))
+  [obj]
+  (instance? clojure.lang.IDeref obj))
 
 (defn promise?
   "Returns `true` is `x` is a promise
@@ -137,8 +143,8 @@
   (promise? (promise)) => true
   (promise? (future))  => false"
   {:added "2.0"}
-  [obj]
-  (let [s (.getName (type obj))]
+  [^Object obj]
+  (let [^String s (.getName ^Class (type obj))]
     (.startsWith s "clojure.core$promise$")))
 
 (defn type-checker

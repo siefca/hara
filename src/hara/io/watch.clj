@@ -34,12 +34,12 @@
         (.register dir service (into-array event-kinds))
         (swap! seen conj dir-path))
       (if (:recursive options)
-        (doseq [f (.listFiles (io/file dir-path))]
+        (doseq [^java.io.File f (.listFiles (io/file dir-path))]
           (when (. f isDirectory)
             (register-sub-directory watcher (.getPath f))))))
     watcher))
 
-(defn process-event [watcher kind file]
+(defn process-event [watcher kind ^java.io.File file]
   (let [{:keys [options callback excludes filters kinds]} watcher
         filepath (.getPath file)
         filename (.getName file)]
@@ -51,11 +51,16 @@
         (callback (kind-lookup kind) file)))))
 
 (defn run-watcher [watcher]
-  (let [wkey (.take (:service watcher))]
-    (doseq [event (.pollEvents wkey) :when (not= (.kind event)
-                                                 StandardWatchEventKinds/OVERFLOW)]
+  (let [^java.nio.file.WatchKey wkey
+        (.take ^java.nio.file.WatchService (:service watcher))]
+    (doseq [^java.nio.file.WatchEvent event (.pollEvents wkey)
+            :when (not= (.kind event)
+                        StandardWatchEventKinds/OVERFLOW)]
       (let [kind (.kind event)
-            file (->> event (.context) (.resolve (.watchable wkey)) (.toFile))]
+            ^java.nio.file.Path path (.watchable wkey)
+            ^java.nio.file.Path context (.context event)
+            ^java.nio.file.Path res-path (.resolve path context)
+            ^java.io.File file (.toFile res-path)]
         (if (and (= kind StandardWatchEventKinds/ENTRY_CREATE)
                  (.isDirectory file)
                  (-> watcher :options :recursive))
@@ -67,7 +72,7 @@
 
 (defn start-watcher [watcher]
   (let [{:keys [types filter exclude]} (:options watcher)
-        service (.newWatchService (FileSystems/getDefault))
+        ^java.nio.file.WatchService service (.newWatchService (FileSystems/getDefault))
         seen    (atom #{})
         kinds   (if (= types :all)
                   (set event-kinds)
@@ -84,7 +89,7 @@
     (assoc watcher :running (future (run-watcher watcher)))))
 
 (defn stop-watcher [watcher]
-  (.close (:service watcher))
+  (.close ^java.nio.file.WatchService (:service watcher))
   (future-cancel (:running watcher))
   (dissoc watcher :running :service :seen))
 
@@ -94,7 +99,7 @@
     (str "#watcher" (assoc options :paths paths :running (-> this :running not not)))))
 
 (defmethod print-method Watcher
-  [v w]
+  [v ^java.io.Writer w]
   (.write w (str v)))
 
 (defn watcher

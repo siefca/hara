@@ -128,7 +128,7 @@
     (nth arr i not-found)))
 
 (defmethod print-method ComponentArray
-  [v w]
+  [v ^java.io.Writer w]
   (.write w (str v)))
 
 (defn start-array [carr]
@@ -193,7 +193,7 @@
     (stop-system sys)))
 
 (defmethod print-method ComponentSystem
-  [v w]
+  [v ^java.io.Writer w]
   (.write w (str v)))
 
 (defn- system-dependencies [topology]

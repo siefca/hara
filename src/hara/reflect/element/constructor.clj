@@ -6,9 +6,9 @@
 
 (defmethod invoke-element :constructor [ele & args]
   (let [bargs (box-args ele args)]
-    (.newInstance (:delegate ele) (object-array bargs))))
+    (.newInstance ^java.lang.reflect.Constructor (:delegate ele) (object-array bargs))))
 
-(defmethod to-element java.lang.reflect.Constructor [obj]
+(defmethod to-element java.lang.reflect.Constructor [^java.lang.reflect.Constructor obj]
   (let [body (seed :constructor obj)]
     (-> body
         (assoc :name "new")

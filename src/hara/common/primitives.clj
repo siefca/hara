@@ -57,7 +57,7 @@
            (bytes? id)
            (java.util.UUID/nameUUIDFromBytes id)
            :else (error id " can only be a string or byte array")))
-  ([^java.lang.Long msb ^java.lang.Long lsb]
+  ([^Long msb ^Long lsb]
      (java.util.UUID. msb lsb)))
 
 (defn instant
@@ -68,7 +68,7 @@
   (instant 0) => #inst \"1970-01-01T00:00:00.000-00:00\""
   {:added "2.0"}
   ([] (java.util.Date.))
-  ([val] (java.util.Date. val)))
+  ([^Long val] (java.util.Date. val)))
 
 (defn uri
   "Returns a `java.net.URI` object
@@ -92,7 +92,7 @@
   ([seq] (class-array (-> seq first type) seq))
   ([type seq]
     (let [total (count seq)
-        arr   (make-array type total)]
-    (doseq [i (range total)]
-      (aset arr i (nth seq i)))
-    arr)))
+          ^"[Ljava.lang.Object;" arr (make-array type total)]
+      (doseq [i   (range total)]
+        (aset arr i (nth seq i)))
+      arr)))

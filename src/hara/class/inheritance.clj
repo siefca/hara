@@ -10,7 +10,7 @@
       java.lang.Object]"
   {:added "2.1"}
   ([cls] (ancestor-list cls []))
-  ([cls output]
+  ([^java.lang.Class cls output]
      (if (nil? cls)
        output
        (recur (.getSuperclass cls) (conj output cls)))))
@@ -25,7 +25,7 @@
   "
   {:added "2.1"}
   ([cls] (ancestor-tree cls []))
-  ([cls output]
+  ([^Class cls output]
      (let [base (.getSuperclass cls)]
        (if-not base output
                (recur base
@@ -39,9 +39,9 @@
   (best-match #{String} Long) => nil
   (best-match #{Object Number} Long) => Number"
   {:added "2.1"}
-  [candidates ^Class class]
-  (or (get candidates class)
-      (->> (apply concat (ancestor-tree class))
+  [candidates ^Class cls]
+  (or (get candidates cls)
+      (->> (apply concat (ancestor-tree cls))
            (map (fn [v]
                   (if (set? v)
                     (first (set/intersection v candidates))

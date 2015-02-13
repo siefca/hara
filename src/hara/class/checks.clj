@@ -6,7 +6,7 @@
   (interface? java.util.Map) => true
   (interface? Class) => false"
   {:added "2.1"}
-  [class]
+  [^java.lang.Class class]
   (.isInterface class))
 
 (defn abstract?
@@ -15,7 +15,7 @@
   (abstract? java.util.Map) => true
   (abstract? Class) => false"
   {:added "2.1"}
-  [class]
+  [^java.lang.Class class]
   (java.lang.reflect.Modifier/isAbstract (.getModifiers class)))
 
 (defn multimethod?

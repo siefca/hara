@@ -1,8 +1,7 @@
 (ns hara.reflect.hierarchy
   (:require [hara.reflect.common :as common]
             [hara.reflect.element.common :as element]
-            [hara.class.inheritance :as inheritance])
-)
+            [hara.class.inheritance :as inheritance]))
 
 (defn has-method
   "Checks to see if any given method exists in a particular class
@@ -15,7 +14,7 @@
               clojure.lang.PersistentArrayMap)
   => clojure.lang.PersistentArrayMap"
   {:added "2.1"}
-  [method class]
+  [^java.lang.reflect.Method method ^Class class]
   (try (.getDeclaredMethod class
                            (.getName method) (.getParameterTypes method))
        class
@@ -29,12 +28,12 @@
 
   "
   {:added "2.1"}
-  [method class]
+  [^java.lang.reflect.Method method ^Class class]
   (let [methods (.getDeclaredMethods class)
         iname (.getName method)
         iparams (.getParameterTypes method)
         inargs (count iparams)
-        smethods (filter (fn [x]
+        smethods (filter (fn [^java.lang.reflect.Method x]
                            (and (= iname (.getName x))
                                 (= inargs (count (.getParameterTypes x)))))
                          methods)]
@@ -42,12 +41,12 @@
 
 (defn is-assignable?
   [bcls icls]
-  (every? (fn [[b i]]
+  (every? (fn [[^Class b ^Class i]]
             (.isAssignableFrom b i))
           (map list bcls icls)))
 
 (defn has-overridden-method
-  "Checks to see that the method can be 
+  "Checks to see that the method can be
 
   (has-overridden-method without-method String)
   => nil
@@ -55,10 +54,10 @@
   (has-overridden-method without-method clojure.lang.IPersistentMap)
   => clojure.lang.IPersistentMap"
   {:added "2.1"}
-  [method class]
+  [^java.lang.reflect.Method method class]
   (let [smethods (methods-with-same-name-and-count method class)
         iparams (.getParameterTypes method)]
-    (if (some (fn [smethod]
+    (if (some (fn [^java.lang.reflect.Method smethod]
                 (is-assignable?
                  (.getParameterTypes smethod)
                  iparams))
@@ -77,8 +76,10 @@
   => [clojure.lang.IPersistentMap
       clojure.lang.PersistentArrayMap]"
   {:added "2.1"}
-  ([method] (origins method (inheritance/ancestor-tree (.getDeclaringClass method))))
-  ([method bases] (origins method bases (list (.getDeclaringClass method))))
+  ([^java.lang.reflect.Method method]
+   (origins method (inheritance/ancestor-tree (.getDeclaringClass method))))
+  ([^java.lang.reflect.Method method bases]
+   (origins method bases (list (.getDeclaringClass method))))
   ([method [[super interfaces :as pair] & more] currents]
      (if (nil? pair) currents
          (let [currents (if-let [current (has-overridden-method method super)]

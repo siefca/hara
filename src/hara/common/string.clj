@@ -25,7 +25,7 @@
   [meta string]
   (symbol string))
 
-(defn to-string
+(defn ^String to-string
   "converts symbols and keywords to string representation
 
   (to-string 'hello/world)

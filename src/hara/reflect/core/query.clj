@@ -7,7 +7,7 @@
             [hara.reflect.pretty.display :as display]))
 
 (defn- all-class-members
-  [class]
+  [^Class class]
   (concat
      (seq (.getDeclaredMethods class))
      (seq (.getDeclaredConstructors class))

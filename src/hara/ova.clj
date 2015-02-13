@@ -72,7 +72,7 @@
       (cond (or (= (:type opts) :ova))
             (do (add-watch (::data state) k
                            (watch/process-options opts f))
-                (.getWatches (::data state)))
+                (.getWatches ^clojure.lang.IRef (::data state)))
 
 
             :else
@@ -90,7 +90,7 @@
   (-list-watch [obj opts]
     (let [opts (standardise-opts opts)]
       (cond (= (:type opts) :ova)
-            (.getWatches (::data state))
+            (.getWatches ^clojure.lang.IRef (::data state))
 
             :else
             (deref (::watches state)))))
@@ -116,13 +116,13 @@
 
   clojure.lang.IRef
   (setValidator [ova vf]
-    (.setValidator (::data state) vf))
+    (.setValidator ^clojure.lang.IRef (::data state) vf))
 
   (getValidator [ova]
-    (.getValidator (::data state)))
+    (.getValidator ^clojure.lang.IRef (::data state)))
 
   (getWatches [ova]
-    (.getWatches (::data state)))
+    (.getWatches ^clojure.lang.IRef (::data state)))
 
   (addWatch [ova key callback]
     (add-watch (::data state) key callback))
@@ -190,7 +190,7 @@
     (str "#ova " (persistent! ova))))
 
 (defmethod print-method Ova
-  [v w]
+  [v ^java.io.Writer w]
   (.write w (str v)))
 
 (defn ova

@@ -15,7 +15,7 @@
 
 (defn make-invoke-element-form
   [args]
-  (clojure.walk/postwalk
+  (walk/postwalk
    (fn [x]
      (cond (and (list? x)
                 (= 'invoke-element (first x)))
@@ -60,5 +60,6 @@
   [x]
   (instance? Element x))
 
-(defmethod print-method Element [v w]
+(defmethod print-method Element
+  [v ^java.io.Writer w]
   (.write w (str v)))

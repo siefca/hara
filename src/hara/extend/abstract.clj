@@ -225,7 +225,7 @@
              (protocol-extend-type-wrappers basis wrappers))))
 
 (defn protocol-ns [protocol]
-  (-> protocol :var .ns str))
+  (->  ^clojure.lang.Var (protocol :var) .ns str))
 
 (defn protocol-implementation [protocolsym {:keys [select prefix suffix wrappers] :as options}]
   (let [select (or select '-)

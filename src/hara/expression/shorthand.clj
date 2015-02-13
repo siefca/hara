@@ -75,7 +75,7 @@
   (cond (nil? sel)    obj
         (list? sel)   (call-> obj sel)
         (vector? sel) (get-in obj sel)
-        (symbol? sel) (if-let [f (do (if-let [nsp (.getNamespace sel)]
+        (symbol? sel) (if-let [f (do (if-let [nsp (.getNamespace ^clojure.lang.Symbol sel)]
                                        (require (symbol nsp)))
                                      (suppress (resolve sel)))]
                         (call f obj)

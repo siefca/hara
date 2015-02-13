@@ -24,12 +24,12 @@
 
         (instance? Number arg)
         (condp = param-type
-          Integer/TYPE (.intValue arg)
-          Float/TYPE   (.floatValue arg)
-          Double/TYPE  (.doubleValue arg)
-          Long/TYPE    (.longValue arg)
-          Short/TYPE   (.shortValue arg)
-          Byte/TYPE    (.byteValue arg))
+          Integer/TYPE (.intValue ^Number arg)
+          Float/TYPE   (.floatValue ^Number arg)
+          Double/TYPE  (.doubleValue ^Number arg)
+          Long/TYPE    (.longValue ^Number arg)
+          Short/TYPE   (.shortValue ^Number arg)
+          Byte/TYPE    (.byteValue ^Number arg))
 
         :else
         (throw (ClassCastException.
@@ -42,19 +42,19 @@
           (.set field obj (box-arg ftype val))
 
           (= ftype Boolean)
-          (.setBoolean obj (.cast Boolean val))
+          (.setBoolean field obj (.cast Boolean val))
 
           (= ftype Character)
-          (.setChar obj (.cast Character val))
+          (.setChar field obj (.cast Character val))
 
           (instance? Number val)
           (condp = ftype
-            Integer (.setInt obj (.intValue val))
-            Float   (.setFloat obj (.floatValue val))
-            Double  (.setDouble obj (.doubleValue val))
-            Long    (.setLong obj (.longValue val))
-            Short   (.setShort obj (.shortValue val))
-            Byte    (.setByte obj (.byteValue val)))
+            Integer (.setInt field obj (.intValue ^Number val))
+            Float   (.setFloat field obj (.floatValue ^Number val))
+            Double  (.setDouble field obj (.doubleValue ^Number val))
+            Long    (.setLong field obj (.longValue ^Number val))
+            Short   (.setShort field obj (.shortValue ^Number val))
+            Byte    (.setByte field obj (.byteValue ^Number val)))
 
           :else
           (throw (ClassCastException.

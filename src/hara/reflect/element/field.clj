@@ -8,7 +8,7 @@
 (def patch-field
   (let [mf (.getDeclaredField java.lang.reflect.Field  "modifiers")]
     (.setAccessible mf true)
-    (fn [field]
+    (fn [^java.lang.reflect.Field field]
       (.setInt mf field (bit-and (.getModifiers field) (bit-not java.lang.reflect.Modifier/FINAL)))
       field)))
 
@@ -29,14 +29,16 @@
 
 (defn invoke-static-field
   ([ele cls]
-     (.get (:delegate ele) nil))
+   (.get ^java.lang.reflect.Field
+         (:delegate ele) nil))
   ([ele cls val]
      (util/set-field (:delegate ele) nil val)
      true))
 
 (defn invoke-instance-field
   ([ele obj]
-     (.get (:delegate ele) (util/box-arg (:container ele) obj)))
+   (.get ^java.lang.reflect.Field
+         (:delegate ele) (util/box-arg (:container ele) obj)))
   ([ele obj val]
      (util/set-field (:delegate ele) (util/box-arg (:container ele) obj) val)
      true))
@@ -56,7 +58,8 @@
   ([ele x y & more]
      (throw-arg-exception ele (vec (concat [x y] more)))))
 
-(defmethod to-element java.lang.reflect.Field [obj]
+(defmethod to-element java.lang.reflect.Field
+  [^java.lang.reflect.Field obj]
   (let [body (seed :field obj)
         type (.getType obj)]
     (-> body
@@ -70,11 +73,11 @@
   (if (:static ele)
     (format "#[%s :: <%s> | %s]"
             (:name ele)
-            (.getName (:container ele))
+            (.getName ^Class (:container ele))
             (class-convert (:type ele) :string))
     (format "#[%s :: (%s) | %s]"
             (:name ele)
-            (.getName (:container ele))
+            (.getName ^Class (:container ele))
             (class-convert (:type ele) :string))))
 
 (defmethod element-params :field [ele]

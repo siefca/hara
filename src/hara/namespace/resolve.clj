@@ -10,7 +10,7 @@
 
   (resolve-ns 'clojure.hello) => nil"
   {:added "2.1"}
-  [sym]
+  [^clojure.lang.Symbol sym]
   (let [nsp  (.getNamespace sym)
         nsym (or  (and nsp
                        (symbol nsp))
@@ -20,7 +20,7 @@
 
 (defn ns-vars
   "lists the vars in a particular namespace
-  
+
   (ns-vars 'hara.namespace.resolve) => '[ns-vars resolve-ns]"
   {:added "2.1"}
   [ns]

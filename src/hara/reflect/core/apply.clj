@@ -17,7 +17,7 @@
 
 (defn assignable?
   [current base]
-  (->> (map (fn [x y]
+  (->> (map (fn [^Class x ^Class y]
               (or (= y x)
                   (.isAssignableFrom y x))) current base)
        (every? identity)))

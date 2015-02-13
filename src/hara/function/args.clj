@@ -7,9 +7,10 @@
 
   (vargs? (fn [x & xs])) => true"
   {:added "2.1"}
-  [f]
-  (if (some #(= "getRequiredArity" (.getName %))
-           (.getDeclaredMethods (class f)))
+  [^clojure.lang.Fn f]
+  (if (some (fn [^java.lang.reflect.Method mthd]
+              (= "getRequiredArity" (.getName mthd)))
+            (.getDeclaredMethods (class f)))
     true
     false))
 
@@ -21,9 +22,10 @@
   (varg-count (fn [x])) => nil"
   {:added "2.1"}
   [f]
-  (if (some #(= "getRequiredArity" (.getName %))
-           (.getDeclaredMethods (class f)))
-     (.getRequiredArity f)))
+  (if (some (fn [^java.lang.reflect.Method mthd]
+              (= "getRequiredArity" (.getName mthd)))
+            (.getDeclaredMethods (class f)))
+    (.getRequiredArity ^clojure.lang.RestFn f)))
 
 (defn arg-count
   "counts the number of non-varidic argument types
@@ -35,9 +37,11 @@
   (arg-count (fn ([x]) ([x y]))) => [1 2]"
   {:added "2.1"}
   [f]
-  (let [ms (filter #(= "invoke" (.getName %))
+  (let [ms (filter (fn [^java.lang.reflect.Method mthd]
+                     (= "invoke" (.getName mthd)))
                    (.getDeclaredMethods (class f)))
-        ps (map (fn [m] (.getParameterTypes m)) ms)]
+        ps (map (fn [^java.lang.reflect.Method m]
+                  (.getParameterTypes m)) ms)]
     (map alength ps)))
 
 (defn arg-check
@@ -64,7 +68,7 @@
   (op (fn [x] x) 1 2 3) => 1
 
   (op (fn [_ y] y) 1 2 3) => 2
-  
+
   (op (fn [_] nil)) => (throws Exception)"
   {:added "2.1"}
   [f & args]

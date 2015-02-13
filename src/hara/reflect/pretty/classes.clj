@@ -34,7 +34,7 @@
   (raw->string \"[[V\") => \"void[][]\"
   (raw->string \"[Ljava.lang.String;\") => \"java.lang.String[]\""
   {:added "2.1"}
-  [v]
+  [^String v]
   (if (.startsWith v "[")
     (str (raw-array->string (subs v 1)) "[]")
     (or (primitive-convert v :raw :string)
@@ -46,7 +46,7 @@
   (string-array->raw \"java.lang.String[]\")[Ljava.lang.String;"
   {:added "2.1"}
   ([s] (string-array->raw s false))
-  ([s arr]
+  ([^String s arr]
      (if (.endsWith s "[]")
        (str "[" (string-array->raw
                  (subs s 0 (- (.length s) 2)) true))
@@ -93,7 +93,7 @@
   [v to])
 
 (defmethod class-convert-impl Class
-  [v to]
+  [^Class v to]
   (condp = to
     :container (if (primitive-classes v)
                  (primitive-convert v :class :container)

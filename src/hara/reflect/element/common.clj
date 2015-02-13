@@ -3,7 +3,7 @@
             [hara.reflect.pretty.classes :refer [class-convert]]
             [hara.reflect.util :as util]))
 
-(def override
+(def ^java.lang.reflect.Field  override
   (doto (.getDeclaredField java.lang.reflect.AccessibleObject "override")
     (.setAccessible true)))
 
@@ -13,7 +13,7 @@
 (defn add-annotations [seed obj]
   (if-let [anns (seq (.getDeclaredAnnotations obj))]
     (->> anns
-         (map (fn [ann] [(.annotationType ann)
+         (map (fn [^java.lang.annotation.Annotation ann] [(.annotationType ann)
                         (str ann)]))
          (into {})
          (assoc seed :annotations))

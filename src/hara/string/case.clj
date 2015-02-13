@@ -3,7 +3,7 @@
             [hara.common.string :as common]))
 
 (defn re-sub
-  [value pattern sub-func]
+  [^String value pattern sub-func]
   (loop [matcher (re-matcher pattern value)
          result []
          last-end 0]

@@ -43,7 +43,7 @@
 
 (defn format-cells [{:keys [label] :as cell}]
   (or label
-      (format "{%s}" (.hashCode cell))))
+      (format "{%s}" (.hashCode ^Object cell))))
 
 (deftype Propagator [state]
   Object
@@ -76,7 +76,7 @@
     pg))
 
 (defmethod print-method Propagator
-  [v w]
+  [v ^java.io.Writer w]
   (.write w (str v)))
 
 (defprotocol CellProtocol
@@ -127,14 +127,14 @@
     cell)
 
   clojure.lang.IRef
-  (setValidator [cell vf] (.setValidator (:content state) vf))
-  (getValidator [cell] (.getValidator (:content state)))
-  (getWatches [cell] (.getWatches (:content state)))
+  (setValidator [cell vf] (.setValidator ^clojure.lang.IRef (:content state) vf))
+  (getValidator [cell] (.getValidator ^clojure.lang.IRef (:content state)))
+  (getWatches [cell] (.getWatches ^clojure.lang.IRef (:content state)))
   (addWatch [cell key callback] (add-watch (:content state) key callback))
   (removeWatch [cell key] (remove-watch (:content state) key)))
 
 (defmethod print-method Cell
-  [v w]
+  [v ^java.io.Writer w]
   (.write w (str v)))
 
 (defn cell
