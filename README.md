@@ -5,8 +5,8 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 
 ## Whats New
 
-#### 2.1.9
-- Fixed reflection warnings
+#### 2.1.10
+- Fixed all reflection warnings
 
 #### 2.1.8
 - Reworked `hara.reflect` to use only functions, moved helper macros into vinyasa 

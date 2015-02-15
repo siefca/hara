@@ -1,6 +1,7 @@
 (ns hara.reflect.pretty.classes-test
   (:use midje.sweet)
-  (:require [hara.reflect.pretty.classes :refer :all]))
+  (:require [hara.reflect.pretty.classes :refer :all]
+            [hara.reflect.element.common]))
 
 ^{:refer hara.reflect.pretty.classes/type->raw :added "2.1"}
 (fact "converts to the raw representation"
