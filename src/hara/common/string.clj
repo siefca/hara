@@ -17,6 +17,10 @@
   [meta string]
   string)
 
+(defmethod from-string Class
+  [meta string]
+  (Class/forName string))
+
 (defmethod from-string clojure.lang.Keyword
   [meta string]
   (keyword string))
@@ -49,20 +53,18 @@
   [x]
   (-to-string-meta x))
 
-(extend-type String
+(extend-type nil
   IString
-  (-to-string [x]
-    x)
-  (-to-string-meta [x] {:type String}))
+  (-to-string [x] "")
+  (-to-string-meta [x] {:type nil}))
+
+(extend-type Object
+  IString
+  (-to-string [x] (str x))
+  (-to-string-meta [x] {:type (type x)}))
 
 (extend-type clojure.lang.Keyword
   IString
   (-to-string [x]
     (if (nil? x) "" (#'string/replace-first-char (str x) \: "")))
   (-to-string-meta [x] {:type clojure.lang.Keyword}))
-
-(extend-type clojure.lang.Symbol
-  IString
-  (-to-string [x]
-    (if (nil? x) "" (str x)))
-  (-to-string-meta [x] {:type clojure.lang.Symbol}))

@@ -1,5 +1,6 @@
 (ns hara.reflect.core.extract
   (:require [clojure.string :as string]
+            [hara.common.string :refer [to-string]]
             [hara.reflect.common :as common]
             [hara.reflect.types.element :as element]
             [hara.reflect.pretty.classes :as classes]
@@ -24,7 +25,7 @@
       (assoc :doc
         (if (= :multi (:tag ele)) ""
           (format "\nmember: %s\ntype: %s\nmodifiers: %s"
-                  (str (.getName (:container ele))
+                  (str (to-string (:container ele))
                        "/" (:name ele))
                   (classes/class-convert (:type ele) :string)
                   (string/join ", " (map name (:modifiers ele))))))))

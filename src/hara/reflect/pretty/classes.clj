@@ -1,6 +1,7 @@
 (ns hara.reflect.pretty.classes
   (require [hara.reflect.common :refer :all]
-           [hara.reflect.pretty.primitives :refer :all]))
+           [hara.reflect.pretty.primitives :refer :all]
+           [hara.common.string :as string]))
 
 (def class-reps #{:raw :symbol :string :class :container})
 
@@ -11,7 +12,7 @@
   (type->raw 'byte) => \"B\""
   {:added "2.1"}
   [v]
-  (let [raw (.getName v)]
+  (let [raw (string/to-string v)]
     (or (primitive-convert raw :string :raw)
         raw)))
 

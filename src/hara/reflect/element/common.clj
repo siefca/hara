@@ -1,7 +1,33 @@
 (ns hara.reflect.element.common
-  (:require [hara.reflect.types.modifiers :refer [int-to-modifiers]]
+  (:require [hara.protocol.string :refer [IString]]
+            [hara.reflect.types.modifiers :refer [int-to-modifiers]]
             [hara.reflect.pretty.classes :refer [class-convert]]
-            [hara.reflect.util :as util]))
+            [hara.reflect.util :as util]
+            [hara.common.string :refer [to-string]]))
+
+(extend-type Class
+  IString
+  (-to-string [x]
+    (.getName x))
+  (-to-string-meta [x] {:type Class}))
+
+(extend-type java.lang.reflect.Member
+  IString
+  (-to-string [x]
+    (.getName x))
+  (-to-string-meta [x] {:type (type x)}))
+
+(defprotocol IElement
+  (get-modifiers [obj])
+  (get-declaring-class [obj]))
+
+(extend-protocol IElement
+  Class
+  (get-modifiers [obj] (.getModifiers obj))
+  (get-declaring-class [obj] (.getDeclaringClass obj))
+  java.lang.reflect.Member
+  (get-modifiers [obj] (.getModifiers obj))
+  (get-declaring-class [obj] (.getDeclaringClass obj)))
 
 (def ^java.lang.reflect.Field  override
   (doto (.getDeclaredField java.lang.reflect.AccessibleObject "override")
@@ -11,7 +37,8 @@
   (.set override obj flag))
 
 (defn add-annotations [seed obj]
-  (if-let [anns (seq (.getDeclaredAnnotations obj))]
+  (if-let [anns (seq (.getDeclaredAnnotations
+                      ^java.lang.reflect.AnnotatedElement obj))]
     (->> anns
          (map (fn [^java.lang.annotation.Annotation ann] [(.annotationType ann)
                         (str ann)]))
@@ -20,7 +47,7 @@
     seed))
 
 (defn seed [tag obj]
-  (let [int-m (.getModifiers obj)
+  (let [int-m (get-modifiers obj)
         modifiers (conj (int-to-modifiers int-m tag) tag)
         modifiers (if (some #(contains? modifiers %) [:public :private :protected])
                     modifiers
@@ -30,10 +57,10 @@
                     modifiers
                     (conj modifiers :instance))
         _ (if (not= tag :class) (set-accessible obj true))]
-    (-> {:name (.getName obj)
+    (-> {:name (to-string obj)
          :tag  tag
-         :hash (.hashCode obj)
-         :container (.getDeclaringClass obj)
+         :hash (.hashCode ^Object obj)
+         :container (get-declaring-class obj)
          :modifiers modifiers
          :static  (contains? modifiers :static)
          :delegate obj}
