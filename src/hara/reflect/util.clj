@@ -115,7 +115,7 @@
           Character/TYPE (= arg-type Character)
           Short/TYPE     (= arg-type Short)
           Byte/TYPE      (= arg-type Byte)
-          Boolean        (= arg-type Boolean)
+          Boolean/TYPE   (= arg-type Boolean)
           false)))
 
 (defn is-congruent [params args]
