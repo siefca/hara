@@ -7,7 +7,7 @@
   :profiles {:dev {:dependencies [[midje "1.6.3"]]
                    :plugins [[lein-midje "3.1.3"]
                              [lein-midje-doc "0.0.23"]
-                             [lein-repack "0.2.8"]]}}
+                             [lein-repack "0.2.10"]]}}
   :documentation {:files {"docs/index"
                         {:input "test/midje_doc/hara/outline.clj"
                          :title "hara"

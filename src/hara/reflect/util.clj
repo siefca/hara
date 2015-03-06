@@ -2,7 +2,7 @@
   (:import [java.lang.reflect Field]))
 
 (defn box-arg
-  "boxArg
+  "Converts primitives to their correct data types
   (box-arg Float/TYPE 2)
   => 2.0
 
@@ -62,7 +62,8 @@
                         ftype (-> val .getClass .getName)))))))
 
 (defn param-arg-match
-  "(param-arg-match Double/TYPE Float/TYPE)
+  "Checks if the second argument can be used as the first argument
+ (param-arg-match Double/TYPE Float/TYPE)
  => true
 
  (param-arg-match Float/TYPE Double/TYPE)

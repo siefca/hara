@@ -29,7 +29,7 @@
   [meta string]
   (symbol string))
 
-(defn ^String to-string
+(defn to-string
   "converts symbols and keywords to string representation
 
   (to-string 'hello/world)
@@ -39,7 +39,7 @@
   => \"hello/world\""
   {:added "2.1"}
   [x]
-  (-to-string x))
+  ^String (-to-string x))
 
 (defn to-meta
   "meta information of keywords and symbols

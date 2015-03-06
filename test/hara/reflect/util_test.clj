@@ -5,7 +5,7 @@
 
 
 ^{:refer hara.reflect.util/box-arg :added "2.1"}
-(fact "boxArg"
+(fact "Converts primitives to their correct data types"
   (box-arg Float/TYPE 2)
   => 2.0
 
@@ -16,7 +16,7 @@
   => java.lang.Short)
 
 ^{:refer hara.reflect.util/more :added "2.1"}
-(fact "paramArgTypeMatch basics"
+(fact "param-arg-match basics"
   (.isPrimitive Integer/TYPE)
   => true
 
@@ -33,7 +33,7 @@
   => false)
 
 ^{:refer hara.reflect.util/param-arg-match :added "2.1"}
-(fact
+(fact "Checks if the second argument can be used as the first argument"
  (param-arg-match Double/TYPE Float/TYPE)
  => true
 
