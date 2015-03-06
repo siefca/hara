@@ -8,8 +8,6 @@
   (let [a   "hello"
         >a  (delegate a)]
 
-    (keys >a) => (contains [:hash :value] :in-any-order)
-
     (seq (>a :value)) => [\h \e \l \l \o]
 
     (>a :value (char-array "world"))
