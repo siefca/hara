@@ -8,7 +8,7 @@
 
 (defmethod from-map :default
   [data meta]
-  (throw (Exception. (str "Not Implemented for: " meta " and " map)))
+  (throw (Exception. (str "Not Implemented for: " meta " and " map))))
 
 (defn to-map
   {:added "2.1"}
@@ -18,14 +18,14 @@
 (defn to-meta
   {:added "2.1"}
   [x]
-  (-to-map-meta x))
+  (map/-to-map-meta x))
 
 (extend-type nil
-  IMap
+  map/IMap
   (-to-map [x] {})
   (-to-map-meta [x] {:type nil}))
 
 (extend-type Object
-  IMap
+  map/IMap
   (-to-map [x] (str x))
   (-to-map-meta [x] {:type (type x)}))

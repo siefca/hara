@@ -38,8 +38,8 @@
   (to-string :hello/world)
   => \"hello/world\""
   {:added "2.1"}
-  [x]
-  ^String (-to-string x))
+  ^String [x]
+  (-to-string x))
 
 (defn to-meta
   "meta information of keywords and symbols

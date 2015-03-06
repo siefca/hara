@@ -5,6 +5,9 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 
 ## Whats New
 
+#### 2.1.11
+- bugfix for `hara.reflect`, added `hara.object` namespace
+
 #### 2.1.10
 - Fixed all reflection warnings
 
@@ -24,15 +27,15 @@ General purpose utilities library. Please see [finding a middle ground](http://z
 Add to project.clj dependencies:
 
 ```clojure
-[im.chit/hara "2.1.10"]
+[im.chit/hara "2.1.11"]
 
 or
 
-[im.chit/hara.<PACKAGE> "2.1.10"]
+[im.chit/hara.<PACKAGE> "2.1.11"]
 
 or
 
-[im.chit/hara.<PACKAGE>.<NAMESPACE> "2.1.10"]
+[im.chit/hara.<PACKAGE>.<NAMESPACE> "2.1.11"]
 ```
 
 Where `PACKAGE` and `NAMESPACE` can be seen from the [API Documentation](http://docs.caudate.me/hara/). Please see documentation for examples of usage.
