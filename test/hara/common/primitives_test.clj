@@ -60,3 +60,16 @@
     (aget a 0) => "a"
 
     (count a) => 3))
+
+^{:refer hara.common.primitives/nil-unless :added "2.1"}
+(fact "Returns `nil` unless the given predicate called on other argument(s) returns true"
+
+   (nil-unless even? 2) => 2
+
+   (nil-unless odd? 2) => nil
+
+   (nil-unless = 2 2 2) => '(2 2 2)
+
+   (nil-unless = 2 2 3) => nil
+
+   (nil-unless not= 2 2 3) => '(2 2 3))
