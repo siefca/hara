@@ -96,3 +96,24 @@
       (doseq [i   (range total)]
         (aset arr i (nth seq i)))
       arr)))
+
+(defmacro nil-unless
+  "Returns the value of the given `arg' or a list containing
+  all the arguments (if there are `more`) including `arg`,
+  when the predicate `pred` called on them does not return
+  `nil` nor `false`. Otherwise it returns `nil`.
+
+  (nil-unless odd? 3) => 3
+
+  (nil-unless odd? 2) => nil
+
+  (nil-unless = 2 2 (inc 1)) => (2 2 2)
+
+  (nil-unless = 2 2 3) => nil
+
+  (some #(nil-unless even? %) [1 2 3 4]) => 2"
+  {:added "2.1"}
+  ([pred arg]
+     `(if (~pred ~arg) ~arg nil))
+  ([pred arg & more]
+     `(if (~pred ~arg ~@more) (list ~arg ~@more) nil)))
